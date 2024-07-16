@@ -1,0 +1,80 @@
+ :root {
+  --primary-color: #F8EDE3;
+  --secondary-color: #DFD3C3;
+  --accent-color: #D0B8A8;
+  --dark-accent: #8D493A;
+  --text-color: #4a4a4a;
+  --shadow-color: rgba(141, 73, 58, 0.2);
+  --highlight-color: #ffffff;
+}
+
+body {
+  background-color: var(--primary-color);
+}
+
+.sidebar {
+  background-color: var(--secondary-color);
+  box-shadow: 
+    -8px -8px 12px var(--highlight-color),
+    8px 8px 12px var(--shadow-color);
+}
+
+.sidebar-heading {
+  color: var(--dark-accent);
+}
+
+.sidebar .nav-link {
+  color: var(--text-color);
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+  background-color: var(--accent-color);
+  color: var(--dark-accent);
+  box-shadow: 
+    inset 3px 3px 5px var(--shadow-color),
+    inset -3px -3px 5px var(--highlight-color);
+}
+
+.content-wrapper {
+  background-color: var(--primary-color);
+  box-shadow: 
+    8px 8px 15px var(--shadow-color),
+    -8px -8px 15px var(--highlight-color);
+}
+
+.feature-card, .stats-card {
+  background-color: var(--secondary-color);
+  box-shadow: 
+    5px 5px 10px var(--shadow-color),
+    -5px -5px 10px var(--highlight-color);
+}
+
+.feature-card:hover, .stats-card:hover {
+  box-shadow: 
+    8px 8px 15px var(--shadow-color),
+    -8px -8px 15px var(--highlight-color);
+}
+
+.stats-card {
+  color: var(--dark-accent);
+}
+
+.navbar {
+  background-color: var(--secondary-color) !important;
+}
+
+.btn {
+  background-color: var(--secondary-color);
+  color: var(--dark-accent);
+  box-shadow: 
+    5px 5px 10px var(--shadow-color),
+    -5px -5px 10px var(--highlight-color);
+}
+
+.btn:hover {
+  box-shadow: 
+    inset 3px 3px 5px var(--shadow-color),
+    inset -3px -3px 5px var(--highlight-color);
+  color: var(--dark-accent);
+}

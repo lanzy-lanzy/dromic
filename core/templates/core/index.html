@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="welcome-card">
+    <h1 class="main-title">Welcome to DROMIC Management System</h1>
+    <p class="main-subtitle">Disaster Response Operations Monitoring and Information Center</p>
+    <button class="btn btn-explore">Explore</button>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="feature-card">
+            <i class="fas fa-exclamation-circle fa-3x mb-3" style="color: var(--accent-color);"></i>
+            <h3>Disaster Tracking</h3>
+            <p>Monitor ongoing disasters and their impacts</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="feature-card">
+            <i class="fas fa-users fa-3x mb-3" style="color: var(--accent-color);"></i>
+            <h3>Affected Population</h3>
+            <p>Track affected individuals and communities</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="feature-card">
+            <i class="fas fa-home fa-3x mb-3" style="color: var(--accent-color);"></i>
+            <h3>Evacuation Centers</h3>
+            <p>Manage and monitor evacuation facilities</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

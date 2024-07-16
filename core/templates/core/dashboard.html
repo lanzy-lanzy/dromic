@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="main-title">DROMIC Dashboard</h1>
+    <p class="main-subtitle">Overview of Current Disaster Response Operations</p>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: var(--accent-color);"></i>
+            <h3>Active Disasters</h3>
+            <p class="stat-number">{{ active_disasters_count }}</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <i class="fas fa-users fa-3x mb-3" style="color: var(--accent-color);"></i>
+            <h3>Affected Persons</h3>
+            <p class="stat-number">{{ total_affected_persons }}</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <i class="fas fa-home fa-3x mb-3" style="color: var(--accent-color);"></i>
+            <h3>Evacuation Centers</h3>
+            <p class="stat-number">{{ evacuation_centers_count }}</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <i class="fas fa-house-damage fa-3x mb-3" style="color: var(--accent-color);"></i>
+            <h3>Damaged Houses</h3>
+            <p class="stat-number">{{ total_damaged_houses }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="chart-card">
+            <h3>Affected Areas by Province</h3>
+            <canvas id="affectedAreasChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="chart-card">
+            <h3>Displaced Population</h3>
+            <canvas id="displacedPopulationChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="table-card">
+            <h3>Recent DROMIC Reports</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Disaster</th>
+                        <th>Province</th>
+                        <th>Affected Families</th>
+                        <th>Affected Persons</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in recent_reports %}
+                    <tr>
+                        <td>{{ report.date }}</td>
+                        <td>{{ report.disaster.name }}</td>
+                        <td>{{ report.province.name }}</td>
+                        <td>{{ report.total_affected_families }}</td>
+                        <td>{{ report.total_affected_persons }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Add Chart.js code here for affectedAreasChart and displacedPopulationChart
+</script>
+{% endblock %}
