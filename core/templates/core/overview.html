@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 class="mb-4 text-center">DROMIC Overview</h1>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card neumorphic text-center p-4">
+            <i class="fas fa-exclamation-triangle fa-3x mb-3 text-danger"></i>
+            <h5 class="card-title">Total Disasters</h5>
+            <p class="card-text display-4" id="totalDisasters">{{ total_disasters }}</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card neumorphic text-center p-4">
+            <i class="fas fa-map-marked-alt fa-3x mb-3 text-primary"></i>
+            <h5 class="card-title">Affected Areas</h5>
+            <p class="card-text display-4" id="affectedAreas">{{ total_affected_areas }}</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card neumorphic text-center p-4">
+            <i class="fas fa-home fa-3x mb-3 text-success"></i>
+            <h5 class="card-title">Affected Families</h5>
+            <p class="card-text display-4" id="affectedFamilies">{{ total_affected_families }}</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card neumorphic text-center p-4">
+            <i class="fas fa-users fa-3x mb-3 text-info"></i>
+            <h5 class="card-title">Affected Persons</h5>
+            <p class="card-text display-4" id="affectedPersons">{{ total_affected_persons }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="neumorphic p-4">
+            <h5 class="mb-3">Displaced Population</h5>
+            <canvas id="displacedChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="neumorphic p-4">
+            <h5 class="mb-3">Damaged Houses</h5>
+            <canvas id="damagedHousesChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="neumorphic p-4">
+            <h5 class="mb-3">Sex and Age Distribution</h5>
+            <canvas id="sexAgeChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="neumorphic p-4">
+            <h5 class="mb-3">Sectoral Distribution</h5>
+            <canvas id="sectoralChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="neumorphic p-4 mb-4">
+    <h5 class="mb-3">Relief Operations Summary</h5>
+    <p>Total Financial Assistance: ${{ relief_summary.total_financial_assistance|floatformat:2 }}</p>
+    <p>Total Food Items: {{ relief_summary.total_food_items }}</p>
+    <p>Total Non-Food Items: {{ relief_summary.total_non_food_items }}</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Displaced Population Chart
+    var displacedCtx = document.getElementById('displacedChart').getContext('2d');
+    var displacedChart = new Chart(displacedCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Families', 'Persons'],
+            datasets: [{
+                label: 'Cumulative',
+                data: [{{ total_displaced.cum_families }}, {{ total_displaced.cum_persons }}],
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+            }, {
+                label: 'Current',
+                data: [{{ total_displaced.now_families }}, {{ total_displaced.now_persons }}],
+                backgroundColor: 'rgba(153, 102, 255, 0.6)',
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Damaged Houses Chart
+    var damagedHousesCtx = document.getElementById('damagedHousesChart').getContext('2d');
+    var damagedHousesChart = new Chart(damagedHousesCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Partially Damaged', 'Totally Damaged'],
+            datasets: [{
+                data: [{{ damaged_houses_summary.partially_damaged }}, {{ damaged_houses_summary.totally_damaged }}],
+                backgroundColor: ['rgba(255, 206, 86, 0.6)', 'rgba(255, 99, 132, 0.6)'],
+            }]
+        },
+        options: {
+            responsive: true,
+        }
+    });
+
+    // Sex and Age Distribution Chart
+    var sexAgeCtx = document.getElementById('sexAgeChart').getContext('2d');
+    var sexAgeChart = new Chart(sexAgeCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for item in sex_age_distribution %}'{{ item.sex }} - {{ item.age_group }}',{% endfor %}],
+            datasets: [{
+                label: 'Current Count',
+                data: [{% for item in sex_age_distribution %}{{ item.now_total }},{% endfor %}],
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Sectoral Distribution Chart
+    var sectoralCtx = document.getElementById('sectoralChart').getContext('2d');
+    var sectoralChart = new Chart(sectoralCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for item in sectoral_distribution %}'{{ item.sector }}',{% endfor %}],
+            datasets: [{
+                data: [{% for item in sectoral_distribution %}{{ item.now_total }},{% endfor %}],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                ],
+            }]
+        },
+        options: {
+            responsive: true,
+        }
+    });
+</script>
+{% endblock %}
