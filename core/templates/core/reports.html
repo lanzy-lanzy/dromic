@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block content %}
-<h1 class="mb-4 text-center">Comprehensive DROMIC Reports</h1>
+<h1 class="mb-4 text-center">DROMIC Reports</h1>
 
 <div class="row mb-4">
     <div class="col-md-3">
@@ -37,16 +37,18 @@
 <div class="neumorphic p-4 mb-4">
     <h3>Displaced Population</h3>
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-6">
+            <canvas id="displacedPopulationChart"></canvas>
+        </div>
+        <div class="col-md-6">
             <p>Cumulative Families: {{ total_displaced.cum_families }}</p>
             <p>Current Families: {{ total_displaced.now_families }}</p>
-        </div>
-        <div class="col-md-3">
             <p>Cumulative Persons: {{ total_displaced.cum_persons }}</p>
             <p>Current Persons: {{ total_displaced.now_persons }}</p>
         </div>
     </div>
 </div>
+
 
 <div class="neumorphic p-4 mb-4">
     <h3>Sex and Age Distribution</h3>
@@ -96,16 +98,32 @@
 
 <div class="neumorphic p-4 mb-4">
     <h3>Damaged Houses</h3>
-    <p>Partially Damaged: {{ damaged_houses.partially_damaged }}</p>
-    <p>Totally Damaged: {{ damaged_houses.totally_damaged }}</p>
+    <div class="row">
+        <div class="col-md-6">
+            <canvas id="damagedHousesChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <p>Partially Damaged: {{ damaged_houses.partially_damaged }}</p>
+            <p>Totally Damaged: {{ damaged_houses.totally_damaged }}</p>
+        </div>
+    </div>
 </div>
+
 
 <div class="neumorphic p-4 mb-4">
     <h3>Relief Operations</h3>
-    <p>Total Financial Assistance: {{ relief_operations.total_financial_assistance }}</p>
-    <p>Total Food Items: {{ relief_operations.total_food_items }}</p>
-    <p>Total Non-Food Items: {{ relief_operations.total_non_food_items }}</p>
+    <div class="row">
+        <div class="col-md-6">
+            <canvas id="reliefOperationsChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <p>Total Financial Assistance: ₱{{ relief_operations.total_financial_assistance|intcomma }}</p>
+            <p>Total Food Items: {{ relief_operations.total_food_items }}</p>
+            <p>Total Non-Food Items: {{ relief_operations.total_non_food_items }}</p>
+        </div>
+    </div>
 </div>
+
 
 
 <div class="table-responsive neumorphic p-4">
@@ -130,13 +148,79 @@
                 <td>{{ report.municipality.name }}</td>
                 <td>{{ report.barangay.name }}</td>
                 <td>
-                    <a href="{% url 'report_detail' report.id %}" class="btn btn-sm btn-primary neumorphic"><i class="fas fa-eye"></i> View</a>
-                    <a href="{% url 'export_report_pdf' report.id %}" class="btn btn-sm btn-secondary neumorphic"><i class="fas fa-file-pdf"></i> Export PDF</a>
+                    <a href="{% url 'report_detail' report.id %}" class="btn btn-sm btn-primary "><i class="fas fa-eye"></i> View</a>
+                    <a href="{% url 'export_report_pdf' report.id %}" class="btn btn-sm btn-secondary"><i class="fas fa-file-pdf"></i> Export PDF</a>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Displaced Population Chart
+    var displacedCtx = document.getElementById('displacedPopulationChart').getContext('2d');
+    var displacedChart = new Chart(displacedCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Families', 'Persons'],
+            datasets: [{
+                label: 'Cumulative',
+                data: [{{ total_displaced.cum_families }}, {{ total_displaced.cum_persons }}],
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+            }, {
+                label: 'Current',
+                data: [{{ total_displaced.now_families }}, {{ total_displaced.now_persons }}],
+                backgroundColor: 'rgba(255, 99, 132, 0.6)',
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Damaged Houses Chart
+    var damagedCtx = document.getElementById('damagedHousesChart').getContext('2d');
+    var damagedChart = new Chart(damagedCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Partially Damaged', 'Totally Damaged'],
+            datasets: [{
+                data: [{{ damaged_houses.partially_damaged }}, {{ damaged_houses.totally_damaged }}],
+                backgroundColor: ['rgba(255, 206, 86, 0.6)', 'rgba(255, 99, 132, 0.6)'],
+            }]
+        },
+        options: {
+            responsive: true,
+        }
+    });
+
+    // Relief Operations Chart
+    var reliefCtx = document.getElementById('reliefOperationsChart').getContext('2d');
+    var reliefChart = new Chart(reliefCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Financial Assistance', 'Food Items', 'Non-Food Items'],
+            datasets: [{
+                data: [
+                    {{ relief_operations.total_financial_assistance }},
+                    {{ relief_operations.total_food_items }},
+                    {{ relief_operations.total_non_food_items }}
+                ],
+                backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(255, 206, 86, 0.6)', 'rgba(75, 192, 192, 0.6)'],
+            }]
+        },
+        options: {
+            responsive: true,
+        }
+    });
+</script>
+{% endblock %}
 
 {% endblock %}

@@ -26,8 +26,7 @@ class Disaster(models.Model):
     date_occurred = models.DateField()
 
     def __str__(self):
-        return self.name
-
+        return f"{self.name} - {self.date_occurred:%Y-%m-%d}"
 class AffectedArea(models.Model):
     disaster = models.ForeignKey(Disaster, on_delete=models.CASCADE)
     province = models.ForeignKey(Province, on_delete=models.CASCADE)

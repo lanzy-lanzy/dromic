@@ -1,10 +1,10 @@
 :root {
-  --primary-color: #ffffff;
-  --secondary-color: #c8d0e7;
-  --accent-color: #17153B;
-  --text-color: #4d4d4d;
-  --shadow-light: #ffffff;
-  --shadow-dark: #C8ACD6;
+  --primary-color: #FEFBF6;
+  --secondary-color: #FEFBF6;
+  --accent-color: #ECB159;
+  --text-color: #2F3645;
+  --shadow-light: #FEFBF6;
+  --shadow-dark: #ECCEAE;
 }
 
 body {
@@ -63,8 +63,7 @@ body {
 
 main {
   padding-top: 48px;
-  margin-left: 240px;
-}
+  margin-left: 40px;
 
 .navbar {
   position: fixed;
@@ -154,4 +153,5 @@ main {
     left: 0;
     transition: left 0.3s ease-in-out;
   }
+}
 }

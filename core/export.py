@@ -1,104 +1,166 @@
 from io import BytesIO
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
-from reportlab.lib.units import inch
-from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from django.http import HttpResponse
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.charts.piecharts import Pie
+from reportlab.graphics.charts.barcharts import VerticalBarChart
 from django.db.models import Sum
-from .models import DROMICReport, DisplacedPopulation, SexAgeDistribution, SectoralDistribution, DamagedHouse, ReliefOperation
 
 def generate_report_pdf(report):
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
 
     styles = getSampleStyleSheet()
+    if 'Heading1' not in styles:
+        styles.add(ParagraphStyle(name='Heading1', fontSize=18, spaceAfter=12))
+    if 'Heading2' not in styles:
+        styles.add(ParagraphStyle(name='Heading2', fontSize=14, spaceAfter=8))
+
+
     elements = []
 
     # Title
-    elements.append(Paragraph(f"DROMIC Report: {report.disaster.name}", styles['Title']))
-    elements.append(Spacer(1, 0.5 * inch))
+    elements.append(Paragraph(f"DROMIC Report: {report.disaster.name}", styles['Heading1']))
+    elements.append(Paragraph(f"Date: {report.date.strftime('%B %d, %Y')}", styles['Normal']))
+    elements.append(Spacer(1, 0.5*cm))
+
+    # Location
+    elements.append(Paragraph("Location", styles['Heading2']))
+    location_data = [
+        ["Province", report.province.name],
+        ["Municipality", report.municipality.name],
+        ["Barangay", report.barangay.name]
+    ]
+    location_table = Table(location_data, colWidths=[4*cm, 10*cm])
+    location_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.black),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 10),
+        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+        ('TEXTCOLOR', (0,1), (-1,-1), colors.black),
+        ('ALIGN', (0,1), (-1,-1), 'LEFT'),
+        ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+        ('FONTSIZE', (0,1), (-1,-1), 10),
+        ('TOPPADDING', (0,1), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 6),
+        ('GRID', (0,0), (-1,-1), 1, colors.black)
+    ]))
+    elements.append(location_table)
+    elements.append(Spacer(1, 0.5*cm))
 
     # Summary Statistics
     elements.append(Paragraph("Summary Statistics", styles['Heading2']))
-    data = [
+    summary_data = [
         ["Total Affected Families", str(report.total_affected_families())],
-        ["Total Affected Persons", str(report.total_affected_persons())],
+        ["Total Affected Persons", str(report.total_affected_persons())]
     ]
-    table = Table(data)
-    table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                               ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke)]))
-    elements.append(table)
-    elements.append(Spacer(1, 0.25 * inch))
+    summary_table = Table(summary_data, colWidths=[8*cm, 6*cm])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.lightblue),
+        ('TEXTCOLOR', (0,0), (-1,-1), colors.black),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('FONTNAME', (0,0), (-1,-1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,-1), 10),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('GRID', (0,0), (-1,-1), 1, colors.black)
+    ]))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 0.5*cm))
 
     # Displaced Population
     elements.append(Paragraph("Displaced Population", styles['Heading2']))
-    displaced = DisplacedPopulation.objects.filter(area__in=report.affected_areas.all()).aggregate(
+    displaced = report.displaced_populations.aggregate(
         cum_families=Sum('cum_families'),
         now_families=Sum('now_families'),
         cum_persons=Sum('cum_persons'),
         now_persons=Sum('now_persons')
     )
-    data = [
+    displaced_data = [
         ["", "Cumulative", "Current"],
         ["Families", str(displaced['cum_families']), str(displaced['now_families'])],
-        ["Persons", str(displaced['cum_persons']), str(displaced['now_persons'])],
+        ["Persons", str(displaced['cum_persons']), str(displaced['now_persons'])]
     ]
-    table = Table(data)
-    table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                               ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke)]))
-    elements.append(table)
-    elements.append(Spacer(1, 0.25 * inch))
-
-    # Sex and Age Distribution
-    elements.append(Paragraph("Sex and Age Distribution", styles['Heading2']))
-    sex_age = SexAgeDistribution.objects.filter(population__area__in=report.affected_areas.all()).values('sex', 'age_group').annotate(
-        cum_total=Sum('cum_count'),
-        now_total=Sum('now_count')
-    )
-    data = [["Sex", "Age Group", "Cumulative", "Current"]]
-    for item in sex_age:
-        data.append([item['sex'], item['age_group'], str(item['cum_total']), str(item['now_total'])])
-    table = Table(data)
-    table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                               ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke)]))
-    elements.append(table)
-    elements.append(Spacer(1, 0.25 * inch))
+    displaced_table = Table(displaced_data, colWidths=[4*cm, 5*cm, 5*cm])
+    displaced_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.grey),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 10),
+        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+        ('TEXTCOLOR', (0,1), (-1,-1), colors.black),
+        ('ALIGN', (0,1), (-1,-1), 'CENTER'),
+        ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+        ('FONTSIZE', (0,1), (-1,-1), 10),
+        ('TOPPADDING', (0,1), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 6),
+        ('GRID', (0,0), (-1,-1), 1, colors.black)
+    ]))
+    elements.append(displaced_table)
+    elements.append(Spacer(1, 0.5*cm))
 
     # Damaged Houses
     elements.append(Paragraph("Damaged Houses", styles['Heading2']))
-    damaged = DamagedHouse.objects.filter(area__in=report.affected_areas.all()).aggregate(
+    damaged = report.damaged_houses.aggregate(
         partially_damaged=Sum('partially_damaged'),
         totally_damaged=Sum('totally_damaged')
     )
-    data = [
+    damaged_data = [
         ["Partially Damaged", str(damaged['partially_damaged'])],
-        ["Totally Damaged", str(damaged['totally_damaged'])],
+        ["Totally Damaged", str(damaged['totally_damaged'])]
     ]
-    table = Table(data)
-    table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                               ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke)]))
-    elements.append(table)
-    elements.append(Spacer(1, 0.25 * inch))
+    damaged_table = Table(damaged_data, colWidths=[8*cm, 6*cm])
+    damaged_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.lightgreen),
+        ('TEXTCOLOR', (0,0), (-1,-1), colors.black),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
+        ('FONTSIZE', (0,0), (-1,-1), 10),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('GRID', (0,0), (-1,-1), 1, colors.black)
+    ]))
+    elements.append(damaged_table)
+    elements.append(Spacer(1, 0.5*cm))
 
     # Relief Operations
     elements.append(Paragraph("Relief Operations", styles['Heading2']))
-    relief = ReliefOperation.objects.filter(area__in=report.affected_areas.all()).aggregate(
-        total_financial_assistance=Sum('financial_assistance'),
-        total_food_items=Sum('food_items'),
-        total_non_food_items=Sum('non_food_items')
-    )
-    data = [
-        ["Financial Assistance", f"${relief['total_financial_assistance']:.2f}"],
-        ["Food Items", str(relief['total_food_items'])],
-        ["Non-Food Items", str(relief['total_non_food_items'])],
-    ]
-    table = Table(data)
-    table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                               ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke)]))
-    elements.append(table)
+    relief_data = [["Date", "Food Items", "Non-Food Items", "Financial Assistance"]]
+    for relief in report.relief_operations.all():
+        relief_data.append([
+            relief.date.strftime('%Y-%m-%d'),
+            str(relief.food_items),
+            str(relief.non_food_items),
+            f"${relief.financial_assistance:.2f}"
+        ])
+    relief_table = Table(relief_data, colWidths=[4*cm, 4*cm, 4*cm, 4*cm])
+    relief_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.grey),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 10),
+        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+        ('TEXTCOLOR', (0,1), (-1,-1), colors.black),
+        ('ALIGN', (0,1), (-1,-1), 'CENTER'),
+        ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+        ('FONTSIZE', (0,1), (-1,-1), 10),
+        ('TOPPADDING', (0,1), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 6),
+        ('GRID', (0,0), (-1,-1), 1, colors.black)
+    ]))
+    elements.append(relief_table)
 
+    # Build the PDF
     doc.build(elements)
     buffer.seek(0)
     return buffer

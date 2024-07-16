@@ -1,13 +1,13 @@
-{
-    "python.terminal.activateEnvironment": true,
-    "python.defaultInterpreterPath": "C:\\Users\\MDRRMO--VERSION\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe"
-}
+// {
+//     "python.terminal.activateEnvironment": true,
+//     "python.defaultInterpreterPath": "C:\\Users\\MDRRMO--VERSION\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe"
+// }
 
 
 // to open the path of env running python without typing necessary .venv\scripts\activate overtime in vscode
 // type where python in cmd run administrator and copy it 
 
-// {
-//     "python.terminal.activateEnvironment": true,
-//     "python.defaultInterpreterPath": "C:\\Users\\gerla\\djangoproj\\python.exe"
-// }
+{
+    "python.terminal.activateEnvironment": true,
+    "python.defaultInterpreterPath": "C:\\Users\\gerla\\djangoproj\\python.exe"
+}
