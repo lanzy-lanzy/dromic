@@ -9,16 +9,22 @@ class Province(models.Model):
 class Municipality(models.Model):
     province = models.ForeignKey(Province, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
 
     def __str__(self):
         return self.name
+
 
 class Barangay(models.Model):
     municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
 
     def __str__(self):
         return self.name
+
 
 class Disaster(models.Model):
     name = models.CharField(max_length=255)

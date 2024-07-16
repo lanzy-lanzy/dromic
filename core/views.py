@@ -5,6 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.db.models import Sum
+from django.utils import timezone
+from datetime import timedelta
 from .models import (
     Disaster, AffectedArea, EvacuationCenter, DROMICReport,
     DamagedHouse, DisplacedPopulation, SexAgeDistribution,
@@ -13,15 +15,19 @@ from .models import (
 from .export import generate_report_pdf
 
 
+def index(request):
+    active_disasters_count = Disaster.objects.filter(date_occurred__gte=timezone.now() - timedelta(days=30)).count()
+    total_affected_persons = AffectedArea.objects.aggregate(Sum('affected_persons'))['affected_persons__sum']
+    evacuation_centers_count = EvacuationCenter.objects.count()
+    recent_updates = DROMICReport.objects.order_by('-date')[:3]
+    affected_areas = AffectedArea.objects.all()  # You might want to filter this for Mindanao only
 
-def dashboard(request):
     context = {
-        'total_disasters': Disaster.objects.count(),
-        'affected_areas': AffectedArea.objects.count(),
-        'evacuation_centers': EvacuationCenter.objects.count(),
-        'affected_families': sum(area.affected_families for area in AffectedArea.objects.all()),
-        'affected_persons': sum(area.affected_persons for area in AffectedArea.objects.all()),
-        'displaced_population': DisplacedPopulation.objects.aggregate(Sum('now_persons'))['now_persons__sum'],
+        'active_disasters_count': active_disasters_count,
+        'total_affected_persons': total_affected_persons,
+        'evacuation_centers_count': evacuation_centers_count,
+        'recent_updates': recent_updates,
+        'affected_areas': affected_areas,
     }
     return render(request, 'core/index.html', context)
 
