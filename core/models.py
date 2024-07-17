@@ -9,8 +9,8 @@ class Province(models.Model):
 class Municipality(models.Model):
     province = models.ForeignKey(Province, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
+    latitude = models.FloatField(null=True, blank=True)  # Allow null values
+    longitude = models.FloatField(null=True, blank=True) 
 
     def __str__(self):
         return self.name
@@ -19,8 +19,8 @@ class Municipality(models.Model):
 class Barangay(models.Model):
     municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
+    latitude = models.FloatField(null=True, blank=True)  # Allow null values
+    longitude = models.FloatField(null=True, blank=True) 
 
     def __str__(self):
         return self.name

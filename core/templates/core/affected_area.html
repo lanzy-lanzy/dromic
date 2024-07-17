@@ -24,6 +24,33 @@
         font-size: 3rem;
         color: #3498db;
     }
+    .modal-content {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        background-color: #3498db;
+        
+    }
+
+    .form-label {
+        font-weight: 600;
+    }
+
+    .input-group-text {
+        background-color: #f8f9fa;
+    }
+
+    .btn-primary {
+        background-color: #3498db;
+        border-color: #3498db;
+    }
+
+    .btn-primary:hover {
+        background-color: #2980b9;
+        border-color: #2980b9;
+    }
 </style>
 {% endblock %}
 
@@ -108,74 +135,342 @@
 
 <!-- Add Affected Area Modal -->
 <div class="modal fade" id="addAffectedAreaModal" tabindex="-1" aria-labelledby="addAffectedAreaModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addAffectedAreaModalLabel">Add Affected Area</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addAffectedAreaForm">
-                        {% csrf_token %}
-                        <div class="form-group mb-3">
-                            <label for="disaster">Disaster</label>
-                            <select class="form-control" id="disaster" name="disaster" required>
-                                <option value="">Select Disaster</option>
-                                {% for disaster in disasters %}
-                                <option value="{{ disaster.id }}">{{ disaster.name }}</option>
-                                {% endfor %}
-                                <option value="new">New Disaster</option>
-                            </select>
-                            <input type="text" class="form-control mt-2" id="new_disaster" name="new_disaster" style="display: none;" placeholder="Enter new disaster name">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="province">Province</label>
-                            <select class="form-control" id="province" name="province" required>
-                                <option value="">Select Province</option>
-                                {% for province in provinces %}
-                                <option value="{{ province.id }}">{{ province.name }}</option>
-                                {% endfor %}
-                                <option value="new">New Province</option>
-                            </select>
-                            <input type="text" class="form-control mt-2" id="new_province" name="new_province" style="display: none;" placeholder="Enter new province name">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="municipality">Municipality</label>
-                            <select class="form-control" id="municipality" name="municipality" required>
-                                <option value="">Select Municipality</option>
-                                <option value="new">New Municipality</option>
-                            </select>
-                            <input type="text" class="form-control mt-2" id="new_municipality" name="new_municipality" style="display: none;" placeholder="Enter new municipality name">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="barangay">Barangay</label>
-                            <select class="form-control" id="barangay" name="barangay" required>
-                                <option value="">Select Barangay</option>
-                                <option value="new">New Barangay</option>
-                            </select>
-                            <input type="text" class="form-control mt-2" id="new_barangay" name="new_barangay" style="display: none;" placeholder="Enter new barangay name">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="affected_families">Affected Families</label>
-                            <input type="number" class="form-control" id="affected_families" name="affected_families" required>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="affected_persons">Affected Persons</label>
-                            <input type="number" class="form-control" id="affected_persons" name="affected_persons" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveAffectedArea">Save</button>
-                </div>
-            </div>
-        </div>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-white" id="addAffectedAreaModalLabel">
+                    <i class="fas fa-plus-circle me-2 text-success"></i>Add Affected Area
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAffectedAreaForm" class="row g-3">
+                    {% csrf_token %}
+                    <div class="col-md-6">
+                        <label for="disaster" class="form-label">Disaster</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-exclamation-triangle text-danger"></i></span>
+                            <select class="form-select" id="disaster" name="disaster" required>
+                                <option value="">Select Disaster</option>
+                                {% for disaster in disasters %}
+                                <option value="{{ disaster.id }}">{{ disaster.name }}</option>
+                                {% endfor %}
+                                <option value="new">New Disaster</option>
+                            </select>
+                        </div>
+                        <input type="text" class="form-control mt-2" id="new_disaster" name="new_disaster" style="display: none;" placeholder="Enter new disaster name">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="province" class="form-label">Province</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-map-marker-alt text-primary"></i></span>
+                            <select class="form-select" id="province" name="province" required>
+                                <option value="">Select Province</option>
+                                {% for province in provinces %}
+                                <option value="{{ province.id }}">{{ province.name }}</option>
+                                {% endfor %}
+                                <option value="new">New Province</option>
+                            </select>
+                        </div>
+                        <input type="text" class="form-control mt-2" id="new_province" name="new_province" style="display: none;" placeholder="Enter new province name">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="municipality" class="form-label">Municipality</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-city text-info"></i></span>
+                            <select class="form-select" id="municipality" name="municipality" required>
+                                <option value="">Select Municipality</option>
+                                <option value="new">New Municipality</option>
+                            </select>
+                        </div>
+                        <input type="text" class="form-control mt-2" id="new_municipality" name="new_municipality" style="display: none;" placeholder="Enter new municipality name">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="barangay" class="form-label">Barangay</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-home text-success"></i></span>
+                            <select class="form-select" id="barangay" name="barangay" required>
+                                <option value="">Select Barangay</option>
+                                <option value="new">New Barangay</option>
+                            </select>
+                        </div>
+                        <input type="text" class="form-control mt-2" id="new_barangay" name="new_barangay" style="display: none;" placeholder="Enter new barangay name">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="affected_families" class="form-label">Affected Families</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-users text-warning"></i></span>
+                            <input type="number" class="form-control" id="affected_families" name="affected_families" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="affected_persons" class="form-label">Affected Persons</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user text-secondary"></i></span>
+                            <input type="number" class="form-control" id="affected_persons" name="affected_persons" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2 text-danger"></i>Close
+                </button>
+                <button type="button" class="btn btn-primary" id="saveAffectedArea">
+                    <i class="fas fa-save me-2 text-light"></i>Save
+                </button>
+            </div>
+        </div>
     </div>
-{% endblock %}
+</div>
+
+
+
+<!-- Add New Disaster Modal -->
+<div class="modal fade" id="addNewDisasterModal" tabindex="-1" aria-labelledby="addNewDisasterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addNewDisasterModalLabel">Add New Disaster</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addNewDisasterForm">
+                    <div class="mb-3">
+                        <label for="newDisasterName" class="form-label">Disaster Name</label>
+                        <input type="text" class="form-control" id="newDisasterName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newDisasterDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="newDisasterDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newDisasterDate" class="form-label">Date Occurred</label>
+                        <input type="date" class="form-control" id="newDisasterDate" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveNewDisaster">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add New Province Modal -->
+<div class="modal fade" id="addNewProvinceModal" tabindex="-1" aria-labelledby="addNewProvinceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addNewProvinceModalLabel">Add New Province</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addNewProvinceForm">
+                    <div class="mb-3">
+                        <label for="newProvinceName" class="form-label">Province Name</label>
+                        <input type="text" class="form-control" id="newProvinceName" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveNewProvince">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add New Municipality Modal -->
+<div class="modal fade" id="addNewMunicipalityModal" tabindex="-1" aria-labelledby="addNewMunicipalityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addNewMunicipalityModalLabel">Add New Municipality</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addNewMunicipalityForm">
+                    <div class="mb-3">
+                        <label for="newMunicipalityName" class="form-label">Municipality Name</label>
+                        <input type="text" class="form-control" id="newMunicipalityName" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveNewMunicipality">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add New Barangay Modal -->
+<div class="modal fade" id="addNewBarangayModal" tabindex="-1" aria-labelledby="addNewBarangayModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addNewBarangayModalLabel">Add New Barangay</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addNewBarangayForm">
+                    <div class="mb-3">
+                        <label for="newBarangayName" class="form-label">Barangay Name</label>
+                        <input type="text" class="form-control" id="newBarangayName" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveNewBarangay">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% block extra_js %}
 <script>
-// JavaScript code remains the same
+    $(document).ready(function() {
+    // Show modal when "New" is selected
+    $('#disaster, #province, #municipality, #barangay').change(function() {
+        if ($(this).val() === 'new') {
+            $('#addNew' + this.id.charAt(0).toUpperCase() + this.id.slice(1) + 'Modal').modal('show');
+        }
+    });
+
+    // Function to handle saving new items
+    function saveNewItem(url, formData, selectId, modalId) {
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#' + selectId).append($('<option>', {
+                        value: response.id,
+                        text: response.name
+                    }));
+                    $('#' + selectId).val(response.id).trigger('change');
+                    $('#' + modalId).modal('hide');
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            }
+        });
+    }
+
+    // Save new disaster
+    $('#saveNewDisaster').click(function() {
+        saveNewItem('/create_disaster/', {
+            name: $('#newDisasterName').val(),
+            description: $('#newDisasterDescription').val(),
+            date_occurred: $('#newDisasterDate').val()
+        }, 'disaster', 'addNewDisasterModal');
+    });
+
+    // Save new province
+    $('#saveNewProvince').click(function() {
+        saveNewItem('/create_province/', {
+            name: $('#newProvinceName').val()
+        }, 'province', 'addNewProvinceModal');
+    });
+
+    // Save new municipality
+    $('#saveNewMunicipality').click(function() {
+        var provinceId = $('#province').val();
+        if (provinceId && provinceId !== 'new') {
+            saveNewItem('/create_municipality/', {
+                name: $('#newMunicipalityName').val(),
+                province: provinceId
+            }, 'municipality', 'addNewMunicipalityModal');
+        } else {
+            alert('Please select a valid province before creating a new municipality.');
+        }
+    });
+
+    // Save new barangay
+    $('#saveNewBarangay').click(function() {
+        saveNewItem('/create_barangay/', {
+            name: $('#newBarangayName').val(),
+            municipality: $('#municipality').val()
+        }, 'barangay', 'addNewBarangayModal');
+    });
+
+    // Update municipality and barangay dropdowns
+    $('#province').change(function() {
+        if ($(this).val() === 'new') {
+            $('#addNewProvinceModal').modal('show');
+        } else {
+            updateDropdown('municipality', '/get_municipalities/', {province_id: $(this).val()});
+            $('#barangay').empty().append('<option value="">Select Barangay</option>').prop('disabled', true);
+        }
+    });
+
+    $('#municipality').change(function() {
+    if ($(this).val() === 'new') {
+        $('#addNewMunicipalityModal').modal('show');
+    } else if ($(this).val()) {
+        $.get('/get_barangays/', {municipality_id: $(this).val()}, function(response) {
+            var $barangay = $('#barangay');
+            $barangay.empty().append('<option value="">Select Barangay</option>');
+            $.each(response.barangays, function(i, item) {
+                $barangay.append($('<option>', {value: item.id, text: item.name}));
+            });
+            $barangay.append('<option value="new">New Barangay</option>');
+            $barangay.prop('disabled', false);
+        });
+    } else {
+        $('#barangay').empty().append('<option value="">Select Barangay</option>').prop('disabled', true);
+    }
+});
+
+
+    function updateDropdown(targetId, url, data) {
+        $.get(url, data, function(response) {
+            var $target = $('#' + targetId);
+            $target.empty().append('<option value="">Select ' + targetId.charAt(0).toUpperCase() + targetId.slice(1) + '</option>');
+            $.each(response[targetId + 's'], function(i, item) {
+                $target.append($('<option>', {value: item.id, text: item.name}));
+            });
+            $target.append('<option value="new">New ' + targetId.charAt(0).toUpperCase() + targetId.slice(1) + '</option>');
+            $target.prop('disabled', false);
+        });
+    }
+
+    $('#saveNewDisaster, #saveNewProvince, #saveNewMunicipality, #saveNewBarangay').click(function() {
+        var modalId = $(this).closest('.modal').attr('id');
+        var formData = new FormData($(this).closest('.modal').find('form')[0]);
+        var url = '/' + modalId.replace('addNew', 'create_').toLowerCase() + '/';
+        
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.status === 'success') {
+                    var selectId = modalId.replace('addNew', '').replace('Modal', '').toLowerCase();
+                    $('#' + selectId).append($('<option>', {
+                        value: response.id,
+                        text: response.name
+                    }));
+                    $('#' + selectId).val(response.id).trigger('change');
+                    $('#' + modalId).modal('hide');
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('An error occurred: ' + error);
+            }
+        });
+    });
+});
+
 </script>
+{% endblock %}
+
 {% endblock %}

@@ -26,4 +26,12 @@ urlpatterns = [
     path('disaster-info/', views.disaster_info, name='disaster_info'),
     path('api/disasters/', views.get_disasters, name='get_disasters'),
     path('api/disasters/create/', views.create_disaster, name='create_disaster'),
+
+    path('create_disaster/', views.create_disaster, name='create_disaster'),
+    path('create_province/', views.create_province, name='create_province'),
+    path('create_municipality/', views.create_municipality, name='create_municipality'),
+    path('create_barangay/', views.create_barangay, name='create_barangay'),
+    # Other URL patterns
+    
+
 ]

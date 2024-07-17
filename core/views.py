@@ -128,6 +128,58 @@ def affected_area_list(request):
     return render(request, 'core/affected_area.html', context)
 
 @csrf_exempt
+def create_disaster(request):
+    if request.method == 'POST':
+        try:
+            data = request.POST
+            disaster = Disaster.objects.create(
+                name=data['name'],
+                description=data['description'],
+                date_occurred=data['date_occurred']
+            )
+            return JsonResponse({'status': 'success', 'id': disaster.id, 'name': disaster.name})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+@csrf_exempt
+def create_province(request):
+    if request.method == 'POST':
+        try:
+            data = request.POST
+            province = Province.objects.create(name=data['name'])
+            return JsonResponse({'status': 'success', 'id': province.id, 'name': province.name})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+@csrf_exempt
+def create_municipality(request):
+    if request.method == 'POST':
+        try:
+            data = request.POST
+            province = Province.objects.get(id=data['province'])
+            municipality = Municipality.objects.create(name=data['name'], province=province)
+            return JsonResponse({'status': 'success', 'id': municipality.id, 'name': municipality.name})
+        except Province.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Invalid province selected'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+@csrf_exempt
+def create_barangay(request):
+    if request.method == 'POST':
+        try:
+            data = request.POST
+            municipality = Municipality.objects.get(id=data['municipality'])
+            barangay = Barangay.objects.create(name=data['name'], municipality=municipality)
+            return JsonResponse({'status': 'success', 'id': barangay.id, 'name': barangay.name})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+# Update the existing add_affected_area view
+@csrf_exempt
 def add_affected_area(request):
     if request.method == 'POST':
         try:
@@ -151,11 +203,12 @@ def add_affected_area(request):
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
+# Keep other existing views
+
 def get_municipalities(request):
     province_id = request.GET.get('province_id')
     municipalities = Municipality.objects.filter(province_id=province_id).values('id', 'name')
     return JsonResponse({'municipalities': list(municipalities)})
-
 
 def get_barangays(request):
     municipality_id = request.GET.get('municipality_id')
