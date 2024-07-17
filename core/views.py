@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
-from django.contrib.auth import logout
+from django.contrib.auth import logout, login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.db.models import Sum, Count
 from django.utils import timezone
 from datetime import timedelta
+from django.contrib.auth.forms import UserCreationForm
 from .models import (
     Disaster, AffectedArea, EvacuationCenter, DROMICReport,
     DamagedHouse, DisplacedPopulation, SexAgeDistribution,
@@ -14,6 +15,34 @@ from .models import (
 )
 from .export import generate_report_pdf
 
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('dashboard')  # Replace 'home' with your main page URL name
+        else:
+            # Add an error message
+            pass
+    return render(request, 'core/login.html')
+
+def register_view(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')
+    else:
+        form = UserCreationForm()
+    return render(request, 'core/register.html', {'form': form})
+
+def logout_view(request):
+    logout(request)
+    return redirect('index')
+
+@login_required
 def dashboard(request):
     total_disasters = Disaster.objects.count()
     affected_areas = AffectedArea.objects.count()
@@ -76,7 +105,7 @@ def save_report(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
-
+@login_required
 def overview(request):
     reports = DROMICReport.objects.all().order_by('-date')
     context = {

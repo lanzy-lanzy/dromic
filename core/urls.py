@@ -10,7 +10,10 @@ urlpatterns = [
     
     path('evacuation-centers/', views.evacuation_centers, name='evacuation_centers'),
 
-  
+    path('login/', views.login_view, name='login'),
+    path('register/', views.register_view, name='register'),
+    path('logout/', views.logout_view, name='logout'),
+
     path('save_report/', views.save_report, name='save_report'),
     
     path('reports/', views.report_list, name='report_list'),

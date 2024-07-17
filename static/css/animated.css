@@ -44,24 +44,6 @@ h2, h3, h4, h5, h6 {
     transform: translateY(-2px);
     color: white;
 }
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: -1;
-    background: linear-gradient(45deg, #f3f3f3, #e6e6e6);
-}
-@keyframes float {
-    0% { transform: translateY(0px) rotate(0deg); }
-    25% { transform: translateY(-15px) rotate(5deg); }
-    50% { transform: translateY(0px) rotate(0deg); }
-    75% { transform: translateY(15px) rotate(-5deg); }
-    100% { transform: translateY(0px) rotate(0deg); }
-}
-
 .floating-icon {
     position: absolute;
     opacity: 0.15;
