@@ -7,12 +7,10 @@
     <title>{% block title %}DROMIC Management System{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <style>
         body { background-color: #FBF6E2; }
@@ -26,26 +24,11 @@
             background: #ECCEAE;
             box-shadow: inset 20px 20px 60px #bec3c9, inset -20px -20px 60px #ffffff;
         }
-        body {
-            font-family: 'Roboto', sans-serif;
-            font-weight: 400;
-            line-height: 1.6;
-        }
-        
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Poppins', sans-serif;
             font-weight: 700;
             color: #333;
         }
-        
-        .sidebar-heading {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 500;
-            color: #2c3e50;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
         .nav-link {
             font-family: 'Roboto', sans-serif;
             font-weight: 500;
@@ -71,8 +54,7 @@
             <!-- Sidebar -->
             <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
                 <div class="position-sticky sidebar-sticky">
-                    <h3 class="sidebar-heading"><i class="fas fa-shield-alt text-primary"></i> DRR Management</h3>
-                    <ul class="nav flex-column">
+                    <h3 class="sidebar-heading"><img src="{% static 'img/dromic_logo.png' %}" alt="DROMIC Logo" width="24" height="24"> DROMIC MIS</h3>                                        <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'dashboard' %}"><i class="fas fa-tachometer-alt text-success"></i> Dashboard</a>
                         </li>
@@ -97,7 +79,7 @@
             {% endblock %}
             <!-- Main content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-
+                        
                 {% block header %}
                 <header class="navbar navbar-light sticky-top flex-md-nowrap p-0 shadow-sm">
                     <button class="navbar-toggler d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation">

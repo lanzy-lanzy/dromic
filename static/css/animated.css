@@ -1,0 +1,81 @@
+body {
+    font-family: 'Ubuntu', sans-serif;
+    font-weight: 500;
+    background-color: #f4f4f4;
+}
+
+h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    color: #ffffff;
+}
+.dashboard-card {
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+    background-color: white;
+    margin-bottom: 20px;
+}
+.dashboard-card:hover {
+    transform: translateY(-5px);
+}
+.dashboard-card-header {
+    background-color: #3498db;
+    color: white;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    padding: 15px;
+}
+.dashboard-icon {
+    font-size: 3rem;
+    color: #3498db;
+}
+.btn-explore {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-weight: bold;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+}
+.btn-explore:hover {
+    background-color: #E68369;
+    transform: translateY(-2px);
+    color: white;
+}
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    background: linear-gradient(45deg, #f3f3f3, #e6e6e6);
+}
+@keyframes float {
+    0% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-15px) rotate(5deg); }
+    50% { transform: translateY(0px) rotate(0deg); }
+    75% { transform: translateY(15px) rotate(-5deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.floating-icon {
+    position: absolute;
+    opacity: 0.15;
+    animation: float 8s ease-in-out infinite;
+}
+
+.floating-icon:nth-child(2n) {
+    animation-duration: 10s;
+}
+
+.floating-icon:nth-child(3n) {
+    animation-duration: 12s;
+}
+
+.floating-icon:nth-child(4n) {
+    animation-duration: 14s;
+}
