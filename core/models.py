@@ -1,29 +1,30 @@
+# models.py
 from django.db import models
 
 class Province(models.Model):
-    name = models.CharField(max_length=100)
-
+    code = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=255)
+    
     def __str__(self):
         return self.name
 
 class Municipality(models.Model):
-    province = models.ForeignKey(Province, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    latitude = models.FloatField(null=True, blank=True)  # Allow null values
-    longitude = models.FloatField(null=True, blank=True) 
-
+    code = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=255)
+    province = models.ForeignKey(Province, related_name='municipalities', on_delete=models.CASCADE)
+    
     def __str__(self):
         return self.name
-
 
 class Barangay(models.Model):
-    municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    latitude = models.FloatField(null=True, blank=True)  # Allow null values
-    longitude = models.FloatField(null=True, blank=True) 
-
+    code = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=255)
+    municipality = models.ForeignKey(Municipality, related_name='barangays', on_delete=models.CASCADE)
+    
     def __str__(self):
         return self.name
+
+
 
 
 class Disaster(models.Model):
@@ -46,7 +47,9 @@ class AffectedArea(models.Model):
 
 class EvacuationCenter(models.Model):
     name = models.CharField(max_length=100)
-    location = models.CharField(max_length=255)
+    province = models.ForeignKey(Province, on_delete=models.CASCADE)
+    municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE)
+    barangay = models.ForeignKey(Barangay, on_delete=models.CASCADE)
     capacity = models.IntegerField()
     current_occupancy = models.IntegerField(default=0)
 
@@ -56,6 +59,7 @@ class EvacuationCenter(models.Model):
     @property
     def is_full(self):
         return self.current_occupancy >= self.capacity
+
 
 
 class Family(models.Model):

@@ -69,8 +69,11 @@
     </div>
 
     <div class="card dashboard-card mt-4">
-        <div class="card-header dashboard-card-header">
-            <h5 class="card-title mb-0">Evacuation Center List</h5>
+        <div class="card-header dashboard-card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 font-weight-bold"><i class="fas fa-building mr-2"></i> Evacuation Center List</h5>
+            <button class="btn btn-light btn-sm rounded-pill shadow-sm" data-toggle="modal" data-target="#addEvacuationCenterModal">
+                <i class="fas fa-plus mr-1"></i> Add Evacuation Center
+            </button>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -85,7 +88,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for center in centers %}
+                        {% for center in evacuation_centers %}
                         <tr>
                             <td>{{ center.name }}</td>
                             <td>{{ center.location }}</td>
@@ -100,11 +103,132 @@
         </div>
     </div>
 </div>
+
+<!-- Add Evacuation Center Modal -->
+<div class="modal fade" id="addEvacuationCenterModal" tabindex="-1" role="dialog" aria-labelledby="addEvacuationCenterModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="addEvacuationCenterModalLabel">Add Evacuation Center</h5>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="addEvacuationCenterForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+    <label for="province">Province</label>
+    <select class="form-control" id="province" name="province" required>
+        <option value="">Select Province</option>
+        {% for province in provinces %}
+        <option value="{{ province.id }}">{{ province.name }}</option>
+        {% endfor %}
+    </select>
+</div>          
+<div class="form-group">
+    <label for="municipality">Municipality</label>
+    <select class="form-control" id="municipality" name="municipality" required>
+        <option value="">Select Municipality</option>
+    </select>
+</div>
+<div class="form-group">
+    <label for="barangay">Barangay</label>
+    <select class="form-control" id="barangay" name="barangay" required>
+        <option value="">Select Barangay</option>
+    </select>
+</div>
+
+            <div class="form-group">
+                <label for="capacity">Capacity</label>
+                <input type="number" class="form-control" id="capacity" name="capacity" required>
+            </div>
+            <div class="form-group">
+                <label for="current_occupancy">Current Occupancy</label>
+                <input type="number" class="form-control" id="current_occupancy" name="current_occupancy" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="submitEvacuationCenter">Add Center</button>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-    // Add a chart here if needed
+
+$(document).ready(function() {
+    $('#province').change(function() {
+        var provinceId = $(this).val();
+        if (provinceId) {
+            $.getJSON('{% url "get_municipalities" %}', {province_id: provinceId}, function(data) {
+                $('#municipality').html('<option value="">Select Municipality</option>');
+                $.each(data.municipalities, function(index, item) {
+                    $('#municipality').append('<option value="' + item.id + '">' + item.name + '</option>');
+                });
+                $('#municipality').prop('disabled', false);
+            });
+        } else {
+            $('#municipality').html('<option value="">Select Municipality</option>');
+            $('#municipality').prop('disabled', true);
+        }
+        $('#barangay').html('<option value="">Select Barangay</option>');
+        $('#barangay').prop('disabled', true);
+    });
+
+    $('#municipality').change(function() {
+        var municipalityId = $(this).val();
+        if (municipalityId) {
+            $.getJSON('{% url "get_barangays" %}', {municipality_id: municipalityId}, function(data) {
+                $('#barangay').html('<option value="">Select Barangay</option>');
+                $.each(data.barangays, function(index, item) {
+                    $('#barangay').append('<option value="' + item.id + '">' + item.name + '</option>');
+                });
+                $('#barangay').prop('disabled', false);
+            });
+        } else {
+            $('#barangay').html('<option value="">Select Barangay</option>');
+            $('#barangay').prop('disabled', true);
+        }
+    });
+});
+
+    $('#submitEvacuationCenter').click(function() {
+        var formData = $('#addEvacuationCenterForm').serialize();
+        $.ajax({
+            url: '{% url "add_evacuation_center" %}',
+            type: 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#addEvacuationCenterModal').modal('hide');
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('An error occurred. Please try again.');
+            }
+        });
+    });
+
+    $('#addEvacuationCenterModal').on('hidden.bs.modal', function () {
+        $('body').removeClass('modal-open');
+        $('.modal-backdrop').remove();
+    });
+});
 </script>
 {% endblock %}

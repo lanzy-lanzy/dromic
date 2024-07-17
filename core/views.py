@@ -81,6 +81,25 @@ def index(request):
     }
     return render(request, 'core/index.html', context)
 
+@require_POST
+def add_evacuation_center(request):
+    try:
+        name = request.POST.get('name')
+        location = request.POST.get('location')
+        capacity = int(request.POST.get('capacity'))
+        current_occupancy = int(request.POST.get('current_occupancy'))
+
+        EvacuationCenter.objects.create(
+            name=name,
+            location=location,
+            capacity=capacity,
+            current_occupancy=current_occupancy
+        )
+
+        return JsonResponse({'status': 'success', 'message': 'Evacuation center added successfully.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
 
 @csrf_exempt
 def save_report(request):
@@ -209,30 +228,47 @@ def create_barangay(request):
 
 # Update the existing add_affected_area view
 @csrf_exempt
+@require_POST
 def add_affected_area(request):
-    if request.method == 'POST':
-        try:
-            data = request.POST
-            disaster = get_or_create_instance(Disaster, data.get('disaster'), data.get('new_disaster'))
-            province = get_or_create_instance(Province, data.get('province'), data.get('new_province'))
-            municipality = get_or_create_instance(Municipality, data.get('municipality'), data.get('new_municipality'), province=province)
-            barangay = get_or_create_instance(Barangay, data.get('barangay'), data.get('new_barangay'), municipality=municipality)
-            
-            AffectedArea.objects.create(
-                disaster=disaster,
-                province=province,
-                municipality=municipality,
-                barangay=barangay,
-                affected_families=data.get('affected_families'),
-                affected_persons=data.get('affected_persons')
-            )
-            return JsonResponse({'status': 'success'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
-    
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+    try:
+        data = request.POST
+        disaster = get_or_create_instance(Disaster, data.get('disaster'), data.get('new_disaster'))
+        province = get_or_create_instance(Province, data.get('province'), data.get('new_province'))
+        municipality = get_or_create_instance(Municipality, data.get('municipality'), data.get('new_municipality'), province=province)
+        barangay = get_or_create_instance(Barangay, data.get('barangay'), data.get('new_barangay'), municipality=municipality)
+        
+        affected_area = AffectedArea.objects.create(
+            disaster=disaster,
+            province=province,
+            municipality=municipality,
+            barangay=barangay,
+            affected_families=data.get('affected_families'),
+            affected_persons=data.get('affected_persons')
+        )
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Affected area added successfully',
+            'area_id': affected_area.id
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
 
-# Keep other existing views
+from django.shortcuts import render
+from django.http import JsonResponse
+from .models import EvacuationCenter, Province, Municipality, Barangay
+
+def evacuation_centers(request):
+    centers = EvacuationCenter.objects.all()
+    provinces = Province.objects.all()
+    context = {
+        'centers': centers,
+        'provinces': provinces,
+        'total_centers': centers.count(),
+        'total_capacity': centers.aggregate(Sum('capacity'))['capacity__sum'],
+        'total_occupied': centers.aggregate(Sum('current_occupancy'))['current_occupancy__sum'],
+    }
+    return render(request, 'core/evacuation_centers.html', context)
+
 
 def get_municipalities(request):
     province_id = request.GET.get('province_id')

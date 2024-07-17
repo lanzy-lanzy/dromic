@@ -8,20 +8,20 @@ from .models import (
 
 @admin.register(Province)
 class ProvinceAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('name',)
+    list_display = ('code', 'name')
+    search_fields = ('code', 'name')
 
 @admin.register(Municipality)
 class MunicipalityAdmin(admin.ModelAdmin):
-    list_display = ('name', 'province')
+    list_display = ('code', 'name', 'province')
     list_filter = ('province',)
-    search_fields = ('name', 'province__name')
+    search_fields = ('code', 'name', 'province__name')
 
 @admin.register(Barangay)
 class BarangayAdmin(admin.ModelAdmin):
-    list_display = ('name', 'municipality')
+    list_display = ('code', 'name', 'municipality')
     list_filter = ('municipality__province', 'municipality')
-    search_fields = ('name', 'municipality__name', 'municipality__province__name')
+    search_fields = ('code', 'name', 'municipality__name', 'municipality__province__name')
 
 @admin.register(Disaster)
 class DisasterAdmin(admin.ModelAdmin):
@@ -34,6 +34,12 @@ class AffectedAreaAdmin(admin.ModelAdmin):
     list_display = ('disaster', 'province', 'municipality', 'barangay', 'affected_families', 'affected_persons')
     list_filter = ('disaster', 'province', 'municipality')
     search_fields = ('disaster__name', 'province__name', 'municipality__name', 'barangay__name')
+
+@admin.register(EvacuationCenter)
+class EvacuationCenterAdmin(admin.ModelAdmin):
+    list_display = ('name', 'province', 'municipality', 'barangay', 'capacity', 'current_occupancy', 'is_full')
+    list_filter = ('province', 'municipality', 'barangay')
+    search_fields = ('name', 'province__name', 'municipality__name', 'barangay__name')
 
 
 @admin.register(Family)
@@ -89,6 +95,5 @@ class DROMICReportAdmin(admin.ModelAdmin):
     list_display = ('disaster', 'province', 'municipality', 'barangay', 'date', 'total_affected_families', 'total_affected_persons')
     list_filter = ('disaster', 'province', 'municipality', 'date')
     search_fields = ('disaster__name', 'province__name', 'municipality__name', 'barangay__name')
-    date_hierarchy = 'date'
+    readonly_fields = ('created_at', 'updated_at')
     filter_horizontal = ('affected_areas', 'displaced_populations', 'sex_age_distributions', 'sectoral_distributions', 'damaged_houses', 'relief_operations', 'early_recovery', 'families')
-
