@@ -1,0 +1,56 @@
+.neumorphic-body {
+    background-color: #e0e5ec;
+    font-family: 'Poppins', sans-serif;
+}
+
+.neumorphic-nav {
+    background: #e0e5ec;
+    box-shadow: 9px 9px 16px rgb(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.5);
+}
+
+.neumorphic-btn {
+    border-radius: 50px;
+    background: #e0e5ec;
+    box-shadow: 6px 6px 12px #b8b9be, -6px -6px 12px #ffffff;
+    transition: all 0.2s ease-in-out;
+}
+
+.neumorphic-btn:hover {
+    box-shadow: inset 6px 6px 12px #b8b9be, inset -6px -6px 12px #ffffff;
+}
+
+.neumorphic-btn-primary {
+    color: #007bff;
+}
+
+.neumorphic-btn-secondary {
+    color: #6c757d;
+}
+
+.neumorphic-card {
+    border-radius: 20px;
+    background: #e0e5ec;
+    box-shadow: 8px 8px 16px #b8b9be, -8px -8px 16px #ffffff;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.neumorphic-card-header {
+    border-bottom: 1px solid #d1d9e6;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.neumorphic-icon {
+    font-size: 3rem;
+    padding: 20px;
+    border-radius: 50%;
+    background: #e0e5ec;
+    box-shadow: 6px 6px 12px #b8b9be, -6px -6px 12px #ffffff;
+}
+
+.neumorphic-map {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: inset 8px 8px 16px #b8b9be, inset -8px -8px 16px #ffffff;
+}
