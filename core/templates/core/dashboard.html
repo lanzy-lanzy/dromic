@@ -104,60 +104,62 @@
 {% block extra_js %}
 <script>
     // Disaster Types Distribution Chart
-var disasterTypes = {{ disaster_types|safe }};
-var disasterTypesCtx = document.getElementById('disasterTypesChart').getContext('2d');
-var disasterTypesChart = new Chart(disasterTypesCtx, {
-    type: 'doughnut',
-    data: {
-        labels: disasterTypes.map(item => item.name),
-        datasets: [{
-            data: disasterTypes.map(item => item.count),
-            backgroundColor: [
-                '#3498db',
-                '#2ecc71',
-                '#e74c3c',
-                '#f39c12',
-                '#9b59b6'
-            ]
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'bottom',
-            },
-            title: {
-                display: true,
-                text: 'Disaster Types'
-            }
-        }
-    }
-});
-
-
-    // Affected Population Over Time Chart
-    var affectedPopulation = {{ affected_population|safe }};
-    var affectedPopulationCtx = document.getElementById('affectedPopulationChart').getContext('2d');
-    var affectedPopulationChart = new Chart(affectedPopulationCtx, {
-        type: 'line',
+    var disasterTypes = {{ disaster_types|safe }};
+    var disasterTypesCtx = document.getElementById('disasterTypesChart').getContext('2d');
+    var disasterTypesChart = new Chart(disasterTypesCtx, {
+        type: 'doughnut',
         data: {
-            labels: affectedPopulation.map(item => item.disaster__date_occurred),
+            labels: disasterTypes.map(item => item.name),
             datasets: [{
-                label: 'Affected Population',
-                data: affectedPopulation.map(item => item.total),
-                borderColor: '#3498db',
-                tension: 0.1
+                data: disasterTypes.map(item => item.count),
+                backgroundColor: [
+                    '#3498db',
+                    '#2ecc71',
+                    '#e74c3c',
+                    '#f39c12',
+                    '#9b59b6'
+                ]
             }]
         },
         options: {
             responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                title: {
+                    display: true,
+                    text: 'Disaster Types'
                 }
             }
         }
     });
+
+   // Affected Population Over Time Chart
+   var affectedData = JSON.parse('{{ affected_data|safe }}');
+    var affectedDataCtx = document.getElementById('affectedPopulationChart').getContext('2d');
+    var affectedDataChart = new Chart(affectedDataCtx, {
+       type: 'line',
+       data: {
+           labels: affectedData.map(item => item.date),
+           datasets: [{
+               label: 'Affected Families',
+               data: affectedData.map(item => item.families),
+               borderColor: '#3498db',
+               tension: 0.1
+           }, {
+               label: 'Affected Persons',
+               data: affectedData.map(item => item.persons),
+               borderColor: '#e74c3c',
+               tension: 0.1
+           }]
+       },
+       options: {
+           responsive: true,
+           scales: {
+               y: { beginAtZero: true }
+           }
+       }
+   });
 </script>
 {% endblock %}

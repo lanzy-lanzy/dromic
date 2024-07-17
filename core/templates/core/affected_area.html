@@ -51,6 +51,120 @@
         background-color: #2980b9;
         border-color: #2980b9;
     }
+    .disaster-container {
+    background-color: #f0f4f8;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.disaster-card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.disaster-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.disaster-header {
+    background-color: #F8EDE3;
+    color: #ffffff;
+    padding: 15px 20px;
+    font-size: 1.4em;
+}
+
+.disaster-body {
+    padding: 20px;
+}
+
+.province-card {
+    background-color: #f8fafc;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.province-header {
+    background-color: #EECEB9;
+    color: #ffffff;
+    padding: 12px 18px;
+    font-size: 1.2em;
+}
+
+.province-body {
+    padding: 15px;
+}
+
+.municipality-card {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.municipality-header {
+    background-color: #8D493A;
+    color: #ffffff;
+    padding: 10px 15px;
+    font-size: 1.1em;
+}
+
+.municipality-body {
+    padding: 12px;
+}
+
+.barangay-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.barangay-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    background-color: #f0f4f8;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.barangay-item:hover {
+    background-color: #e6eaf0;
+}
+
+.barangay-name {
+    font-weight: bold;
+    color: #34495e;
+}
+
+.affected-count {
+    font-size: 0.9em;
+    color: #7f8c8d;
+}
+
+.affected-count i {
+    margin-right: 5px;
+    margin-left: 10px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.disaster-card, .province-card, .municipality-card {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
 </style>
 {% endblock %}
 
@@ -98,36 +212,36 @@
         </div>
     </div>
     <div class="container-fluid mt-4">
-        <h2 class="mb-4">Affected Areas by Disaster</h2>
+    <h2 class="mb-4 text-center">Affected Areas by Disaster</h2>
+    <div class="disaster-container">
         {% regroup affected_areas|dictsort:"disaster.name" by disaster as disaster_list %}
         {% for disaster in disaster_list %}
-            <div class="card mb-4">
-                <div class="card-header bg-danger text-white">
-                    <h3 class="card-title">{{ disaster.grouper }}</h3>
+            <div class="disaster-card">
+                <div class="disaster-header">
+                    <h3>{{ disaster.grouper }}</h3>
                 </div>
-                <div class="card-body">
+                <div class="disaster-body ">
                     {% regroup disaster.list|dictsort:"province.name" by province as province_list %}
                     {% for province in province_list %}
-                        <div class="card mb-3">
-                            <div class="card-header bg-warning">
-                                <h4 class="card-title">{{ province.grouper }}</h4>
+                        <div class="province-card">
+                            <div class="province-header">
+                                <h4>{{ province.grouper }}</h4>
                             </div>
-                            <div class="card-body">
+                            <div class="province-body">
                                 {% regroup province.list|dictsort:"municipality.name" by municipality as municipality_list %}
                                 {% for municipality in municipality_list %}
-                                    <div class="card mb-2">
-                                        <div class="card-header bg-info">
-                                            <h5 class="card-title">{{ municipality.grouper }}</h5>
+                                    <div class="municipality-card">
+                                        <div class="municipality-header">
+                                            <h5>{{ municipality.grouper }}</h5>
                                         </div>
-                                        <div class="card-body">
-                                            <ul class="list-group">
+                                        <div class="municipality-body">
+                                            <ul class="barangay-list">
                                                 {% for area in municipality.list|dictsort:"barangay.name" %}
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                        {{ area.barangay.name }}
-                                                        <span>
-                                                            Families: {{ area.affected_families }} |
-                                                            Persons: {{ area.affected_persons }}
-                                                        </span>
+                                                    <li class="barangay-item">
+                                                        <span class="barangay-name">{{ area.barangay.name }}</span>
+                                                        <span class="affected-count">
+                                                            <i class="fas fa-home text-primary"></i> Families : {{ area.affected_families }}
+                                                            <i class="fas fa-users text-success"></i> Persons : {{ area.affected_persons }}                                                        </span>
                                                     </li>
                                                 {% endfor %}
                                             </ul>
@@ -141,10 +255,8 @@
             </div>
         {% endfor %}
     </div>
-    
-   
-    
 </div>
+
 <!-- Add Affected Area Modal -->
 <div class="modal fade" id="addAffectedAreaModal" tabindex="-1" aria-labelledby="addAffectedAreaModalLabel" aria-hidden="true">
     <div class="modal-dialog">

@@ -90,11 +90,10 @@
                     <tbody>
                         {% for center in evacuation_centers %}
                         <tr>
-                            <td>{{ center.name }}</td>
-                            <td>{{ center.province.name }}.{{ center.municipality.name }}.{{ center.barangay.name }}</td>
-                            <td>{{ center.capacity|intcomma }}</td>
-                            <td>{{ center.current_occupancy|intcomma }}</td>
-                            <td>{{ center.capacity|sub:center.current_occupancy|intcomma }}</td>
+                            <td class="text-capitalize">{{ center.name }}</td>
+                            <td class="text-capitalize">{{ center.barangay.name }}, {{ center.municipality.name }} {{ center.province.name }}</td>                            <td>{{ center.capacity|intcomma }}</td>
+                            <td class="text-capitalize">{{ center.current_occupancy|intcomma }}</td>
+                            <td class="text-capitalize">{{ center.capacity|sub:center.current_occupancy|intcomma }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
