@@ -2,34 +2,33 @@
 {% load humanize %}
 {% block content %}
 <h1 class="mb-4 text-center">DROMIC Reports</h1>
-
 <div class="row mb-4">
     <div class="col-md-3">
         <div class="card neumorphic text-center p-4">
             <i class="fas fa-clipboard-list fa-3x mb-3 text-primary"></i>
             <h5 class="card-title">Total Reports</h5>
-            <p class="card-text display-4">{{ total_reports }}</p>
+            <p class="card-text display-4">{{ total_reports|intcomma }}</p>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card neumorphic text-center p-4">
             <i class="fas fa-home fa-3x mb-3 text-success"></i>
             <h5 class="card-title">Affected Families</h5>
-            <p class="card-text display-4">{{ total_affected_families }}</p>
+            <p class="card-text display-4">{{ total_affected_families|intcomma }}</p>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card neumorphic text-center p-4">
             <i class="fas fa-users fa-3x mb-3 text-info"></i>
             <h5 class="card-title">Affected Persons</h5>
-            <p class="card-text display-4">{{ total_affected_persons }}</p>
+            <p class="card-text display-4">{{ total_affected_persons|intcomma }}</p>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card neumorphic text-center p-4">
             <i class="fas fa-house-damage fa-3x mb-3 text-danger"></i>
             <h5 class="card-title">Damaged Houses</h5>
-            <p class="card-text display-4">{{ damaged_houses.total_damaged }}</p>
+            <p class="card-text display-4">{{ damaged_houses.total_damaged|intcomma }}</p>
         </div>
     </div>
 </div>
@@ -41,10 +40,10 @@
             <canvas id="displacedPopulationChart"></canvas>
         </div>
         <div class="col-md-6">
-            <p>Cumulative Families: {{ total_displaced.cum_families }}</p>
-            <p>Current Families: {{ total_displaced.now_families }}</p>
-            <p>Cumulative Persons: {{ total_displaced.cum_persons }}</p>
-            <p>Current Persons: {{ total_displaced.now_persons }}</p>
+            <p>Cumulative Families: {{ total_displaced.cum_families|intcomma }}</p>
+            <p>Current Families: {{ total_displaced.now_families|intcomma }}</p>
+            <p>Cumulative Persons: {{ total_displaced.cum_persons|intcomma }}</p>
+            <p>Current Persons: {{ total_displaced.now_persons|intcomma }}</p>
         </div>
     </div>
 </div>
@@ -66,8 +65,8 @@
             <tr>
                 <td>{{ item.sex }}</td>
                 <td>{{ item.age_group }}</td>
-                <td>{{ item.cum_total }}</td>
-                <td>{{ item.now_total }}</td>
+                <td>{{ item.cum_total|intcomma }}</td>
+                <td>{{ item.now_total|intcomma }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -88,8 +87,8 @@
             {% for item in sectoral_distribution %}
             <tr>
                 <td>{{ item.sector }}</td>
-                <td>{{ item.cum_total }}</td>
-                <td>{{ item.now_total }}</td>
+                <td>{{ item.cum_total|intcomma }}</td>
+                <td>{{ item.now_total|intcomma }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -103,8 +102,8 @@
             <canvas id="damagedHousesChart"></canvas>
         </div>
         <div class="col-md-6">
-            <p>Partially Damaged: {{ damaged_houses.partially_damaged }}</p>
-            <p>Totally Damaged: {{ damaged_houses.totally_damaged }}</p>
+            <p>Partially Damaged: {{ damaged_houses.partially_damaged|intcomma }}</p>
+            <p>Totally Damaged: {{ damaged_houses.totally_damaged|intcomma }}</p>
         </div>
     </div>
 </div>
@@ -118,8 +117,8 @@
         </div>
         <div class="col-md-6">
             <p>Total Financial Assistance: ₱{{ relief_operations.total_financial_assistance|intcomma }}</p>
-            <p>Total Food Items: {{ relief_operations.total_food_items }}</p>
-            <p>Total Non-Food Items: {{ relief_operations.total_non_food_items }}</p>
+            <p>Total Food Items: {{ relief_operations.total_food_items|intcomma }}</p>
+            <p>Total Non-Food Items: {{ relief_operations.total_non_food_items|intcomma }}</p>
         </div>
     </div>
 </div>

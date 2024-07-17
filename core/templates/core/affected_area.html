@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize%}
 
 {% block content %}
 <div class="container mt-4">
@@ -11,20 +12,20 @@
     <div class="row">
         <div class="col-md-4">
             <div class="card neumorphic text-center p-3 mb-3">
-                <h5>Total Affected Areas</h5>
-                <p class="display-4">{{ total_affected_areas }}</p>
+                <h5><i class="fas fa-map-marked-alt me-2"></i>Total Affected Areas</h5>
+                <p class="display-4">{{ total_affected_areas|intcomma }}</p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card neumorphic text-center p-3 mb-3">
-                <h5>Total Affected Families</h5>
-                <p class="display-4">{{ total_affected_families }}</p>
+                <h5><i class="fas fa-home me-2"></i>Total Affected Families</h5>
+                <p class="display-4">{{ total_affected_families|intcomma }}</p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card neumorphic text-center p-3 mb-3">
-                <h5>Total Affected Persons</h5>
-                <p class="display-4">{{ total_affected_persons }}</p>
+                <h5><i class="fas fa-users me-2"></i>Total Affected Persons</h5>
+                <p class="display-4">{{ total_affected_persons|intcomma }}</p>
             </div>
         </div>
     </div>
