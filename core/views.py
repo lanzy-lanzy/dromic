@@ -4,7 +4,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.utils import timezone
 from datetime import timedelta
 from .models import (
@@ -14,6 +14,27 @@ from .models import (
 )
 from .export import generate_report_pdf
 
+def dashboard(request):
+    total_disasters = Disaster.objects.count()
+    affected_areas = AffectedArea.objects.count()
+    evacuation_centers = EvacuationCenter.objects.count()
+    total_reports = DROMICReport.objects.count()
+
+    disaster_types = Disaster.objects.values('name').annotate(count=Count('id'))
+
+    affected_population = AffectedArea.objects.values('disaster__date_occurred').annotate(
+        total=Sum('affected_persons')
+    ).order_by('disaster__date_occurred')
+
+    context = {
+        'total_disasters': total_disasters,
+        'affected_areas': affected_areas,
+        'evacuation_centers': evacuation_centers,
+        'total_reports': total_reports,
+        'disaster_types': list(disaster_types),
+        'affected_population': list(affected_population),
+    }
+    return render(request, 'core/dashboard.html', context)
 
 def index(request):
     active_disasters_count = Disaster.objects.filter(date_occurred__gte=timezone.now() - timedelta(days=30)).count()

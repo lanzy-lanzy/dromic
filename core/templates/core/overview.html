@@ -2,85 +2,156 @@
 {% load static %}
 {% load humanize %}
 
+{% block title %}DROMIC Overview{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+    }
+    .dashboard-card-header {
+        background-color: #3498db;
+        color: white;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+    }
+    .dashboard-icon {
+        font-size: 3rem;
+        color: #3498db;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1 class="mb-4 text-center">DROMIC Overview</h1>
+<div class="container-fluid mt-4">
+    <h1 class="display-4 mb-4">DROMIC Overview</h1>
 
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card neumorphic text-center p-4">
-            <i class="fas fa-exclamation-triangle fa-3x mb-3 text-danger"></i>
-            <h5 class="card-title">Total Disasters</h5>
-            <p class="card-text display-4" id="totalDisasters">{{ total_disasters }}</p>
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Total Disasters</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle dashboard-icon mb-3" style="color: #dc3545;"></i>
+                    <h2 class="card-text" id="totalDisasters">{{ total_disasters }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Affected Areas</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-map-marked-alt dashboard-icon mb-3" style="color: #17a2b8;"></i>
+                    <h2 class="card-text" id="affectedAreas">{{ total_affected_areas }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Affected Families</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-home dashboard-icon mb-3" style="color: #ffc107;"></i>
+                    <h2 class="card-text" id="affectedFamilies">{{ total_affected_families|intcomma }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Affected Persons</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-users dashboard-icon mb-3" style="color: #28a745;"></i>
+                    <h2 class="card-text" id="affectedPersons">{{ total_affected_persons|intcomma }}</h2>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card neumorphic text-center p-4">
-            <i class="fas fa-map-marked-alt fa-3x mb-3 text-primary"></i>
-            <h5 class="card-title">Affected Areas</h5>
-            <p class="card-text display-4" id="affectedAreas">{{ total_affected_areas }}</p>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Displaced Population</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="displacedChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Damaged Houses</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="damagedHousesChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card neumorphic text-center p-4">
-            <i class="fas fa-home fa-3x mb-3 text-success"></i>
-            <h5 class="card-title">Affected Families</h5>
-            <p class="card-text display-4" id="affectedFamilies">{{ total_affected_families|intcomma }}</p>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Sex and Age Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="sexAgeChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Sectoral Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="sectoralChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card neumorphic text-center p-4">
-            <i class="fas fa-users fa-3x mb-3 text-info"></i>
-            <h5 class="card-title">Affected Persons</h5>
-            <p class="card-text display-4" id="affectedPersons">{{ total_affected_persons|intcomma }}</p>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Relief Operations Summary</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="reliefOperationsChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Relief Operations Details</h5>
+                </div>
+                <div class="card-body">
+                    <p>Total Financial Assistance: ₱{{ relief_summary.total_financial_assistance|floatformat:2|intcomma }}</p>
+                    <p>Total Food Items: {{ relief_summary.total_food_items|intcomma }}</p>
+                    <p>Total Non-Food Items: {{ relief_summary.total_non_food_items|intcomma }}</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="neumorphic p-4">
-            <h5 class="mb-3">Displaced Population</h5>
-            <canvas id="displacedChart"></canvas>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="neumorphic p-4">
-            <h5 class="mb-3">Damaged Houses</h5>
-            <canvas id="damagedHousesChart"></canvas>
-        </div>
-    </div>
-</div>
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="neumorphic p-4">
-            <h5 class="mb-3">Sex and Age Distribution</h5>
-            <canvas id="sexAgeChart"></canvas>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="neumorphic p-4">
-            <h5 class="mb-3">Sectoral Distribution</h5>
-            <canvas id="sectoralChart"></canvas>
-        </div>
-    </div>
-</div>
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="neumorphic p-4">
-            <h5 class="mb-3">Relief Operations Summary</h5>
-            <canvas id="reliefOperationsChart"></canvas>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="neumorphic p-4">
-            <h5 class="mb-3">Relief Operations Details</h5>
-            <p>Total Financial Assistance: ₱{{ relief_summary.total_financial_assistance|floatformat:2|intcomma }}</p>            <p>Total Food Items: {{ relief_summary.total_food_items|intcomma }}</p>
-            <p>Total Non-Food Items: {{ relief_summary.total_non_food_items|intcomma }}</p>
-        </div>
-    </div>
-</div>
 
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -208,3 +279,4 @@ var reliefOperationsChart = new Chart(reliefOperationsCtx, {
 
 </script>
 {% endblock %}
+

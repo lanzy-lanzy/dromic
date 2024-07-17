@@ -1,33 +1,72 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block content %}
+
+{% block title %}DROMIC Disaster Information{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+    }
+    .dashboard-card-header {
+        background-color: #3498db;
+        color: white;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+    }
+    .dashboard-icon {
+        font-size: 3rem;
+        color: #3498db;
+    }
+</style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
-<div class="container-fluid mt-5">
-    <h1 class="mb-4 text-center">Disaster Information Dashboard</h1>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h1 class="display-4 mb-4">Disaster Information</h1>
+    
     <div class="row g-4 mb-4">
         <div class="col-md-4">
-            <div class="card neumorphic text-center p-4">
-                <i class="fas fa-exclamation-triangle fa-3x mb-3 text-danger"></i>
-                <h5 class="card-title">Total Disasters</h5>
-                <p class="card-text display-4" id="totalDisasters">0</p>
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Total Disasters</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle dashboard-icon mb-3 text-danger"></i>
+                    <h2 class="card-text" id="totalDisasters">0</h2>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card neumorphic text-center p-4">
-                <i class="fas fa-calendar-alt fa-3x mb-3 text-success"></i>
-                <h5 class="card-title">Most Recent Disaster</h5>
-                <p class="card-text fs-5" id="recentDisaster">None</p>
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Most Recent Disaster</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-alt dashboard-icon mb-3 text-primary"></i>
+                    <h2 class="card-text" id="recentDisaster">None</h2>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card neumorphic p-4">
-                <h5 class="card-title text-center mb-3">Disasters Over Time</h5>
-                <canvas id="disasterChart"></canvas>
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Disasters Over Time</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="disasterChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
     
-    <button class="btn btn-primary btn-lg mb-4 neumorphic" data-bs-toggle="modal" data-bs-target="#addDisasterModal">
+    <button class="btn btn-primary btn-lg mb-4" data-bs-toggle="modal" data-bs-target="#addDisasterModal">
         <i class="fas fa-plus-circle me-2"></i>Add New Disaster
     </button>
     
@@ -70,9 +109,10 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
-{% block extra_js%}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 <script>
     $(document).ready(function(){
         $('.datepicker').datepicker({

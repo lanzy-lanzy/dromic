@@ -1,91 +1,163 @@
 {% extends 'base.html' %}
 
+{% block title %}DROMIC Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+    }
+    .dashboard-card-header {
+        background-color: #3498db;
+        color: white;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+    }
+    .dashboard-icon {
+        font-size: 3rem;
+        color: #3498db;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="dashboard-header">
-    <h1 class="main-title">DROMIC Dashboard</h1>
-    <p class="main-subtitle">Overview of Current Disaster Response Operations</p>
-</div>
+<div class="container-fluid mt-4">
+    <h1 class="display-4 mb-4">DROMIC Dashboard</h1>
+    
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Total Disasters</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle dashboard-icon mb-3" style="color: #e74c3c;"></i>
+                    <h2 class="card-text">{{ total_disasters }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Affected Areas</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-map-marked-alt dashboard-icon mb-3" style="color: #3498db;"></i>
+                    <h2 class="card-text">{{ affected_areas }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Evacuation Centers</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-home dashboard-icon mb-3" style="color: #2ecc71;"></i>
+                    <h2 class="card-text">{{ evacuation_centers }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Total Reports</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-bar dashboard-icon mb-3" style="color: #f39c12;"></i>
+                    <h2 class="card-text">{{ total_reports }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div class="row">
-    <div class="col-md-3">
-        <div class="stat-card">
-            <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: var(--accent-color);"></i>
-            <h3>Active Disasters</h3>
-            <p class="stat-number">{{ active_disasters_count }}</p>
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Disaster Types Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="disasterTypesChart"></canvas>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card">
-            <i class="fas fa-users fa-3x mb-3" style="color: var(--accent-color);"></i>
-            <h3>Affected Persons</h3>
-            <p class="stat-number">{{ total_affected_persons }}</p>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card">
-            <i class="fas fa-home fa-3x mb-3" style="color: var(--accent-color);"></i>
-            <h3>Evacuation Centers</h3>
-            <p class="stat-number">{{ evacuation_centers_count }}</p>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card">
-            <i class="fas fa-house-damage fa-3x mb-3" style="color: var(--accent-color);"></i>
-            <h3>Damaged Houses</h3>
-            <p class="stat-number">{{ total_damaged_houses }}</p>
-        </div>
-    </div>
-</div>
-
-<div class="row mt-4">
-    <div class="col-md-6">
-        <div class="chart-card">
-            <h3>Affected Areas by Province</h3>
-            <canvas id="affectedAreasChart"></canvas>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="chart-card">
-            <h3>Displaced Population</h3>
-            <canvas id="displacedPopulationChart"></canvas>
-        </div>
-    </div>
-</div>
-
-<div class="row mt-4">
-    <div class="col-md-12">
-        <div class="table-card">
-            <h3>Recent DROMIC Reports</h3>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Disaster</th>
-                        <th>Province</th>
-                        <th>Affected Families</th>
-                        <th>Affected Persons</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for report in recent_reports %}
-                    <tr>
-                        <td>{{ report.date }}</td>
-                        <td>{{ report.disaster.name }}</td>
-                        <td>{{ report.province.name }}</td>
-                        <td>{{ report.total_affected_families }}</td>
-                        <td>{{ report.total_affected_persons }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="col-md-6 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Affected Population Over Time</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="affectedPopulationChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Add Chart.js code here for affectedAreasChart and displacedPopulationChart
+    // Disaster Types Distribution Chart
+var disasterTypes = {{ disaster_types|safe }};
+var disasterTypesCtx = document.getElementById('disasterTypesChart').getContext('2d');
+var disasterTypesChart = new Chart(disasterTypesCtx, {
+    type: 'doughnut',
+    data: {
+        labels: disasterTypes.map(item => item.name),
+        datasets: [{
+            data: disasterTypes.map(item => item.count),
+            backgroundColor: [
+                '#3498db',
+                '#2ecc71',
+                '#e74c3c',
+                '#f39c12',
+                '#9b59b6'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            },
+            title: {
+                display: true,
+                text: 'Disaster Types'
+            }
+        }
+    }
+});
+
+
+    // Affected Population Over Time Chart
+    var affectedPopulation = {{ affected_population|safe }};
+    var affectedPopulationCtx = document.getElementById('affectedPopulationChart').getContext('2d');
+    var affectedPopulationChart = new Chart(affectedPopulationCtx, {
+        type: 'line',
+        data: {
+            labels: affectedPopulation.map(item => item.disaster__date_occurred),
+            datasets: [{
+                label: 'Affected Population',
+                data: affectedPopulation.map(item => item.total),
+                borderColor: '#3498db',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
 </script>
 {% endblock %}

@@ -3,65 +3,106 @@
 {% load humanize %}
 {% load custom_filters %}
 
+{% block title %}DROMIC Evacuation Centers{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+    }
+    .dashboard-card-header {
+        background-color: #3498db;
+        color: white;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+    }
+    .dashboard-icon {
+        font-size: 3rem;
+        color: #3498db;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="text-center mb-5">Evacuation Centers</h1>
+<div class="container-fluid mt-4">
+    <h1 class="display-4 mb-4">Evacuation Centers</h1>
 
     <div class="row mb-4">
         <div class="col-md-4">
-            <div class="card neumorphic text-center p-4">
-                <i class="fas fa-building fa-3x mb-3 text-primary"></i>
-                <h5 class="card-title">Total Centers</h5>
-                <p class="card-text display-4">{{ total_centers }}</p>
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Total Centers</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-building dashboard-icon mb-3" style="color: #007bff;"></i>
+                    <h2 class="card-text">{{ total_centers }}</h2>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card neumorphic text-center p-4">
-                <i class="fas fa-users fa-3x mb-3 text-success"></i>
-                <h5 class="card-title">Total Capacity</h5>
-                <p class="card-text display-4">{{ total_capacity|intcomma }}</p>
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Total Capacity</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-users dashboard-icon mb-3" style="color: #28a745;"></i>
+                    <h2 class="card-text">{{ total_capacity|intcomma }}</h2>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card neumorphic text-center p-4">
-                <i class="fas fa-bed fa-3x mb-3 text-warning"></i>
-                <h5 class="card-title">Currently Occupied</h5>
-                <p class="card-text display-4">{{ total_occupied|intcomma }}</p>
+            <div class="card dashboard-card">
+                <div class="card-header dashboard-card-header">
+                    <h5 class="card-title mb-0">Currently Occupied</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-bed dashboard-icon mb-3" style="color: #ffc107;"></i>
+                    <h2 class="card-text">{{ total_occupied|intcomma }}</h2>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="neumorphic p-4">
-        <h3 class="mb-4">Evacuation Center List</h3>
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="thead-light">
-                    <tr>
-                        <th>Name</th>
-                        <th>Location</th>
-                        <th>Capacity</th>
-                        <th>Occupied</th>
-                        <th>Available</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for center in centers %}
-                    <tr>
-                        <td>{{ center.name }}</td>
-                        <td>{{ center.location }}</td>
-                        <td>{{ center.capacity|intcomma }}</td>
-                        <td>{{ center.current_occupancy|intcomma }}</td>
-                        <td>{{ center.capacity|sub:center.current_occupancy|intcomma }}</td>
-
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="card dashboard-card mt-4">
+        <div class="card-header dashboard-card-header">
+            <h5 class="card-title mb-0">Evacuation Center List</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>Capacity</th>
+                            <th>Occupied</th>
+                            <th>Available</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for center in centers %}
+                        <tr>
+                            <td>{{ center.name }}</td>
+                            <td>{{ center.location }}</td>
+                            <td>{{ center.capacity|intcomma }}</td>
+                            <td>{{ center.current_occupancy|intcomma }}</td>
+                            <td>{{ center.capacity|sub:center.current_occupancy|intcomma }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     // Add a chart here if needed

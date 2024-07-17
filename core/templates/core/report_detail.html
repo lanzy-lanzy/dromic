@@ -2,13 +2,13 @@
 {% load humanize %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="mb-4">DROMIC Report: {{ report.disaster.name }}</h1>
+<div class="container-fluid mt-4">
+    <h1 class="display-4 mb-4">DROMIC Report: {{ report.disaster.name }}</h1>
     <p class="lead">{{ report.date|date:"F d, Y" }}</p>
 
-    <div class="row">
+    <div class="row mb-4">
         <div class="col-md-6">
-            <div class="card neumorphic mb-4">
+            <div class="card dashboard-card">
                 <div class="card-body">
                     <h5 class="card-title">Report Overview</h5>
                     <p><strong>Province:</strong> {{ report.province.name }}</p>
@@ -20,7 +20,7 @@
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card neumorphic mb-4">
+            <div class="card dashboard-card">
                 <div class="card-body">
                     <h5 class="card-title">Impact Visualization</h5>
                     <canvas id="impactChart"></canvas>
@@ -29,96 +29,108 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row mb-4">
         <div class="col-md-6">
-            <div class="card neumorphic mb-4">
+            <div class="card dashboard-card">
                 <div class="card-body">
                     <h5 class="card-title">Displaced Population</h5>
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Category</th>
-                                <th>Cumulative</th>
-                                <th>Current</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for dp in report.displaced_populations.all %}
-                            <tr>
-                                <td>Families</td>
-                                <td>{{ dp.cum_families|intcomma }}</td>
-                                <td>{{ dp.now_families|intcomma }}</td>
-                            </tr>
-                            <tr>
-                                <td>Persons</td>
-                                <td>{{ dp.cum_persons|intcomma }}</td>
-                                <td>{{ dp.now_persons|intcomma }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Cumulative</th>
+                                    <th>Current</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dp in report.displaced_populations.all %}
+                                <tr>
+                                    <td>Families</td>
+                                    <td>{{ dp.cum_families|intcomma }}</td>
+                                    <td>{{ dp.now_families|intcomma }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Persons</td>
+                                    <td>{{ dp.cum_persons|intcomma }}</td>
+                                    <td>{{ dp.now_persons|intcomma }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card neumorphic mb-4">
+            <div class="card dashboard-card">
                 <div class="card-body">
                     <h5 class="card-title">Damaged Houses</h5>
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Category</th>
-                                <th>Count</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for dh in report.damaged_houses.all %}
-                            <tr>
-                                <td>Partially Damaged</td>
-                                <td>{{ dh.partially_damaged|intcomma }}</td>
-                            </tr>
-                            <tr>
-                                <td>Totally Damaged</td>
-                                <td>{{ dh.totally_damaged|intcomma }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dh in report.damaged_houses.all %}
+                                <tr>
+                                    <td>Partially Damaged</td>
+                                    <td>{{ dh.partially_damaged|intcomma }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Totally Damaged</td>
+                                    <td>{{ dh.totally_damaged|intcomma }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card neumorphic mb-4">
+    <div class="card dashboard-card mb-4">
         <div class="card-body">
             <h5 class="card-title">Relief Operations</h5>
-            <table class="table table-sm">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Food Items</th>
-                        <th>Non-Food Items</th>
-                        <th>Financial Assistance</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ro in report.relief_operations.all %}
-                    <tr>
-                        <td>{{ ro.date|date:"F d, Y" }}</td>
-                        <td>{{ ro.food_items|intcomma }}</td>
-                        <td>{{ ro.non_food_items|intcomma }}</td>
-                        <td>₱{{ ro.financial_assistance|intcomma }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Food Items</th>
+                            <th>Non-Food Items</th>
+                            <th>Financial Assistance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ro in report.relief_operations.all %}
+                        <tr>
+                            <td>{{ ro.date|date:"F d, Y" }}</td>
+                            <td>{{ ro.food_items|intcomma }}</td>
+                            <td>{{ ro.non_food_items|intcomma }}</td>
+                            <td>₱{{ ro.financial_assistance|intcomma }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <a href="{% url 'report_list' %}" class="btn btn-secondary">Back to List</a>
-    <a href="{% url 'export_report_pdf' report.id %}" class="btn btn-primary">Export PDF</a>
+    <div class="text-center mt-4">
+        <a href="{% url 'report_list' %}" class="btn btn-secondary">Back to List</a>
+        <a href="{% url 'export_report_pdf' report.id %}" class="btn btn-primary">Export PDF</a>
+    </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     var ctx = document.getElementById('impactChart').getContext('2d');
     var chart = new Chart(ctx, {

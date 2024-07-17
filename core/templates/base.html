@@ -71,25 +71,25 @@
             <!-- Sidebar -->
             <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
                 <div class="position-sticky sidebar-sticky">
-                    <h3 class="sidebar-heading"><i class="fas fa-shield-alt"></i> DRR Management</h3>
+                    <h3 class="sidebar-heading"><i class="fas fa-shield-alt text-primary"></i> DRR Management</h3>
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link active" href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                            <a class="nav-link" href="{% url 'dashboard' %}"><i class="fas fa-tachometer-alt text-success"></i> Dashboard</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'overview' %}"><i class="fas fa-eye"></i> Overview</a>
+                            <a class="nav-link" href="{% url 'overview' %}"><i class="fas fa-eye text-info"></i> Overview</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'disaster_info' %}"><i class="fas fa-info-circle"></i> Disaster Info</a>
+                            <a class="nav-link" href="{% url 'disaster_info' %}"><i class="fas fa-info-circle text-warning"></i> Disaster Info</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'affected_area_list' %}"><i class="fas fa-map-marked-alt"></i> Affected Areas</a>
+                            <a class="nav-link" href="{% url 'affected_area_list' %}"><i class="fas fa-map-marked-alt text-danger"></i> Affected Areas</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'evacuation_centers' %}"><i class="fas fa-home"></i> Evacuation Centers</a>
+                            <a class="nav-link" href="{% url 'evacuation_centers' %}"><i class="fas fa-home text-secondary"></i> Evacuation Centers</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'report_list' %}"><i class="fas fa-chart-bar"></i> Reports</a>
+                            <a class="nav-link" href="{% url 'report_list' %}"><i class="fas fa-chart-bar text-primary"></i> Reports</a>
                         </li>
                     </ul>
                 </div>
@@ -130,6 +130,19 @@
     <script src="{% static 'js/disaster_info.js' %}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
     <script src="{% static 'js/script.js' %}"></script>
+    
+    <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('.sidebar .nav-link');
+    navLinks.forEach(link => {
+      if (link.getAttribute('href') === currentPath) {
+        link.classList.add('active');
+      }
+    });
+  });
+</script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>
