@@ -54,3 +54,9 @@
     overflow: hidden;
     box-shadow: inset 8px 8px 16px #b8b9be, inset -8px -8px 16px #ffffff;
 }
+h1, h2, h3, h4 ,h5 ,h6 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    color: #A87676;
+   
+}
