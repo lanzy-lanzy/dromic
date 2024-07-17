@@ -85,13 +85,17 @@ def index(request):
 def add_evacuation_center(request):
     try:
         name = request.POST.get('name')
-        location = request.POST.get('location')
+        province_id = request.POST.get('province')
+        municipality_id = request.POST.get('municipality')
+        barangay_id = request.POST.get('barangay')
         capacity = int(request.POST.get('capacity'))
         current_occupancy = int(request.POST.get('current_occupancy'))
 
         EvacuationCenter.objects.create(
             name=name,
-            location=location,
+            province_id=province_id,
+            municipality_id=municipality_id,
+            barangay_id=barangay_id,
             capacity=capacity,
             current_occupancy=current_occupancy
         )
@@ -253,22 +257,20 @@ def add_affected_area(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
 
-from django.shortcuts import render
-from django.http import JsonResponse
-from .models import EvacuationCenter, Province, Municipality, Barangay
 
-def evacuation_centers(request):
-    centers = EvacuationCenter.objects.all()
+def evacuation_center_list(request):
+    evacuation_centers = EvacuationCenter.objects.all().select_related('province', 'municipality', 'barangay')
     provinces = Province.objects.all()
+    
     context = {
-        'centers': centers,
+        'evacuation_centers': evacuation_centers,
         'provinces': provinces,
-        'total_centers': centers.count(),
-        'total_capacity': centers.aggregate(Sum('capacity'))['capacity__sum'],
-        'total_occupied': centers.aggregate(Sum('current_occupancy'))['current_occupancy__sum'],
+        'total_centers': evacuation_centers.count(),
+        'total_capacity': evacuation_centers.aggregate(Sum('capacity'))['capacity__sum'] or 0,
+        'total_occupied': evacuation_centers.aggregate(Sum('current_occupancy'))['current_occupancy__sum'] or 0,
     }
+    
     return render(request, 'core/evacuation_centers.html', context)
-
 
 def get_municipalities(request):
     province_id = request.GET.get('province_id')
@@ -285,15 +287,7 @@ def get_or_create_instance(model, instance_id, new_name, **kwargs):
         return model.objects.create(name=new_name, **kwargs)
     return model.objects.get(id=instance_id)
 
-def evacuation_center_list(request):
-    evacuation_centers = EvacuationCenter.objects.all()
-    context = {
-        'evacuation_centers': evacuation_centers,
-        'total_centers': evacuation_centers.count(),
-        'total_capacity': sum(center.capacity for center in evacuation_centers),
-        'total_occupancy': sum(center.current_occupancy for center in evacuation_centers),
-    }
-    return render(request, 'core/evacuation.html', context)
+
 
 
 def report_list(request):
@@ -344,16 +338,6 @@ def export_report_pdf(request, report_id):
     pdf_buffer = generate_report_pdf(report)
     return HttpResponse(pdf_buffer, content_type='application/pdf')
 
-
-def evacuation_centers(request):
-    centers = EvacuationCenter.objects.all()
-    context = {
-        'centers': centers,
-        'total_centers': centers.count(),
-        'total_capacity': centers.aggregate(Sum('capacity'))['capacity__sum'],
-        'total_occupied': centers.aggregate(Sum('current_occupancy'))['current_occupancy__sum'],
-    }
-    return render(request, 'core/evacuation_centers.html', context)
 
 
 def disaster_info(request):

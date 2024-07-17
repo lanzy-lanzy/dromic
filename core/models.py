@@ -38,7 +38,7 @@ class AffectedArea(models.Model):
     disaster = models.ForeignKey(Disaster, on_delete=models.CASCADE)
     province = models.ForeignKey(Province, on_delete=models.CASCADE)
     municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE)
-    barangay = models.ForeignKey(Barangay, on_delete=models.CASCADE)
+    barangay = models.ForeignKey(Barangay, on_delete=models.CASCADE, blank=True, null=True)
     affected_families = models.IntegerField()
     affected_persons = models.IntegerField()
 
@@ -47,9 +47,9 @@ class AffectedArea(models.Model):
 
 class EvacuationCenter(models.Model):
     name = models.CharField(max_length=100)
-    province = models.ForeignKey(Province, on_delete=models.CASCADE)
-    municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE)
-    barangay = models.ForeignKey(Barangay, on_delete=models.CASCADE)
+    province = models.ForeignKey(Province, on_delete=models.CASCADE, null=True, blank=True)
+    municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, null=True, blank=True)
+    barangay = models.ForeignKey(Barangay, on_delete=models.CASCADE, null=True, blank=True)
     capacity = models.IntegerField()
     current_occupancy = models.IntegerField(default=0)
 
@@ -59,6 +59,7 @@ class EvacuationCenter(models.Model):
     @property
     def is_full(self):
         return self.current_occupancy >= self.capacity
+
 
 
 
