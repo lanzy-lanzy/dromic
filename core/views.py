@@ -296,7 +296,8 @@ def get_or_create_instance(model, instance_id, new_name, **kwargs):
         return model.objects.create(name=new_name, **kwargs)
     return model.objects.get(id=instance_id)
 
-
+def disaster_impact(request):
+    return render(request, 'core/disaster_impact.html')
 
 
 def report_list(request):

@@ -30,10 +30,6 @@ class Barangay(models.Model):
     def __str__(self):
         return self.name
 
-
-
-
-
 class Disaster(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
@@ -66,8 +62,6 @@ class EvacuationCenter(models.Model):
     @property
     def is_full(self):
         return self.current_occupancy >= self.capacity
-
-
 
 
 class Family(models.Model):

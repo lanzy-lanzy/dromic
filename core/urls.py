@@ -34,6 +34,9 @@ urlpatterns = [
     path('create_province/', views.create_province, name='create_province'),
     path('create_municipality/', views.create_municipality, name='create_municipality'),
     path('create_barangay/', views.create_barangay, name='create_barangay'),
+    
+    
+    path('disaster_impact/', views.disaster_impact, name='disaster_impact'),
     # Other URL patterns
     
 

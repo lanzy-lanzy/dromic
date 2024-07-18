@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Disaster Impact Details</h1>
+
+    <!-- Family Members -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h2 class="h4 mb-0">Family Members</h2>
+            <button class="btn btn-sm btn-light float-end add-btn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-card-type="family-members">Add</button>
+        </div>
+        <div class="card-body">
+            {% for member in family_members %}
+            <div class="row mb-2">
+                <div class="col-md-3"><strong>{{ member.name }}</strong></div>
+                <div class="col-md-2">Age: {{ member.age }}</div>
+                <div class="col-md-2">Gender: {{ member.gender }}</div>
+                <div class="col-md-3">Relation: {{ member.relationship_to_head }}</div>
+                <div class="col-md-2">
+                    {% if member.is_displaced %}
+                    <span class="badge bg-warning">Displaced</span>
+                    {% endif %}
+                    {% if member.is_in_evacuation_center %}
+                    <span class="badge bg-info">In Evacuation</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Displaced Population -->
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h2 class="h4 mb-0">Displaced Population</h2>
+            <button class="btn btn-sm btn-light float-end add-btn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-card-type="family-members">Add</button>
+
+        </div>
+        <div class="card-body">
+            <p><strong>Area:</strong> {{ displaced_population.area }}</p>
+            <p><strong>Evacuation Center:</strong> {{ displaced_population.evacuation_center }}</p>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Cumulative Families</h5>
+                            <p class="card-text display-4">{{ displaced_population.cum_families }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Current Families</h5>
+                            <p class="card-text display-4">{{ displaced_population.now_families }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Cumulative Persons</h5>
+                            <p class="card-text display-4">{{ displaced_population.cum_persons }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Current Persons</h5>
+                            <p class="card-text display-4">{{ displaced_population.now_persons }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sex and Age Distribution -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h2 class="h4 mb-0">Sex and Age Distribution</h2>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Sex</th>
+                        <th>Age Group</th>
+                        <th>Cumulative Count</th>
+                        <th>Current Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for distribution in sex_age_distributions %}
+                    <tr>
+                        <td>{{ distribution.sex }}</td>
+                        <td>{{ distribution.age_group }}</td>
+                        <td>{{ distribution.cum_count }}</td>
+                        <td>{{ distribution.now_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Sectoral Distribution -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h2 class="h4 mb-0">Sectoral Distribution</h2>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Sector</th>
+                        <th>Cumulative Count</th>
+                        <th>Current Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for distribution in sectoral_distributions %}
+                    <tr>
+                        <td>{{ distribution.sector }}</td>
+                        <td>{{ distribution.cum_count }}</td>
+                        <td>{{ distribution.now_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Damaged Houses -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h2 class="h4 mb-0">Damaged Houses</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Partially Damaged</h5>
+                            <p class="card-text display-4">{{ damaged_houses.partially_damaged }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Totally Damaged</h5>
+                            <p class="card-text display-4">{{ damaged_houses.totally_damaged }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Relief Operations -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h2 class="h4 mb-0">Relief Operations</h2>
+        </div>
+        <div class="card-body">
+            <p><strong>Date:</strong> {{ relief_operation.date }}</p>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Food Items</h5>
+                            <p class="card-text display-4">{{ relief_operation.food_items }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Non-Food Items</h5>
+                            <p class="card-text display-4">{{ relief_operation.non_food_items }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Financial Assistance</h5>
+                            <p class="card-text display-4">₱{{ relief_operation.financial_assistance }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Early Recovery -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h2 class="h4 mb-0">Early Recovery</h2>
+        </div>
+        <div class="card-body">
+            <p><strong>Description:</strong> {{ early_recovery.description }}</p>
+            <p><strong>Date Started:</strong> {{ early_recovery.date_started }}</p>
+            {% if early_recovery.date_completed %}
+            <p><strong>Date Completed:</strong> {{ early_recovery.date_completed }}</p>
+            {% else %}
+            <p><strong>Status:</strong> <span class="badge bg-warning">Ongoing</span></p>
+            {% endif %}
+        </div>
+    </div>
+ {% include "core/modal/add_impact.html" %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('dynamicModal');
+    const modalTitle = modal.querySelector('.modal-title');
+    const modalBody = modal.querySelector('.modal-body');
+
+    modal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const cardType = button.getAttribute('data-card-type');
+
+        switch(cardType) {
+            case 'family-members':
+                modalTitle.textContent = 'Add Family Member';
+                modalBody.innerHTML = `
+                    <form id="addFamilyMemberForm">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="age" class="form-label">Age</label>
+                            <input type="number" class="form-control" id="age" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="gender" class="form-label">Gender</label>
+                            <select class="form-select" id="gender" required>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="relationship" class="form-label">Relationship to Head</label>
+                            <input type="text" class="form-control" id="relationship" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Family Member</button>
+                    </form>
+                `;
+                break;
+            case 'displaced-population':
+                modalTitle.textContent = 'Add Displaced Population';
+                modalBody.innerHTML = `
+                    <form id="addDisplacedPopulationForm">
+                        <div class="mb-3">
+                            <label for="area" class="form-label">Area</label>
+                            <input type="text" class="form-control" id="area" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="evacuationCenter" class="form-label">Evacuation Center</label>
+                            <input type="text" class="form-control" id="evacuationCenter" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cumFamilies" class="form-label">Cumulative Families</label>
+                            <input type="number" class="form-control" id="cumFamilies" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="nowFamilies" class="form-label">Current Families</label>
+                            <input type="number" class="form-control" id="nowFamilies" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Displaced Population</button>
+                    </form>
+                `;
+                break;
+            // Add cases for other card types here
+        }
+    });
+});
+</script>
+{% endblock %}
