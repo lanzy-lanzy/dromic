@@ -298,6 +298,7 @@ def get_or_create_instance(model, instance_id, new_name, **kwargs):
 
 
 def report_list(request):
+    report_create= DROMICReport.objects.all().select_related('province', 'municipality', 'barangay')
     reports = DROMICReport.objects.all().order_by('-date')
     context = {
         'reports': reports,

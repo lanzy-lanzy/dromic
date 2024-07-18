@@ -152,9 +152,13 @@
     </div>
 
     <div class="card dashboard-card">
-        <div class="card-header dashboard-card-header">
+        <div class="card-header dashboard-card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title-1 mb-0">DROMIC Reports</h5>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createReportModal">
+                Create New Report
+            </button>
         </div>
+
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-hover">
@@ -188,71 +192,259 @@
         </div>
     </div>
 </div>
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Create Report Modal -->
+<div class="modal fade" id="createReportModal" tabindex="-1" aria-labelledby="createReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createReportModalLabel">Create New DROMIC Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createReportForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="disaster" class="form-label">Disaster</label>
+                        <select class="form-select" id="disaster" name="disaster" required>
+                            <option value="">Select Disaster</option>
+                            <option value="new">New Disaster</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="new_disaster_group" style="display: none;">
+                        <label for="new_disaster" class="form-label">New Disaster Name</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="new_disaster" name="new_disaster">
+                            <button class="btn btn-outline-secondary" type="button" id="create_new_disaster">Create</button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="province" class="form-label">Province</label>
+                        <select class="form-select" id="province" name="province" required>
+                            <option value="">Select Province</option>
+                            <option value="new">New Province</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="new_province_group" style="display: none;">
+                        <label for="new_province" class="form-label">New Province Name</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="new_province" name="new_province">
+                            <button class="btn btn-outline-secondary" type="button" id="create_new_province">Create</button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="municipality" class="form-label">Municipality</label>
+                        <select class="form-select" id="municipality" name="municipality" required>
+                            <option value="">Select Municipality</option>
+                            <option value="new">New Municipality</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="new_municipality_group" style="display: none;">
+                        <label for="new_municipality" class="form-label">New Municipality Name</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="new_municipality" name="new_municipality">
+                            <button class="btn btn-outline-secondary" type="button" id="create_new_municipality">Create</button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="barangay" class="form-label">Barangay</label>
+                        <select class="form-select" id="barangay" name="barangay" required>
+                            <option value="">Select Barangay</option>
+                            <option value="new">New Barangay</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="new_barangay_group" style="display: none;">
+                        <label for="new_barangay" class="form-label">New Barangay Name</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="new_barangay" name="new_barangay">
+                            <button class="btn btn-outline-secondary" type="button" id="create_new_barangay">Create</button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="date" name="date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="affected_families" class="form-label">Affected Families</label>
+                        <input type="number" class="form-control" id="affected_families" name="affected_families" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="affected_persons" class="form-label">Affected Persons</label>
+                        <input type="number" class="form-control" id="affected_persons" name="affected_persons" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="submitReport">Create Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 <script>
-    // Displaced Population Chart
-    var displacedCtx = document.getElementById('displacedPopulationChart').getContext('2d');
-    var displacedChart = new Chart(displacedCtx, {
-        type: 'bar',
-        data: {
-            labels: ['Families', 'Persons'],
-            datasets: [{
-                label: 'Cumulative',
-                data: [{{ total_displaced.cum_families }}, {{ total_displaced.cum_persons }}],
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
-            }, {
-                label: 'Current',
-                data: [{{ total_displaced.now_families }}, {{ total_displaced.now_persons }}],
-                backgroundColor: 'rgba(255, 99, 132, 0.6)',
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
+$(document).ready(function() {
+    // Function to populate provinces
+    function populateProvinces() {
+        $.get('/api/provinces/', function(data) {
+            $('#province').html('<option value="">Select Province</option>');
+            $.each(data, function(index, item) {
+                $('#province').append('<option value="' + item.id + '">' + item.name + '</option>');
+            });
+            $('#province').append('<option value="new">New Province</option>');
+        });
+    }
+
+    // Function to populate municipalities
+    function populateMunicipalities(provinceId) {
+        if (provinceId && provinceId !== 'new') {
+            $.get('/api/municipalities/', {province_id: provinceId}, function(data) {
+                $('#municipality').html('<option value="">Select Municipality</option>');
+                $.each(data, function(index, item) {
+                    $('#municipality').append('<option value="' + item.id + '">' + item.name + '</option>');
+                });
+                $('#municipality').append('<option value="new">New Municipality</option>');
+                $('#municipality').prop('disabled', false);
+            });
+        } else {
+            $('#municipality').html('<option value="">Select Municipality</option>');
+            $('#municipality').prop('disabled', true);
+        }
+        $('#barangay').html('<option value="">Select Barangay</option>');
+        $('#barangay').prop('disabled', true);
+    }
+
+    // Function to populate barangays
+    function populateBarangays(municipalityId) {
+        if (municipalityId && municipalityId !== 'new') {
+            $.get('/api/barangays/', {municipality_id: municipalityId}, function(data) {
+                $('#barangay').html('<option value="">Select Barangay</option>');
+                $.each(data, function(index, item) {
+                    $('#barangay').append('<option value="' + item.id + '">' + item.name + '</option>');
+                });
+                $('#barangay').append('<option value="new">New Barangay</option>');
+                $('#barangay').prop('disabled', false);
+            });
+        } else {
+            $('#barangay').html('<option value="">Select Barangay</option>');
+            $('#barangay').prop('disabled', true);
+        }
+    }
+
+    // Populate disasters
+    $.get('/api/disasters/', function(data) {
+        $('#disaster').html('<option value="">Select Disaster</option>');
+        $.each(data, function(index, item) {
+            $('#disaster').append('<option value="' + item.id + '">' + item.name + '</option>');
+        });
+        $('#disaster').append('<option value="new">New Disaster</option>');
+    });
+
+    // Populate provinces on page load
+    populateProvinces();
+
+    // Cascading dropdowns
+    $('#province').change(function() {
+        var provinceId = $(this).val();
+        populateMunicipalities(provinceId);
+    });
+
+    $('#municipality').change(function() {
+        var municipalityId = $(this).val();
+        populateBarangays(municipalityId);
+    });
+
+    // Show/hide new input fields based on selection
+    $('#disaster, #province, #municipality, #barangay').change(function() {
+        var newInputId = 'new_' + this.id + '_group';
+        if ($(this).val() === 'new') {
+            $('#' + newInputId).show();
+        } else {
+            $('#' + newInputId).hide();
+        }
+    });
+
+    // Submit report
+    $('#submitReport').click(function() {
+        let formData = $('#createReportForm').serialize();
+        $.post('/api/create_report/', formData, function(response) {
+            if (response.success) {
+                alert('Report created successfully!');
+                var modal = bootstrap.Modal.getInstance(document.getElementById('createReportModal'));
+                modal.hide();
+                location.reload();
+            } else {
+                alert('Error creating report: ' + response.error);
             }
-        }
+        });
     });
 
-    // Damaged Houses Chart
-    var damagedCtx = document.getElementById('damagedHousesChart').getContext('2d');
-    var damagedChart = new Chart(damagedCtx, {
-        type: 'pie',
-        data: {
-            labels: ['Partially Damaged', 'Totally Damaged'],
-            datasets: [{
-                data: [{{ damaged_houses.partially_damaged }}, {{ damaged_houses.totally_damaged }}],
-                backgroundColor: ['rgba(255, 206, 86, 0.6)', 'rgba(255, 99, 132, 0.6)'],
-            }]
-        },
-        options: {
-            responsive: true,
+    // Handle creation of new entries
+    function createNewEntry(type, name, parentId) {
+        let url, data;
+        switch(type) {
+            case 'disaster':
+                url = '/api/create_disaster/';
+                data = {name: name};
+                break;
+            case 'province':
+                url = '/api/create_province/';
+                data = {name: name};
+                break;
+            case 'municipality':
+                url = '/api/create_municipality/';
+                data = {name: name, province: parentId};
+                break;
+            case 'barangay':
+                url = '/api/create_barangay/';
+                data = {name: name, municipality: parentId};
+                break;
         }
+        
+        $.post(url, data, function(response) {
+            if (response.status === 'success') {
+                alert(type + ' created successfully');
+                // Refresh the corresponding dropdown
+                switch(type) {
+                    case 'disaster':
+                        $.get('/api/disasters/', function(data) {
+                            $('#disaster').html('<option value="">Select Disaster</option>');
+                            $.each(data, function(index, item) {
+                                $('#disaster').append('<option value="' + item.id + '">' + item.name + '</option>');
+                            });
+                            $('#disaster').append('<option value="new">New Disaster</option>');
+                        });
+                        break;
+                    case 'province':
+                        populateProvinces();
+                        break;
+                    case 'municipality':
+                        populateMunicipalities($('#province').val());
+                        break;
+                    case 'barangay':
+                        populateBarangays($('#municipality').val());
+                        break;
+                }
+            } else {
+                alert('Error creating ' + type + ': ' + response.message);
+            }
+        });
+    }
+
+    // Event listeners for creating new entries
+    $('#create_new_disaster').click(function() {
+        createNewEntry('disaster', $('#new_disaster').val());
     });
 
-    // Relief Operations Chart
-    var reliefCtx = document.getElementById('reliefOperationsChart').getContext('2d');
-    var reliefChart = new Chart(reliefCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Financial Assistance', 'Food Items', 'Non-Food Items'],
-            datasets: [{
-                data: [
-                    {{ relief_operations.total_financial_assistance }},
-                    {{ relief_operations.total_food_items }},
-                    {{ relief_operations.total_non_food_items }}
-                ],
-                backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(255, 206, 86, 0.6)', 'rgba(75, 192, 192, 0.6)'],
-            }]
-        },
-        options: {
-            responsive: true,
-        }
+    $('#create_new_province').click(function() {
+        createNewEntry('province', $('#new_province').val());
     });
+
+    $('#create_new_municipality').click(function() {
+        createNewEntry('municipality', $('#new_municipality').val(), $('#province').val());
+    });
+
+    $('#create_new_barangay').click(function() {
+        createNewEntry('barangay', $('#new_barangay').val(), $('#municipality').val());
+    });
+});
 </script>
-{% endblock %}
-
-{% endblock %}
