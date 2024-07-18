@@ -72,6 +72,16 @@
     
     <div class="row g-4" id="disasterList">
         <!-- Disaster cards will be dynamically added here -->
+        {% for disaster in disasters %}
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>{{ disaster.name|title }}</h5>
+                        <p class="card-text">{{ disaster.description }}</p>
+                        <p class="card-text"><small class="text-muted">Date: {{ disaster.date_occurred|date:"F j, Y" }}</small></p>                    </div>
+                </div>
+            </div>
+        {% endfor %}
     </div>
 </div>
 
@@ -109,6 +119,44 @@
         </div>
     </div>
 </div>
+<!-- Edit Disaster Modal -->
+<div class="modal fade" id="editDisasterModal" tabindex="-1" aria-labelledby="editDisasterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="editDisasterModalLabel">Edit Disaster</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editDisasterForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="editDisasterId" name="id">
+                    <div class="mb-3">
+                        <label for="editDisasterName" class="form-label">Disaster Name</label>
+                        <input type="text" class="form-control" id="editDisasterName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDisasterDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editDisasterDescription" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDisasterDate" class="form-label">Date Occurred</label>
+                        <input type="text" class="form-control datepicker" id="editDisasterDate" name="date_occurred" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="updateDisaster">
+                    <i class="fas fa-save me-2"></i>Update Disaster
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 {% endblock %}
 
 {% block extra_js %}

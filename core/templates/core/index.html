@@ -99,27 +99,49 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script>
-        var zamboangaDelSur = [7.8383, 123.2967];
-        var map = L.map('mindanao-map').setView(zamboangaDelSur, 9);
+    <div id="mindanao-map" class="neumorphic-map" style="height: 400px;"></div>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    var zamboangaDelSur = [7.8383, 123.2967];
+    var map = L.map('mindanao-map').setView(zamboangaDelSur, 9);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
 
-        L.control.zoom({
-            position: 'bottomright'
-        }).addTo(map);
+    L.control.zoom({
+        position: 'bottomright'
+    }).addTo(map);
 
-        {% for report in recent_updates %}
-            {% if report.municipality.province.name == 'Zamboanga del Sur' %}
-                {% for affected_area in report.affected_areas.all %}
-                    L.marker([{{ affected_area.barangay.latitude }}, {{ affected_area.barangay.longitude }}])
-                        .addTo(map)
-                        .bindPopup("{{ report.disaster.name }} - {{ affected_area.barangay.name }}, {{ affected_area.municipality.name }} ({{ report.date|date:'M d, Y' }})");
-                {% endfor %}
-            {% endif %}
-        {% endfor %}
-    </script>
+    var blueIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    {% for report in recent_updates %}
+    {% for affected_area in report.affected_areas.all %}
+        L.marker([{{ affected_area.barangay.latitude }}, {{ affected_area.barangay.longitude }}], {icon: blueIcon})
+            .addTo(map)
+            .bindPopup("{{ report.disaster.name }} - {{ affected_area.barangay.name }}, {{ affected_area.municipality.name }} ({{ report.date|date:'M d, Y' }})");
+    {% endfor %}
+{% endfor %}
+
+{% for area in affected_areas %}
+    L.marker([{{ area.barangay.latitude }}, {{ area.barangay.longitude }}], {icon: blueIcon})
+        .addTo(map)
+        .bindPopup("Affected Area: {{ area.barangay.name }}, {{ area.municipality.name }}");
+{% endfor %}
+
+{% for barangay in barangays %}
+        L.marker([{{ barangay.latitude }}, {{ barangay.longitude }}], {icon: blueIcon})
+            .addTo(map)
+            .bindPopup("Barangay: {{ barangay.name }}, {{ barangay.municipality.name }}");
+    {% endfor %}
+</script>
+
 </body>
 </html>

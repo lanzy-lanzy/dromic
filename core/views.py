@@ -77,7 +77,8 @@ def index(request):
     total_affected_persons = AffectedArea.objects.aggregate(Sum('affected_persons'))['affected_persons__sum']
     evacuation_centers_count = EvacuationCenter.objects.count()
     recent_updates = DROMICReport.objects.order_by('-date')[:3]
-    affected_areas = AffectedArea.objects.all()  # You might want to filter this for Mindanao only
+    affected_areas = AffectedArea.objects.all() 
+    barangays = Barangay.objects.all()# You might want to filter this for Mindanao only
 
     context = {
         'active_disasters_count': active_disasters_count,
@@ -85,6 +86,7 @@ def index(request):
         'evacuation_centers_count': evacuation_centers_count,
         'recent_updates': recent_updates,
         'affected_areas': affected_areas,
+        'barangays': barangays,
     }
     return render(request, 'core/index.html', context)
 
@@ -298,6 +300,7 @@ def get_or_create_instance(model, instance_id, new_name, **kwargs):
 
 
 def report_list(request):
+    report_create= DROMICReport.objects.all().select_related('province', 'municipality', 'barangay')
     reports = DROMICReport.objects.all().order_by('-date')
     context = {
         'reports': reports,
