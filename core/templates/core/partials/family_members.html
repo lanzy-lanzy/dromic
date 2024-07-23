@@ -1,0 +1,16 @@
+{% for member in family_members %}
+<div class="row mb-2">
+    <div class="col-md-3"><strong>{{ member.name }}</strong></div>
+    <div class="col-md-2">Age: {{ member.age }}</div>
+    <div class="col-md-2">Gender: {{ member.gender }}</div>
+    <div class="col-md-3">Relation: {{ member.relationship_to_head }}</div>
+    <div class="col-md-2">
+        {% if member.is_displaced %}
+        <span class="badge bg-warning">Displaced</span>
+        {% endif %}
+        {% if member.is_in_evacuation_center %}
+        <span class="badge bg-info">In Evacuation</span>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}

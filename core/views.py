@@ -12,7 +12,7 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import (
     Disaster, AffectedArea, EvacuationCenter, DROMICReport,
     DamagedHouse, DisplacedPopulation, SexAgeDistribution,
-    SectoralDistribution, ReliefOperation, Province, Municipality, Barangay
+    SectoralDistribution, ReliefOperation, Province, Municipality, Barangay, Family, FamilyMember
 )
 from .export import generate_report_pdf
 from django.db.models.functions import TruncDate
@@ -373,4 +373,34 @@ def create_disaster(request):
             return JsonResponse({'status': 'success', 'message': 'Disaster created successfully'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+
+# Disaster impact
+from django.template.loader import render_to_string
+def add_family_member(request):
+    if request.method == 'POST':
+        # Process form data and save to database
+        FamilyMember.objects.create(
+            name=request.POST.get('name'),
+            age=request.POST.get('age'),
+            gender=request.POST.get('gender'),
+            relationship_to_head=request.POST.get('relationship')
+        )
+        family_members = FamilyMember.objects.all()
+        html_content = render_to_string('core/partials/family_members.html', {'family_members': family_members})
+        return JsonResponse({'status': 'success', 'content': html_content})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+def add_displaced_population(request):
+    if request.method == 'POST':
+        DisplacedPopulation.objects.create(
+            area=request.POST.get('area'),
+            evacuation_center=request.POST.get('evacuationCenter'),
+            cum_families=request.POST.get('cumFamilies'),
+            now_families=request.POST.get('nowFamilies')
+        )
+        displaced_population = DisplacedPopulation.objects.all()
+        html_content = render_to_string('core/partials/displaced_population.html', {'displaced_population': displaced_population})
+        return JsonResponse({'status': 'success', 'content': html_content})
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'})

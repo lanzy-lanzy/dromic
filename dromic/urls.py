@@ -4,4 +4,5 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),  # Assuming your app is named 'dromic'
+    path("__reload__/", include("django_browser_reload.urls")),
 ]

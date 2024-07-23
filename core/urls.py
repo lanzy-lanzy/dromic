@@ -39,5 +39,6 @@ urlpatterns = [
     path('disaster_impact/', views.disaster_impact, name='disaster_impact'),
     # Other URL patterns
     
-
+     path('api/add_family_member', views.add_family_member, name='add_family_member'),
+    path('api/add_displaced_population', views.add_displaced_population, name='add_displaced_population'),
 ]
