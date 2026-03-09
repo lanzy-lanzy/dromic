@@ -4,424 +4,241 @@
 
 {% block title %}DROMIC Affected Areas{% endblock %}
 
-{% block extra_css %}
-<style>
-    .dashboard-card {
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s;
-    }
-    .dashboard-card:hover {
-        transform: translateY(-5px);
-    }
-    .dashboard-card-header {
-        background-color: #3498db;
-        color: white;
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
-    }
-    .dashboard-icon {
-        font-size: 3rem;
-        color: #3498db;
-    }
-    .modal-content {
-        border-radius: 15px;
-        overflow: hidden;
-    }
-
-    .modal-header {
-        background-color: #3498db;
-        
-    }
-
-    .form-label {
-        font-weight: 600;
-    }
-
-    .input-group-text {
-        background-color: #f8f9fa;
-    }
-
-    .btn-primary {
-        background-color: #3498db;
-        border-color: #3498db;
-    }
-
-    .btn-primary:hover {
-        background-color: #2980b9;
-        border-color: #2980b9;
-    }
-    .disaster-container {
-    background-color: #f0f4f8;
-    padding: 20px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-}
-
-.disaster-card {
-    background-color: #ffffff;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-    margin-bottom: 30px;
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.disaster-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-}
-
-.disaster-header {
-    background-color: #F8EDE3;
-    color: #ffffff;
-    padding: 15px 20px;
-    font-size: 1.4em;
-}
-
-.disaster-body {
-    padding: 20px;
-}
-
-.province-card {
-    background-color: #f8fafc;
-    border-radius: 12px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-    margin-bottom: 20px;
-    overflow: hidden;
-}
-
-.province-header {
-    background-color: #EECEB9;
-    color: #ffffff;
-    padding: 12px 18px;
-    font-size: 1.2em;
-}
-
-.province-body {
-    padding: 15px;
-}
-
-.municipality-card {
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    margin-bottom: 15px;
-    overflow: hidden;
-}
-
-.municipality-header {
-    background-color: #8D493A;
-    color: #ffffff;
-    padding: 10px 15px;
-    font-size: 1.1em;
-}
-
-.municipality-body {
-    padding: 12px;
-}
-
-.barangay-list {
-    list-style-type: none;
-    padding: 0;
-}
-
-.barangay-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
-    margin-bottom: 8px;
-    background-color: #f0f4f8;
-    border-radius: 8px;
-    transition: background-color 0.2s ease;
-}
-
-.barangay-item:hover {
-    background-color: #e6eaf0;
-}
-
-.barangay-name {
-    font-weight: bold;
-    color: #34495e;
-}
-
-.affected-count {
-    font-size: 0.9em;
-    color: #7f8c8d;
-}
-
-.affected-count i {
-    margin-right: 5px;
-    margin-left: 10px;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.disaster-card, .province-card, .municipality-card {
-    animation: fadeIn 0.5s ease-out forwards;
-}
-
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="container-fluid mt-4">
-    <h1 class="display-4 mb-4">DROMIC Affected Areas</h1>
+<div class="container-fluid mt-4" x-data="{ showModal: false }">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-bold text-dromic-navy">Affected Areas</h1>
+            <p class="text-dromic-slate mt-1">Track and manage disaster-affected areas</p>
+        </div>
+        <button class="mt-4 md:mt-0 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center" @click="showModal = true">
+            <i class="fas fa-plus-circle mr-2"></i>
+            Add Affected Area
+        </button>
+    </div>
 
-    <button class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#addAffectedAreaModal">
-        <i class="fas fa-plus-circle"></i> Add Affected Area
-    </button>
-
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Total Affected Areas</h5>
-                </div>
-                <div class="card-body text-center">
-                    <i class="fas fa-map-marked-alt dashboard-icon mb-3" style="color: #FF9800;"></i>
-                    <h2 class="card-text">{{ total_affected_areas|intcomma }}</h2>
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-map-marked-alt text-orange-500 text-xl"></i>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Total Affected Families</h5>
-                </div>
-                <div class="card-body text-center">
-                    <i class="fas fa-home dashboard-icon mb-3" style="color: #4CAF50;"></i>
-                    <h2 class="card-text">{{ total_affected_families|intcomma }}</h2>
-                </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Total Affected Areas</p>
+                <h2 class="text-4xl font-bold text-slate-800">{{ total_affected_areas|intcomma }}</h2>
             </div>
         </div>
-        <div class="col-md-4 mb-4">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Total Affected Persons</h5>
+
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-home text-emerald-500 text-xl"></i>
                 </div>
-                <div class="card-body text-center">
-                    <i class="fas fa-users dashboard-icon mb-3" style="color: #2196F3;"></i>
-                    <h2 class="card-text">{{ total_affected_persons|intcomma }}</h2>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Total Affected Families</p>
+                <h2 class="text-4xl font-bold text-slate-800">{{ total_affected_families|intcomma }}</h2>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-users text-blue-500 text-xl"></i>
                 </div>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Total Affected Persons</p>
+                <h2 class="text-4xl font-bold text-slate-800">{{ total_affected_persons|intcomma }}</h2>
             </div>
         </div>
     </div>
-    <div class="container-fluid mt-4">
-    <h2 class="mb-4 text-center">Affected Areas by Disaster</h2>
-    <div class="disaster-container">
+
+    <!-- Affected Areas by Disaster -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-dromic-navy mb-6 text-center">Affected Areas by Disaster</h2>
+        
         {% regroup affected_areas|dictsort:"disaster.name" by disaster as disaster_list %}
+        <div class="space-y-6">
         {% for disaster in disaster_list %}
-            <div class="disaster-card">
-                <div class="disaster-header">
-                    <h3>{{ disaster.grouper }}</h3>
+            <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+                <div class="px-6 py-5 border-b border-slate-100">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center mr-3">
+                            <i class="fas fa-exclamation-triangle text-orange-500"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">{{ disaster.grouper }}</h3>
+                    </div>
                 </div>
-                <div class="disaster-body ">
+                <div class="p-6">
                     {% regroup disaster.list|dictsort:"province.name" by province as province_list %}
                     {% for province in province_list %}
-                        <div class="province-card">
-                            <div class="province-header">
-                                <h4>{{ province.grouper }}</h4>
+                    <div class="mb-6 last:mb-0">
+                        <div class="bg-orange-50 rounded-xl px-4 py-3 mb-4">
+                            <h4 class="text-lg font-semibold text-dromic-navy">{{ province.grouper }}</h4>
+                        </div>
+                        {% regroup province.list|dictsort:"municipality.name" by municipality as municipality_list %}
+                        {% for municipality in municipality_list %}
+                        <div class="ml-4 mb-4">
+                            <div class="bg-blue-50 rounded-lg px-3 py-2 mb-3">
+                                <h5 class="font-medium text-dromic-slate">{{ municipality.grouper }}</h5>
                             </div>
-                            <div class="province-body">
-                                {% regroup province.list|dictsort:"municipality.name" by municipality as municipality_list %}
-                                {% for municipality in municipality_list %}
-                                    <div class="municipality-card">
-                                        <div class="municipality-header">
-                                            <h5>{{ municipality.grouper }}</h5>
-                                        </div>
-                                        <div class="municipality-body">
-                                            <ul class="barangay-list">
-                                                {% for area in municipality.list|dictsort:"barangay.name" %}
-                                                    <li class="barangay-item">
-                                                        <span class="barangay-name">{{ area.barangay.name }}</span>
-                                                        <span class="affected-count">
-                                                            <i class="fas fa-home text-primary"></i> Families : {{ area.affected_families }}
-                                                            <i class="fas fa-users text-success"></i> Persons : {{ area.affected_persons }}                                                        </span>
-                                                    </li>
-                                                {% endfor %}
-                                            </ul>
-                                        </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 ml-4">
+                                {% for area in municipality.list|dictsort:"barangay.name" %}
+                                <div class="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-medium text-dromic-navy">{{ area.barangay.name }}</span>
                                     </div>
+                                    <div class="mt-2 flex items-center text-sm text-dromic-slate">
+                                        <span class="bg-blue-100 text-blue-600 px-2 py-0.5 rounded text-xs mr-2">
+                                            <i class="fas fa-home mr-1"></i>{{ area.affected_families|intcomma }}
+                                        </span>
+                                        <span class="bg-green-100 text-green-600 px-2 py-0.5 rounded text-xs">
+                                            <i class="fas fa-users mr-1"></i>{{ area.affected_persons|intcomma }}
+                                        </span>
+                                    </div>
+                                </div>
                                 {% endfor %}
                             </div>
                         </div>
+                        {% endfor %}
+                    </div>
                     {% endfor %}
                 </div>
             </div>
         {% endfor %}
+        </div>
     </div>
 </div>
 
 <!-- Add Affected Area Modal -->
-<div class="modal fade" id="addAffectedAreaModal" tabindex="-1" aria-labelledby="addAffectedAreaModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addAffectedAreaModalLabel">Add Affected Area</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="showModal = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full z-10">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center rounded-t-2xl">
+                <h5 class="text-lg font-bold text-slate-800 flex items-center">
+                    <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center mr-3">
+                        <i class="fas fa-map-marker-alt text-orange-500"></i>
+                    </div>
+                    Add Affected Area
+                </h5>
+                <button @click="showModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
-           <div class="modal-body">
-    <form id="addAffectedAreaForm">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label for="disaster" class="form-label">Disaster</label>
-            <select class="form-select" id="disaster" name="disaster" required>
-                <option value="">Select Disaster</option>
-                {% for disaster in disasters %}
-                <option value="{{ disaster.id }}">{{ disaster.name }}</option>
-                {% endfor %}
-                <option value="new">New Disaster</option>
-            </select>
-            <input type="text" class="form-control mt-2" id="new_disaster" name="new_disaster" style="display: none;" placeholder="Enter new disaster name">
-        </div>
-        <div class="mb-3">
-            <label for="province" class="form-label">Province</label>
-            <select class="form-select" id="province" name="province" required>
-                <option value="">Select Province</option>
-                {% for province in provinces %}
-                <option value="{{ province.id }}">{{ province.name }}</option>
-                {% endfor %}
-                <option value="new">New Province</option>
-            </select>
-            <input type="text" class="form-control mt-2" id="new_province" name="new_province" style="display: none;" placeholder="Enter new province name">
-        </div>
-        <div class="mb-3">
-            <label for="municipality" class="form-label">Municipality</label>
-            <select class="form-select" id="municipality" name="municipality" required>
-                <option value="">Select Municipality</option>
-                <option value="new">New Municipality</option>
-            </select>
-            <input type="text" class="form-control mt-2" id="new_municipality" name="new_municipality" style="display: none;" placeholder="Enter new municipality name">
-        </div>
-        <div class="mb-3">
-            <label for="barangay" class="form-label">Barangay</label>
-            <select class="form-select" id="barangay" name="barangay" required>
-                <option value="">Select Barangay</option>
-                <option value="new">New Barangay</option>
-            </select>
-            <input type="text" class="form-control mt-2" id="new_barangay" name="new_barangay" style="display: none;" placeholder="Enter new barangay name">
-        </div>
-        <div class="mb-3">
-            <label for="affected_families" class="form-label">Affected Families</label>
-            <input type="number" class="form-control" id="affected_families" name="affected_families" required>
-        </div>
-        <div class="mb-3">
-            <label for="affected_persons" class="form-label">Affected Persons</label>
-            <input type="number" class="form-control" id="affected_persons" name="affected_persons" required>
-        </div>
-    </form>
-</div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="saveAffectedArea">Save</button>
+            <div class="p-6">
+                <form id="addAffectedAreaForm">
+                    {% csrf_token %}
+                    <div class="mb-5">
+                        <label class="block text-dromic-navy text-sm font-semibold mb-2">Disaster</label>
+                        <select class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none" id="disaster" name="disaster" required>
+                            <option value="">Select Disaster</option>
+                            {% for disaster in disasters %}
+                            <option value="{{ disaster.id }}">{{ disaster.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-5">
+                        <label class="block text-dromic-navy text-sm font-semibold mb-2">Province</label>
+                        <select class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none" id="province" name="province" required>
+                            <option value="">Select Province</option>
+                            {% for province in provinces %}
+                            <option value="{{ province.id }}">{{ province.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-5">
+                        <label class="block text-dromic-navy text-sm font-semibold mb-2">Municipality</label>
+                        <select class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none" id="municipality" name="municipality" required disabled>
+                            <option value="">Select municipality</option>
+                        </select>
+                    </div>
+                    <div class="mb-5">
+                        <label class="block text-dromic-navy text-sm font-semibold mb-2">Barangay</label>
+                        <select class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none" id="barangay" name="barangay" required disabled>
+                            <option value="">Select Barangay</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="mb-5">
+                            <label class="block text-dromic-navy text-sm font-semibold mb-2">Affected Families</label>
+                            <input type="number" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none" id="affected_families" name="affected_families" required>
+                        </div>
+                        <div class="mb-5">
+                            <label class="block text-dromic-navy text-sm font-semibold mb-2">Affected Persons</label>
+                            <input type="number" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none" id="affected_persons" name="affected_persons" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button @click="showModal = false" class="px-5 py-2.5 rounded-xl border border-gray-200 text-dromic-slate font-medium hover:bg-gray-100 transition-colors">Cancel</button>
+                <button class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl" id="saveAffectedArea">
+                    <i class="fas fa-save mr-2"></i>Save Area
+                </button>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
 {% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
-    $('#saveAffectedArea').click(function() {
-        var formData = new FormData($('#addAffectedAreaForm')[0]);
-        
-        // Handle new disaster
-        if ($('#disaster').val() === 'new') {
-            formData.set('disaster', 'new');
-            formData.append('new_disaster', $('#new_disaster').val());
-        }
-        
-        // Handle new province
-        if ($('#province').val() === 'new') {
-            formData.set('province', 'new');
-            formData.append('new_province', $('#new_province').val());
-        }
-        
-        // Handle new municipality
-        if ($('#municipality').val() === 'new') {
-            formData.set('municipality', 'new');
-            formData.append('new_municipality', $('#new_municipality').val());
-        }
-        
-        // Handle new barangay
-        if ($('#barangay').val() === 'new') {
-            formData.set('barangay', 'new');
-            formData.append('new_barangay', $('#new_barangay').val());
-        }
-        
-        $.ajax({
-            url: '{% url "add_affected_area" %}',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.status === 'success') {
-                    alert(response.message);
-                    $('#addAffectedAreaModal').modal('hide');
-                    location.reload(); // Refresh the page to show the new data
-                } else {
-                    alert('Error: ' + response.message);
-                }
-            },
-            error: function(xhr, status, error) {
-                alert('An error occurred: ' + error);
-            }
-        });
-    });
-
-    // Show/hide new input fields based on selection
-    $('#disaster, #province, #municipality, #barangay').change(function() {
-        var newInputId = 'new_' + this.id;
-        if ($(this).val() === 'new') {
-            $('#' + newInputId).show();
-        } else {
-            $('#' + newInputId).hide();
-        }
-    });
-
-    // Cascading dropdowns
     $('#province').change(function() {
         var provinceId = $(this).val();
-        if (provinceId && provinceId !== 'new') {
+        if (provinceId) {
             $.get('{% url "get_municipalities" %}', {province_id: provinceId}, function(data) {
-                $('#municipality').html('<option value="">Select Municipality</option>');
+                $('#municipality').html('<option value="">Select municipality</option>');
                 $.each(data.municipalities, function(index, item) {
                     $('#municipality').append('<option value="' + item.id + '">' + item.name + '</option>');
                 });
-                $('#municipality').append('<option value="new">New Municipality</option>');
                 $('#municipality').prop('disabled', false);
-                $('#barangay').prop('disabled', true);
             });
         } else {
+            $('#municipality').html('<option value="">Select municipality</option>');
             $('#municipality').prop('disabled', true);
-            $('#barangay').prop('disabled', true);
         }
+        $('#barangay').html('<option value="">Select Barangay</option>');
+        $('#barangay').prop('disabled', true);
     });
 
     $('#municipality').change(function() {
         var municipalityId = $(this).val();
-        if (municipalityId && municipalityId !== 'new') {
+        if (municipalityId) {
             $.get('{% url "get_barangays" %}', {municipality_id: municipalityId}, function(data) {
                 $('#barangay').html('<option value="">Select Barangay</option>');
                 $.each(data.barangays, function(index, item) {
                     $('#barangay').append('<option value="' + item.id + '">' + item.name + '</option>');
                 });
-                $('#barangay').append('<option value="new">New Barangay</option>');
                 $('#barangay').prop('disabled', false);
             });
         } else {
+            $('#barangay').html('<option value="">Select Barangay</option>');
             $('#barangay').prop('disabled', true);
         }
     });
+
+    $('#saveAffectedArea').click(function() {
+        var formData = $('#addAffectedAreaForm').serialize();
+        $.ajax({
+            url: '{% url "add_affected_area" %}',
+            type: 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            }
+        });
+    });
 });
 </script>
-{% endblock %}
-
-
 {% endblock %}

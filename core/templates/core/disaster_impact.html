@@ -2,285 +2,247 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="mb-4">Disaster Impact Details</h1>
+<div class="container mt-5" x-data="{ showModal: false, modalType: '' }">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl md:text-4xl font-bold text-dromic-navy">Disaster Impact Details</h1>
+        <p class="text-dromic-slate mt-1">Comprehensive impact assessment and statistics</p>
+    </div>
 
     <!-- Family Members -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h2 class="h4 mb-0">Family Members</h2>
-            <button class="btn btn-sm btn-light float-end add-btn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-card-type="family-members">Add</button>
-        </div>
-        <div class="card-body">
-            {% for member in family_members %}
-            <div class="row mb-2">
-                <div class="col-md-3"><strong>{{ member.name }}</strong></div>
-                <div class="col-md-2">Age: {{ member.age }}</div>
-                <div class="col-md-2">Gender: {{ member.gender }}</div>
-                <div class="col-md-3">Relation: {{ member.relationship_to_head }}</div>
-                <div class="col-md-2">
-                    {% if member.is_displaced %}
-                    <span class="badge bg-warning">Displaced</span>
-                    {% endif %}
-                    {% if member.is_in_evacuation_center %}
-                    <span class="badge bg-info">In Evacuation</span>
-                    {% endif %}
+    <div class="bg-white rounded-2xl shadow-md border border-slate-100 mb-6 overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
+            <h2 class="text-xl font-bold text-slate-800 flex items-center">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center mr-3">
+                    <i class="fas fa-users text-blue-500"></i>
                 </div>
-            </div>
+                Family Members
+            </h2>
+            <button @click="showModal = true; modalType = 'family'" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
+                <i class="fas fa-plus mr-1"></i>Add
+            </button>
+        </div>
+        <div class="p-6">
+            {% if family_members %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for member in family_members %}
+                <div class="bg-blue-50 rounded-xl p-4 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h4 class="font-semibold text-dromic-navy">{{ member.name }}</h4>
+                            <p class="text-sm text-dromic-slate">{{ member.age }} years old • {{ member.gender }}</p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            {% if member.is_displaced %}
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-xs font-medium">Displaced</span>
+                            {% endif %}
+                            {% if member.is_in_evacuation_center %}
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium">In Evacuation</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <p class="text-sm text-dromic-slate mt-2">{{ member.relationship_to_head }}</p>
+                </div>
             {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-400">
+                <i class="fas fa-users text-4xl mb-2"></i>
+                <p>No family members recorded yet</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 
     <!-- Displaced Population -->
-    <div class="card mb-4">
-        <div class="card-header bg-danger text-white">
-            <h2 class="h4 mb-0">Displaced Population</h2>
-            <button class="btn btn-sm btn-light float-end add-btn" data-bs-toggle="modal" data-bs-target="#dynamicModal" data-card-type="displaced-population">Add</button>
-
+    <div class="bg-white rounded-2xl shadow-md border border-slate-100 mb-6 overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
+            <h2 class="text-xl font-bold text-slate-800 flex items-center">
+                <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center mr-3">
+                    <i class="fas fa-exclamation-circle text-red-500"></i>
+                </div>
+                Displaced Population
+            </h2>
+            <button @click="showModal = true; modalType = 'displaced'" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
+                <i class="fas fa-plus mr-1"></i>Add
+            </button>
         </div>
-        <div class="card-body">
-            <p><strong>Area:</strong> {{ displaced_population.area }}</p>
-            <p><strong>Evacuation Center:</strong> {{ displaced_population.evacuation_center }}</p>
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Cumulative Families</h5>
-                            <p class="card-text display-4">{{ displaced_population.cum_families }}</p>
-                        </div>
-                    </div>
+        <div class="p-6">
+            <div class="bg-red-50 rounded-xl p-4 mb-6">
+                <p class="text-dromic-navy"><strong>Area:</strong> {{ displaced_population.area }}</p>
+                <p class="text-dromic-navy"><strong>Evacuation Center:</strong> {{ displaced_population.evacuation_center }}</p>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 text-center">
+                    <p class="text-red-600 text-sm font-medium">Cumulative Families</p>
+                    <p class="text-3xl font-bold text-dromic-navy">{{ displaced_population.cum_families|default:"0" }}</p>
                 </div>
-                <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Current Families</h5>
-                            <p class="card-text display-4">{{ displaced_population.now_families }}</p>
-                        </div>
-                    </div>
+                <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 text-center">
+                    <p class="text-red-600 text-sm font-medium">Current Families</p>
+                    <p class="text-3xl font-bold text-dromic-navy">{{ displaced_population.now_families|default:"0" }}</p>
                 </div>
-                <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Cumulative Persons</h5>
-                            <p class="card-text display-4">{{ displaced_population.cum_persons }}</p>
-                        </div>
-                    </div>
+                <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 text-center">
+                    <p class="text-red-600 text-sm font-medium">Cumulative Persons</p>
+                    <p class="text-3xl font-bold text-dromic-navy">{{ displaced_population.cum_persons|default:"0" }}</p>
                 </div>
-                <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Current Persons</h5>
-                            <p class="card-text display-4">{{ displaced_population.now_persons }}</p>
-                        </div>
-                    </div>
+                <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 text-center">
+                    <p class="text-red-600 text-sm font-medium">Current Persons</p>
+                    <p class="text-3xl font-bold text-dromic-navy">{{ displaced_population.now_persons|default:"0" }}</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Sex and Age Distribution -->
-    <div class="card mb-4">
-        <div class="card-header bg-success text-white">
-            <h2 class="h4 mb-0">Sex and Age Distribution</h2>
+    <!-- Distribution Tables -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Sex and Age -->
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 bg-white">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center">
+                    <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center mr-3">
+                        <i class="fas fa-chart-bar text-green-500"></i>
+                    </div>
+                    Sex and Age Distribution
+                </h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-green-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-green-600 font-semibold text-sm">Sex</th>
+                            <th class="px-4 py-3 text-left text-green-600 font-semibold text-sm">Age Group</th>
+                            <th class="px-4 py-3 text-left text-green-600 font-semibold text-sm">Cumulative</th>
+                            <th class="px-4 py-3 text-left text-green-600 font-semibold text-sm">Current</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for distribution in sex_age_distributions %}
+                        <tr class="border-b border-green-50 hover:bg-green-50/50">
+                            <td class="px-4 py-3">{{ distribution.sex }}</td>
+                            <td class="px-4 py-3">{{ distribution.age_group }}</td>
+                            <td class="px-4 py-3 font-medium">{{ distribution.cum_count }}</td>
+                            <td class="px-4 py-3">{{ distribution.now_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="card-body">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Sex</th>
-                        <th>Age Group</th>
-                        <th>Cumulative Count</th>
-                        <th>Current Count</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for distribution in sex_age_distributions %}
-                    <tr>
-                        <td>{{ distribution.sex }}</td>
-                        <td>{{ distribution.age_group }}</td>
-                        <td>{{ distribution.cum_count }}</td>
-                        <td>{{ distribution.now_count }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
 
-    <!-- Sectoral Distribution -->
-    <div class="card mb-4">
-        <div class="card-header bg-info text-white">
-            <h2 class="h4 mb-0">Sectoral Distribution</h2>
-        </div>
-        <div class="card-body">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Sector</th>
-                        <th>Cumulative Count</th>
-                        <th>Current Count</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for distribution in sectoral_distributions %}
-                    <tr>
-                        <td>{{ distribution.sector }}</td>
-                        <td>{{ distribution.cum_count }}</td>
-                        <td>{{ distribution.now_count }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <!-- Sectoral -->
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 bg-white">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center">
+                    <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center mr-3">
+                        <i class="fas fa-chart-pie text-purple-500"></i>
+                    </div>
+                    Sectoral Distribution
+                </h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-purple-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-purple-600 font-semibold text-sm">Sector</th>
+                            <th class="px-4 py-3 text-left text-purple-600 font-semibold text-sm">Cumulative</th>
+                            <th class="px-4 py-3 text-left text-purple-600 font-semibold text-sm">Current</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for distribution in sectoral_distributions %}
+                        <tr class="border-b border-purple-50 hover:bg-purple-50/50">
+                            <td class="px-4 py-3">{{ distribution.sector }}</td>
+                            <td class="px-4 py-3 font-medium">{{ distribution.cum_count }}</td>
+                            <td class="px-4 py-3">{{ distribution.now_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Damaged Houses -->
-    <div class="card mb-4">
-        <div class="card-header bg-warning text-dark">
-            <h2 class="h4 mb-0">Damaged Houses</h2>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Partially Damaged</h5>
-                            <p class="card-text display-4">{{ damaged_houses.partially_damaged }}</p>
-                        </div>
-                    </div>
+    <div class="bg-white rounded-2xl shadow-md border border-slate-100 mb-6 overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 bg-white">
+            <h2 class="text-xl font-bold text-slate-800 flex items-center">
+                <div class="w-8 h-8 rounded-lg bg-yellow-50 flex items-center justify-center mr-3">
+                    <i class="fas fa-house-damage text-yellow-500"></i>
                 </div>
-                <div class="col-md-6">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Totally Damaged</h5>
-                            <p class="card-text display-4">{{ damaged_houses.totally_damaged }}</p>
-                        </div>
+                Damaged Houses
+            </h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-6 text-center">
+                    <div class="w-16 h-16 bg-yellow-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-tools text-yellow-600 text-2xl"></i>
                     </div>
+                    <p class="text-yellow-600 font-medium">Partially Damaged</p>
+                    <p class="text-4xl font-bold text-dromic-navy mt-2">{{ damaged_houses.partially_damaged|default:"0" }}</p>
+                </div>
+                <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 text-center">
+                    <div class="w-16 h-16 bg-red-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-times-circle text-red-600 text-2xl"></i>
+                    </div>
+                    <p class="text-red-600 font-medium">Totally Damaged</p>
+                    <p class="text-4xl font-bold text-dromic-navy mt-2">{{ damaged_houses.totally_damaged|default:"0" }}</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Relief Operations -->
-    <div class="card mb-4">
-        <div class="card-header bg-secondary text-white">
-            <h2 class="h4 mb-0">Relief Operations</h2>
+    <div class="bg-white rounded-2xl shadow-md border border-slate-100 mb-6 overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 bg-white">
+            <h2 class="text-xl font-bold text-slate-800 flex items-center">
+                <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center mr-3">
+                    <i class="fas fa-hands-helping text-teal-500"></i>
+                </div>
+                Relief Operations
+            </h2>
         </div>
-        <div class="card-body">
-            <p><strong>Date:</strong> {{ relief_operation.date }}</p>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Food Items</h5>
-                            <p class="card-text display-4">{{ relief_operation.food_items }}</p>
-                        </div>
-                    </div>
+        <div class="p-6">
+            <p class="text-dromic-navy mb-4"><strong>Date:</strong> {{ relief_operation.date|default:"N/A" }}</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-5 text-center">
+                    <i class="fas fa-utensils text-teal-600 text-2xl mb-2"></i>
+                    <p class="text-teal-600 font-medium">Food Items</p>
+                    <p class="text-3xl font-bold text-dromic-navy mt-1">{{ relief_operation.food_items|default:"0" }}</p>
                 </div>
-                <div class="col-md-4">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Non-Food Items</h5>
-                            <p class="card-text display-4">{{ relief_operation.non_food_items }}</p>
-                        </div>
-                    </div>
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 text-center">
+                    <i class="fas fa-box text-blue-600 text-2xl mb-2"></i>
+                    <p class="text-blue-600 font-medium">Non-Food Items</p>
+                    <p class="text-3xl font-bold text-dromic-navy mt-1">{{ relief_operation.non_food_items|default:"0" }}</p>
                 </div>
-                <div class="col-md-4">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Financial Assistance</h5>
-                            <p class="card-text display-4">₱{{ relief_operation.financial_assistance }}</p>
-                        </div>
-                    </div>
+                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 text-center">
+                    <i class="fas fa-peso-sign text-green-600 text-2xl mb-2"></i>
+                    <p class="text-green-600 font-medium">Financial Assistance</p>
+                    <p class="text-3xl font-bold text-dromic-navy mt-1">₱{{ relief_operation.financial_assistance|default:"0" }}</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Early Recovery -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h2 class="h4 mb-0">Early Recovery</h2>
+    <div class="bg-white rounded-2xl shadow-md border border-slate-100 mb-6 overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 bg-white">
+            <h2 class="text-xl font-bold text-slate-800 flex items-center">
+                <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center mr-3">
+                    <i class="fas fa-clipboard-check text-indigo-500"></i>
+                </div>
+                Early Recovery
+            </h2>
         </div>
-        <div class="card-body">
-            <p><strong>Description:</strong> {{ early_recovery.description }}</p>
-            <p><strong>Date Started:</strong> {{ early_recovery.date_started }}</p>
+        <div class="p-6">
+            <p class="text-dromic-navy"><strong>Description:</strong> {{ early_recovery.description|default:"N/A" }}</p>
+            <p class="text-dromic-navy mt-2"><strong>Date Started:</strong> {{ early_recovery.date_started|default:"N/A" }}</p>
             {% if early_recovery.date_completed %}
-            <p><strong>Date Completed:</strong> {{ early_recovery.date_completed }}</p>
+            <p class="text-dromic-navy"><strong>Date Completed:</strong> {{ early_recovery.date_completed }}</p>
             {% else %}
-            <p><strong>Status:</strong> <span class="badge bg-warning">Ongoing</span></p>
+            <span class="inline-block mt-2 px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">Ongoing</span>
             {% endif %}
         </div>
     </div>
- {% include "core/modal/add_impact.html" %}
 </div>
-{% endblock %}
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('dynamicModal');
-    const modalTitle = modal.querySelector('.modal-title');
-    const modalBody = modal.querySelector('.modal-body');
-
-    modal.addEventListener('show.bs.modal', function(event) {
-        const button = event.relatedTarget;
-        const cardType = button.getAttribute('data-card-type');
-
-        switch(cardType) {
-            case 'family-members':
-                modalTitle.textContent = 'Add Family Member';
-                modalBody.innerHTML = `
-                    <form id="addFamilyMemberForm">
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Name</label>
-                            <input type="text" class="form-control" id="name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="age" class="form-label">Age</label>
-                            <input type="number" class="form-control" id="age" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="gender" class="form-label">Gender</label>
-                            <select class="form-select" id="gender" required>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="relationship" class="form-label">Relationship to Head</label>
-                            <input type="text" class="form-control" id="relationship" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Add Family Member</button>
-                    </form>
-                `;
-                break;
-            case 'displaced-population':
-                modalTitle.textContent = 'Add Displaced Population';
-                modalBody.innerHTML = `
-                    <form id="addDisplacedPopulationForm">
-                        <div class="mb-3">
-                            <label for="area" class="form-label">Area</label>
-                            <input type="text" class="form-control" id="area" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="evacuationCenter" class="form-label">Evacuation Center</label>
-                            <input type="text" class="form-control" id="evacuationCenter" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="cumFamilies" class="form-label">Cumulative Families</label>
-                            <input type="number" class="form-control" id="cumFamilies" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="nowFamilies" class="form-label">Current Families</label>
-                            <input type="number" class="form-control" id="nowFamilies" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Add Displaced Population</button>
-                    </form>
-                `;
-                break;
-            // Add cases for other card types here
-        }
-    });
-});
-</script>
 {% endblock %}

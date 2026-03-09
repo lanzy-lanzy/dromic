@@ -6,153 +6,252 @@
 
 {% block extra_css %}
 <style>
-    .dashboard-card {
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s;
+    .stat-card {
+        transition: all 0.3s ease;
     }
-    .dashboard-card:hover {
-        transform: translateY(-5px);
-    }
-    .dashboard-card-header {
-        background-color: #3498db;
-        color: white;
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
-    }
-    .dashboard-icon {
-        font-size: 3rem;
-        color: #3498db;
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
-    <h1 class="display-4 mb-4">DROMIC Overview</h1>
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-bold text-dromic-navy">Overview</h1>
+            <p class="text-dromic-slate mt-1">Comprehensive disaster response statistics and analytics</p>
+        </div>
+        <div class="flex items-center space-x-2 mt-4 md:mt-0">
+            <span class="px-4 py-2 rounded-full bg-blue-100 text-blue-600 text-sm font-medium">
+                <i class="fas fa-calendar-alt mr-1"></i>
+                {% now "F j, Y" %}
+            </span>
+        </div>
+    </div>
 
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Total Disasters</h5>
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Disasters -->
+        <div class="stat-card bg-white rounded-2xl shadow-md border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
                 </div>
-                <div class="card-body text-center">
-                    <i class="fas fa-exclamation-triangle dashboard-icon mb-3" style="color: #dc3545;"></i>
-                    <h2 class="card-text" id="totalDisasters">{{ total_disasters }}</h2>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Total Disasters</p>
+                <div class="flex items-end justify-between">
+                    <h2 class="text-4xl font-bold text-slate-800" id="totalDisasters">{{ total_disasters }}</h2>
+                    <div class="flex items-center text-red-500 text-sm font-semibold bg-red-50 px-2 py-1 rounded-lg">
+                        <i class="fas fa-arrow-up mr-1 text-xs"></i>
+                        <span>12%</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Affected Areas</h5>
+
+        <!-- Affected Areas -->
+        <div class="stat-card bg-white rounded-2xl shadow-md border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-map-marked-alt text-blue-500 text-xl"></i>
                 </div>
-                <div class="card-body text-center">
-                    <i class="fas fa-map-marked-alt dashboard-icon mb-3" style="color: #17a2b8;"></i>
-                    <h2 class="card-text" id="affectedAreas">{{ total_affected_areas }}</h2>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Affected Areas</p>
+                <div class="flex items-end justify-between">
+                    <h2 class="text-4xl font-bold text-slate-800" id="affectedAreas">{{ total_affected_areas }}</h2>
+                    <div class="flex items-center text-blue-500 text-sm font-semibold bg-blue-50 px-2 py-1 rounded-lg">
+                        <i class="fas fa-arrow-up mr-1 text-xs"></i>
+                        <span>8%</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Affected Families</h5>
+
+        <!-- Affected Families -->
+        <div class="stat-card bg-white rounded-2xl shadow-md border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-home text-orange-500 text-xl"></i>
                 </div>
-                <div class="card-body text-center">
-                    <i class="fas fa-home dashboard-icon mb-3" style="color: #ffc107;"></i>
-                    <h2 class="card-text" id="affectedFamilies">{{ total_affected_families|intcomma }}</h2>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Affected Families</p>
+                <div class="flex items-end justify-between">
+                    <h2 class="text-4xl font-bold text-slate-800" id="affectedFamilies">{{ total_affected_families|intcomma }}</h2>
+                    <div class="flex items-center text-orange-500 text-sm font-semibold bg-orange-50 px-2 py-1 rounded-lg">
+                        <i class="fas fa-arrow-up mr-1 text-xs"></i>
+                        <span>15%</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Affected Persons</h5>
+
+        <!-- Affected Persons -->
+        <div class="stat-card bg-white rounded-2xl shadow-md border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-users text-emerald-500 text-xl"></i>
                 </div>
-                <div class="card-body text-center">
-                    <i class="fas fa-users dashboard-icon mb-3" style="color: #28a745;"></i>
-                    <h2 class="card-text" id="affectedPersons">{{ total_affected_persons|intcomma }}</h2>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Affected Persons</p>
+                <div class="flex items-end justify-between">
+                    <h2 class="text-4xl font-bold text-slate-800" id="affectedPersons">{{ total_affected_persons|intcomma }}</h2>
+                    <div class="flex items-center text-emerald-500 text-sm font-semibold bg-emerald-50 px-2 py-1 rounded-lg">
+                        <i class="fas fa-arrow-up mr-1 text-xs"></i>
+                        <span>10%</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Displaced Population</h5>
+    <!-- Charts Row 1 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Displaced Population -->
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center mr-3">
+                        <i class="fas fa-users text-indigo-500"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Displaced Population</h3>
                 </div>
-                <div class="card-body">
+            </div>
+            <div class="p-6">
+                <div class="h-72">
                     <canvas id="displacedChart"></canvas>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Damaged Houses</h5>
+
+        <!-- Damaged Houses -->
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center mr-3">
+                        <i class="fas fa-house-damage text-orange-500"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Damaged Houses</h3>
                 </div>
-                <div class="card-body">
+            </div>
+            <div class="p-6">
+                <div class="h-72">
                     <canvas id="damagedHousesChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Sex and Age Distribution</h5>
+    <!-- Charts Row 2 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Sex and Age Distribution -->
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center mr-3">
+                        <i class="fas fa-chart-bar text-pink-500"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Sex and Age Distribution</h3>
                 </div>
-                <div class="card-body">
+            </div>
+            <div class="p-6">
+                <div class="h-72">
                     <canvas id="sexAgeChart"></canvas>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Sectoral Distribution</h5>
+
+        <!-- Sectoral Distribution -->
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center mr-3">
+                        <i class="fas fa-chart-pie text-emerald-500"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Sectoral Distribution</h3>
                 </div>
-                <div class="card-body">
+            </div>
+            <div class="p-6">
+                <div class="h-72">
                     <canvas id="sectoralChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Relief Operations Summary</h5>
+    <!-- Relief Operations -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center mr-3">
+                        <i class="fas fa-hands-helping text-emerald-500"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Relief Operations Summary</h3>
                 </div>
-                <div class="card-body">
+            </div>
+            <div class="p-6">
+                <div class="h-72">
                     <canvas id="reliefOperationsChart"></canvas>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Relief Operations Details</h5>
+
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center mr-3">
+                        <i class="fas fa-clipboard-list text-blue-500"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Relief Operations Details</h3>
                 </div>
-                <div class="card-body">
-                    <p>Total Financial Assistance: ₱{{ relief_summary.total_financial_assistance|floatformat:2|intcomma }}</p>
-                    <p>Total Food Items: {{ relief_summary.total_food_items|intcomma }}</p>
-                    <p>Total Non-Food Items: {{ relief_summary.total_non_food_items|intcomma }}</p>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-peso-sign text-green-500"></i>
+                                </div>
+                                <span class="text-dromic-slate font-medium">Total Financial Assistance</span>
+                            </div>
+                            <span class="text-2xl font-bold text-dromic-navy">₱{{ relief_summary.total_financial_assistance|floatformat:2|intcomma }}</span>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-100">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-utensils text-blue-500"></i>
+                                </div>
+                                <span class="text-dromic-slate font-medium">Total Food Items</span>
+                            </div>
+                            <span class="text-2xl font-bold text-dromic-navy">{{ relief_summary.total_food_items|intcomma }}</span>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-100">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-box text-purple-500"></i>
+                                </div>
+                                <span class="text-dromic-slate font-medium">Total Non-Food Items</span>
+                            </div>
+                            <span class="text-2xl font-bold text-dromic-navy">{{ relief_summary.total_non_food_items|intcomma }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-
-
-
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -165,18 +264,35 @@
             datasets: [{
                 label: 'Cumulative',
                 data: [{{ displaced_population.cum_families }}, {{ displaced_population.cum_persons }}],
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                backgroundColor: 'rgba(79, 70, 229, 0.8)', // indigo-600
+                borderRadius: 8,
             }, {
                 label: 'Current',
                 data: [{{ displaced_population.now_families }}, {{ displaced_population.now_persons }}],
-                backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                backgroundColor: 'rgba(234, 88, 12, 0.8)', // dromic orange
+                borderRadius: 8,
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
+            },
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                },
+                x: {
+                    grid: { display: false }
                 }
             }
         }
@@ -185,16 +301,30 @@
     // Damaged Houses Chart
     var damagedHousesCtx = document.getElementById('damagedHousesChart').getContext('2d');
     var damagedHousesChart = new Chart(damagedHousesCtx, {
-        type: 'pie',
+        type: 'doughnut',
         data: {
             labels: ['Partially Damaged', 'Totally Damaged'],
             datasets: [{
                 data: [{{ damaged_houses_summary.partially_damaged }}, {{ damaged_houses_summary.totally_damaged }}],
-                backgroundColor: ['rgba(255, 206, 86, 0.6)', 'rgba(255, 99, 132, 0.6)'],
+                backgroundColor: ['rgba(245, 158, 11, 0.8)', 'rgba(234, 88, 12, 0.8)'], // amber, orange
+                borderWidth: 0,
+                hoverOffset: 10
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
+            }
         }
     });
 
@@ -207,14 +337,25 @@
             datasets: [{
                 label: 'Current Count',
                 data: [{% for item in sex_age_distribution %}{{ item.now_total }},{% endfor %}],
-                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                backgroundColor: 'rgba(100, 116, 139, 0.8)', // slate-500
+                borderRadius: 8,
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                },
+                x: {
+                    grid: { display: false }
                 }
             }
         }
@@ -229,54 +370,72 @@
             datasets: [{
                 data: [{% for item in sectoral_distribution %}{{ item.now_total }},{% endfor %}],
                 backgroundColor: [
-                    'rgba(255, 99, 132, 0.6)',
-                    'rgba(54, 162, 235, 0.6)',
-                    'rgba(255, 206, 86, 0.6)',
-                    'rgba(75, 192, 192, 0.6)',
-                    'rgba(153, 102, 255, 0.6)',
+                    '#3b82f6', // blue-500
+                    '#ea580c', // dromic-orange
+                    '#10b981', // emerald-500
+                    '#64748b', // slate-500
+                    '#8b5cf6', // violet-500
                 ],
+                borderWidth: 0,
+                hoverOffset: 10
             }]
         },
         options: {
             responsive: true,
-        }
-    });
-    // Relief Operations Chart
-var reliefOperationsCtx = document.getElementById('reliefOperationsChart').getContext('2d');
-var reliefOperationsChart = new Chart(reliefOperationsCtx, {
-    type: 'bar',
-    data: {
-        labels: ['Financial Assistance', 'Food Items', 'Non-Food Items'],
-        datasets: [{
-            label: 'Relief Operations',
-            data: [
-                {{ relief_summary.total_financial_assistance }},
-                {{ relief_summary.total_food_items }},
-                {{ relief_summary.total_non_food_items }}
-            ],
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.6)',
-                'rgba(75, 192, 192, 0.6)',
-                'rgba(255, 206, 86, 0.6)'
-            ],
-            borderColor: [
-                'rgba(255, 99, 132, 1)',
-                'rgba(75, 192, 192, 1)',
-                'rgba(255, 206, 86, 1)'
-            ],
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
             }
         }
-    }
-});
+    });
 
+    // Relief Operations Chart
+    var reliefOperationsCtx = document.getElementById('reliefOperationsChart').getContext('2d');
+    var reliefOperationsChart = new Chart(reliefOperationsCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Financial', 'Food Items', 'Non-Food'],
+            datasets: [{
+                label: 'Relief Operations',
+                data: [
+                    {{ relief_summary.total_financial_assistance }},
+                    {{ relief_summary.total_food_items }},
+                    {{ relief_summary.total_non_food_items }}
+                ],
+                backgroundColor: [
+                    '#10b981', // emerald
+                    '#3b82f6', // blue
+                    '#ea580c'  // orange
+                ],
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
 </script>
 {% endblock %}
-

@@ -4,99 +4,192 @@
 
 {% block extra_css %}
 <style>
-    .dashboard-card {
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s;
+    .stat-card {
+        transition: all 0.3s ease;
     }
-    .dashboard-card:hover {
-        transform: translateY(-5px);
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     }
-    .dashboard-card-header {
-        background-color: #3498db;
-        color: white;
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
+    .stat-icon {
+        transition: all 0.3s ease;
     }
-    .dashboard-icon {
-        font-size: 3rem;
-        color: #3498db;
+    .stat-card:hover .stat-icon {
+        transform: scale(1.1) rotate(5deg);
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
-    <h1 class="display-4 mb-4">DROMIC Dashboard</h1>
-    
-    <div class="row">
-        <div class="col-md-3 mb-4">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Total Disasters</h5>
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-bold text-dromic-navy">Dashboard</h1>
+            <p class="text-dromic-slate mt-1">Welcome back! Here's what's happening today.</p>
+        </div>
+        <div class="flex items-center space-x-2 mt-4 md:mt-0">
+            <span class="px-4 py-2 rounded-full bg-green-100 text-green-600 text-sm font-medium flex items-center">
+                <span class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                Live
+            </span>
+            <span class="px-4 py-2 rounded-full bg-blue-100 text-blue-600 text-sm font-medium">
+                <i class="fas fa-calendar-alt mr-1"></i>
+                {% now "F j, Y" %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Disasters -->
+        <div class="stat-card bg-white rounded-2xl shadow-md hover:shadow-xl border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-xl stat-icon"></i>
                 </div>
-                <div class="card-body text-center">
-                    <i class="fas fa-exclamation-triangle dashboard-icon mb-3" style="color: #e74c3c;"></i>
-                    <h2 class="card-text">{{ total_disasters }}</h2>
+                <span class="px-2.5 py-1 bg-slate-50 text-slate-500 text-xs font-semibold rounded-lg border border-slate-100">This Month</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Total Disasters</p>
+                <div class="flex items-end justify-between">
+                    <h2 class="text-4xl font-bold text-slate-800">{{ total_disasters }}</h2>
+                    <div class="flex items-center text-red-500 text-sm font-semibold bg-red-50 px-2 py-1 rounded-lg">
+                        <i class="fas fa-arrow-up mr-1 text-xs"></i>
+                        <span>12%</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-4">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Affected Areas</h5>
+
+        <!-- Affected Areas -->
+        <div class="stat-card bg-white rounded-2xl shadow-md hover:shadow-xl border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-map-marked-alt text-blue-500 text-xl stat-icon"></i>
                 </div>
-                <div class="card-body text-center">
-                    <i class="fas fa-map-marked-alt dashboard-icon mb-3" style="color: #3498db;"></i>
-                    <h2 class="card-text">{{ affected_areas }}</h2>
+                <span class="px-2.5 py-1 bg-slate-50 text-slate-500 text-xs font-semibold rounded-lg border border-slate-100">Active</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Affected Areas</p>
+                <div class="flex items-end justify-between">
+                    <h2 class="text-4xl font-bold text-slate-800">{{ affected_areas }}</h2>
+                    <div class="flex items-center text-blue-500 text-sm font-semibold bg-blue-50 px-2 py-1 rounded-lg">
+                        <i class="fas fa-arrow-up mr-1 text-xs"></i>
+                        <span>8%</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-4">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Evacuation Centers</h5>
+
+        <!-- Evacuation Centers -->
+        <div class="stat-card bg-white rounded-2xl shadow-md hover:shadow-xl border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-home text-emerald-500 text-xl stat-icon"></i>
                 </div>
-                <div class="card-body text-center">
-                    <i class="fas fa-home dashboard-icon mb-3" style="color: #2ecc71;"></i>
-                    <h2 class="card-text">{{ evacuation_centers }}</h2>
+                <span class="px-2.5 py-1 bg-slate-50 text-slate-500 text-xs font-semibold rounded-lg border border-slate-100">Operational</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Evacuation Centers</p>
+                <div class="flex items-end justify-between">
+                    <h2 class="text-4xl font-bold text-slate-800">{{ evacuation_centers }}</h2>
+                    <div class="flex items-center text-emerald-500 text-sm font-semibold bg-emerald-50 px-2 py-1 rounded-lg">
+                        <i class="fas fa-arrow-up mr-1 text-xs"></i>
+                        <span>5%</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-4">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Total Reports</h5>
+
+        <!-- Total Reports -->
+        <div class="stat-card bg-white rounded-2xl shadow-md hover:shadow-xl border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-file-alt text-purple-500 text-xl stat-icon"></i>
                 </div>
-                <div class="card-body text-center">
-                    <i class="fas fa-chart-bar dashboard-icon mb-3" style="color: #f39c12;"></i>
-                    <h2 class="card-text">{{ total_reports }}</h2>
+                <span class="px-2.5 py-1 bg-slate-50 text-slate-500 text-xs font-semibold rounded-lg border border-slate-100">This Year</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Total Reports</p>
+                <div class="flex items-end justify-between">
+                    <h2 class="text-4xl font-bold text-slate-800">{{ total_reports }}</h2>
+                    <div class="flex items-center text-purple-500 text-sm font-semibold bg-purple-50 px-2 py-1 rounded-lg">
+                        <i class="fas fa-arrow-up mr-1 text-xs"></i>
+                        <span>23%</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mt-4">
-        <div class="col-md-6 mb-4">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Disaster Types Distribution</h5>
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Disaster Types Chart -->
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center mr-3">
+                        <i class="fas fa-chart-pie text-orange-500"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Disaster Types Distribution</h3>
                 </div>
-                <div class="card-body">
+            </div>
+            <div class="p-6">
+                <div class="h-80">
                     <canvas id="disasterTypesChart"></canvas>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-4">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Affected Population Over Time</h5>
+
+        <!-- Affected Population Chart -->
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center mr-3">
+                        <i class="fas fa-users text-blue-500"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Affected Population Over Time</h3>
                 </div>
-                <div class="card-body">
+            </div>
+            <div class="p-6">
+                <div class="h-80">
                     <canvas id="affectedPopulationChart"></canvas>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <a href="{% url 'disaster_info' %}" class="group bg-white rounded-xl shadow border border-slate-100 p-4 hover:shadow-lg hover:border-red-200 transition-all duration-300">
+            <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-3 group-hover:bg-red-500 transition-colors">
+                <i class="fas fa-exclamation-circle text-red-500 text-xl group-hover:text-white transition-colors"></i>
+            </div>
+            <h4 class="font-bold text-slate-800">Add Disaster</h4>
+            <p class="text-xs text-slate-500 mt-1">Report new disaster</p>
+        </a>
+        <a href="{% url 'affected_area_list' %}" class="group bg-white rounded-xl shadow border border-slate-100 p-4 hover:shadow-lg hover:border-blue-200 transition-all duration-300">
+            <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-3 group-hover:bg-blue-500 transition-colors">
+                <i class="fas fa-map-marked-alt text-blue-500 text-xl group-hover:text-white transition-colors"></i>
+            </div>
+            <h4 class="font-bold text-slate-800">Affected Areas</h4>
+            <p class="text-xs text-slate-500 mt-1">View & manage</p>
+        </a>
+        <a href="{% url 'evacuation_center_list' %}" class="group bg-white rounded-xl shadow border border-slate-100 p-4 hover:shadow-lg hover:border-emerald-200 transition-all duration-300">
+            <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center mb-3 group-hover:bg-emerald-500 transition-colors">
+                <i class="fas fa-home text-emerald-500 text-xl group-hover:text-white transition-colors"></i>
+            </div>
+            <h4 class="font-bold text-slate-800">Evacuation</h4>
+            <p class="text-xs text-slate-500 mt-1">Manage centers</p>
+        </a>
+        <a href="{% url 'report_list' %}" class="group bg-white rounded-xl shadow border border-slate-100 p-4 hover:shadow-lg hover:border-purple-200 transition-all duration-300">
+            <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center mb-3 group-hover:bg-purple-500 transition-colors">
+                <i class="fas fa-file-alt text-purple-500 text-xl group-hover:text-white transition-colors"></i>
+            </div>
+            <h4 class="font-bold text-slate-800">Reports</h4>
+            <p class="text-xs text-slate-500 mt-1">View all reports</p>
+        </a>
     </div>
 </div>
 {% endblock %}
@@ -113,53 +206,100 @@
             datasets: [{
                 data: disasterTypes.map(item => item.count),
                 backgroundColor: [
-                    '#3498db',
-                    '#2ecc71',
-                    '#e74c3c',
-                    '#f39c12',
-                    '#9b59b6'
-                ]
+                    '#3b82f6', // blue-500
+                    '#ea580c', // dromic-orange
+                    '#10b981', // emerald-500
+                    '#64748b', // slate-500
+                    '#8b5cf6', // violet-500
+                    '#f59e0b'  // amber-500
+                ],
+                borderWidth: 0,
+                hoverOffset: 10
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
             plugins: {
                 legend: {
                     position: 'bottom',
-                },
-                title: {
-                    display: true,
-                    text: 'Disaster Types'
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: {
+                            family: "'Poppins', sans-serif",
+                            size: 12
+                        }
+                    }
                 }
             }
         }
     });
 
-   // Affected Population Over Time Chart
-   var affectedData = JSON.parse('{{ affected_data|safe }}');
+    // Affected Population Over Time Chart
+    var affectedData = JSON.parse('{{ affected_data|safe }}');
     var affectedDataCtx = document.getElementById('affectedPopulationChart').getContext('2d');
     var affectedDataChart = new Chart(affectedDataCtx, {
-       type: 'line',
-       data: {
-           labels: affectedData.map(item => item.date),
-           datasets: [{
-               label: 'Affected Families',
-               data: affectedData.map(item => item.families),
-               borderColor: '#3498db',
-               tension: 0.1
-           }, {
-               label: 'Affected Persons',
-               data: affectedData.map(item => item.persons),
-               borderColor: '#e74c3c',
-               tension: 0.1
-           }]
-       },
-       options: {
-           responsive: true,
-           scales: {
-               y: { beginAtZero: true }
-           }
-       }
-   });
+        type: 'line',
+        data: {
+            labels: affectedData.map(item => item.date),
+            datasets: [{
+                label: 'Affected Families',
+                data: affectedData.map(item => item.families),
+                borderColor: '#4f46e5', // indigo-600
+                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }, {
+                label: 'Affected Persons',
+                data: affectedData.map(item => item.persons),
+                borderColor: '#ea580c', // dromic-orange
+                backgroundColor: 'rgba(234, 88, 12, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: {
+                            family: "'Poppins', sans-serif",
+                            size: 12
+                        }
+                    }
+                }
+            }
+        }
+    });
 </script>
 {% endblock %}

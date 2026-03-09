@@ -360,22 +360,6 @@ def get_disasters(request):
     return JsonResponse(list(disasters), safe=False)
 
 
-@csrf_exempt
-def create_disaster(request):
-    if request.method == 'POST':
-        try:
-            data = request.POST
-            Disaster.objects.create(
-                name=data['name'],
-                description=data['description'],
-                date_occurred=data['date_occurred']
-            )
-            return JsonResponse({'status': 'success', 'message': 'Disaster created successfully'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
-
-
 # Disaster impact
 from django.template.loader import render_to_string
 def add_family_member(request):

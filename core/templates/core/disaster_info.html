@@ -3,82 +3,104 @@
 
 {% block title %}DROMIC Disaster Information{% endblock %}
 
-{% block extra_css %}
-<style>
-    .dashboard-card {
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s;
-    }
-    .dashboard-card:hover {
-        transform: translateY(-5px);
-    }
-    .dashboard-card-header {
-        background-color: #3498db;
-        color: white;
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
-    }
-    .dashboard-icon {
-        font-size: 3rem;
-        color: #3498db;
-    }
-</style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
-{% endblock %}
-
 {% block content %}
-<div class="container-fluid mt-4">
-    <h1 class="display-4 mb-4">Disaster Information</h1>
+<div class="container-fluid mt-4" x-data="{ showAddModal: false, showEditModal: false }" @close-modals.window="showAddModal = false; showEditModal = false">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-bold text-dromic-navy">Disaster Information</h1>
+            <p class="text-dromic-slate mt-1">Manage and track all disaster events</p>
+        </div>
+        <button class="mt-4 md:mt-0 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center" @click="showAddModal = true">
+            <i class="fas fa-plus-circle mr-2"></i>
+            Add New Disaster
+        </button>
+    </div>
     
-    <div class="row g-4 mb-4">
-        <div class="col-md-4">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Total Disasters</h5>
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="stat-card bg-white rounded-2xl shadow-md border border-slate-100 hover:shadow-xl transition-all p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center group-hover:bg-red-500 transition-colors">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-xl stat-icon"></i>
                 </div>
-                <div class="card-body text-center">
-                    <i class="fas fa-exclamation-triangle dashboard-icon mb-3 text-danger"></i>
-                    <h2 class="card-text" id="totalDisasters">0</h2>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Total Disasters</p>
+                <div class="flex items-end justify-between">
+                    <h2 class="text-4xl font-bold text-slate-800" id="totalDisasters">{{ disasters|length }}</h2>
+                    <div class="flex items-center text-red-500 text-sm font-semibold bg-red-50 px-2 py-1 rounded-lg">
+                        <i class="fas fa-layer-group text-xs"></i>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Most Recent Disaster</h5>
+
+        <div class="stat-card bg-white rounded-2xl shadow-md border border-slate-100 hover:shadow-xl transition-all p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-calendar-alt text-blue-500 text-xl stat-icon"></i>
                 </div>
-                <div class="card-body text-center">
-                    <i class="fas fa-calendar-alt dashboard-icon mb-3 text-primary"></i>
-                    <h2 class="card-text" id="recentDisaster">None</h2>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Most Recent</p>
+                <div class="flex items-end justify-between">
+                    <h2 class="text-xl font-bold text-slate-800 mt-1 truncate" id="recentDisaster">
+                        {% if disasters %}{{ disasters.0.name }}{% else %}None{% endif %}
+                    </h2>
+                    <div class="flex items-center text-blue-500 text-sm font-semibold bg-blue-50 px-2 py-1 rounded-lg">
+                        <i class="fas fa-clock text-xs"></i>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card dashboard-card">
-                <div class="card-header dashboard-card-header">
-                    <h5 class="card-title mb-0">Disasters Over Time</h5>
+
+        <div class="stat-card bg-white rounded-2xl shadow-md border border-slate-100 hover:shadow-xl transition-all p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-chart-line text-purple-500 text-xl stat-icon"></i>
                 </div>
-                <div class="card-body">
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Disasters Over Time</p>
+                <div class="h-20 mt-2">
                     <canvas id="disasterChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
     
-    <button class="btn btn-primary btn-lg mb-4" data-bs-toggle="modal" data-bs-target="#addDisasterModal">
-        <i class="fas fa-plus-circle me-2"></i>Add New Disaster
-    </button>
-    
-    <div class="row g-4" id="disasterList">
-        <!-- Disaster cards will be dynamically added here -->
+    <!-- Disaster Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="disasterList">
         {% for disaster in disasters %}
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5>{{ disaster.name|title }}</h5>
-                        <p class="card-text">{{ disaster.description }}</p>
-                        <p class="card-text"><small class="text-muted">Date: {{ disaster.date_occurred|date:"F j, Y" }}</small></p>                    </div>
+            <div class="bg-white rounded-2xl shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 overflow-hidden group">
+                <div class="px-5 py-4 border-b border-slate-100 bg-white">
+                    <div class="flex items-center justify-between">
+                        <h5 class="text-lg font-bold text-slate-800 flex items-center">
+                            <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                            {{ disaster.name|title }}
+                        </h5>
+                        <button class="text-slate-400 hover:text-slate-600 transition-colors">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-5">
+                    <p class="text-dromic-slate mb-4 line-clamp-2">{{ disaster.description }}</p>
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-calendar-alt mr-2"></i>
+                            {{ disaster.date_occurred|date:"M j, Y" }}
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-500 hover:bg-blue-200 transition-colors">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         {% endfor %}
@@ -86,90 +108,89 @@
 </div>
 
 <!-- Add Disaster Modal -->
-<div class="modal fade" id="addDisasterModal" tabindex="-1" aria-labelledby="addDisasterModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="addDisasterModalLabel">Add New Disaster</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<div x-show="showAddModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="showAddModal = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full z-10">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center rounded-t-2xl">
+                <h5 class="text-lg font-bold text-slate-800 flex items-center" id="addDisasterModalLabel">
+                    <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center mr-3">
+                        <i class="fas fa-exclamation-triangle text-red-500"></i>
+                    </div>
+                    Add New Disaster
+                </h5>
+                <button @click="showAddModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
-            <div class="modal-body">
+            <div class="p-6">
                 <form id="addDisasterForm">
                     {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="disasterName" class="form-label">Disaster Name</label>
-                        <input type="text" class="form-control" id="disasterName" name="name" required>
+                    <div class="mb-5">
+                        <label for="disasterName" class="block text-dromic-navy text-sm font-semibold mb-2">Disaster Name</label>
+                        <input type="text" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all outline-none" id="disasterName" name="name" placeholder="Enter disaster name" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="disasterDescription" class="form-label">Description</label>
-                        <textarea class="form-control" id="disasterDescription" name="description" rows="3" required></textarea>
+                    <div class="mb-5">
+                        <label for="disasterDescription" class="block text-dromic-navy text-sm font-semibold mb-2">Description</label>
+                        <textarea class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all outline-none" id="disasterDescription" name="description" rows="4" placeholder="Describe the disaster" required></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label for="disasterDate" class="form-label">Date Occurred</label>
-                        <input type="text" class="form-control datepicker" id="disasterDate" name="date_occurred" required>
+                    <div class="mb-5">
+                        <label for="disasterDate" class="block text-dromic-navy text-sm font-semibold mb-2">Date Occurred</label>
+                        <input type="date" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all outline-none" id="disasterDate" name="date_occurred" required>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="saveDisaster">
-                    <i class="fas fa-save me-2"></i>Save Disaster
+            <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button @click="showAddModal = false" class="px-5 py-2.5 rounded-xl border border-gray-200 text-dromic-slate font-medium hover:bg-gray-100 transition-colors">Cancel</button>
+                <button class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white font-medium hover:from-red-600 hover:to-red-700 transition-all shadow-lg hover:shadow-xl" id="saveDisaster">
+                    <i class="fas fa-save mr-2"></i>Save Disaster
                 </button>
             </div>
         </div>
     </div>
 </div>
+
 <!-- Edit Disaster Modal -->
-<div class="modal fade" id="editDisasterModal" tabindex="-1" aria-labelledby="editDisasterModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="editDisasterModalLabel">Edit Disaster</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<div x-show="showEditModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="showEditModal = false"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full z-10">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center rounded-t-2xl">
+                <h5 class="text-lg font-bold text-slate-800 flex items-center" id="editDisasterModalLabel">
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center mr-3">
+                        <i class="fas fa-edit text-blue-500"></i>
+                    </div>
+                    Edit Disaster
+                </h5>
+                <button @click="showEditModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
-            <div class="modal-body">
+            <div class="p-6">
                 <form id="editDisasterForm">
                     {% csrf_token %}
                     <input type="hidden" id="editDisasterId" name="id">
-                    <div class="mb-3">
-                        <label for="editDisasterName" class="form-label">Disaster Name</label>
-                        <input type="text" class="form-control" id="editDisasterName" name="name" required>
+                    <div class="mb-5">
+                        <label for="editDisasterName" class="block text-dromic-navy text-sm font-semibold mb-2">Disaster Name</label>
+                        <input type="text" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all outline-none" id="editDisasterName" name="name" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="editDisasterDescription" class="form-label">Description</label>
-                        <textarea class="form-control" id="editDisasterDescription" name="description" rows="3" required></textarea>
+                    <div class="mb-5">
+                        <label for="editDisasterDescription" class="block text-dromic-navy text-sm font-semibold mb-2">Description</label>
+                        <textarea class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all outline-none" id="editDisasterDescription" name="description" rows="4" required></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label for="editDisasterDate" class="form-label">Date Occurred</label>
-                        <input type="text" class="form-control datepicker" id="editDisasterDate" name="date_occurred" required>
+                    <div class="mb-5">
+                        <label for="editDisasterDate" class="block text-dromic-navy text-sm font-semibold mb-2">Date Occurred</label>
+                        <input type="date" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all outline-none" id="editDisasterDate" name="date_occurred" required>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="updateDisaster">
-                    <i class="fas fa-save me-2"></i>Update Disaster
+            <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button @click="showEditModal = false" class="px-5 py-2.5 rounded-xl border border-gray-200 text-dromic-slate font-medium hover:bg-gray-100 transition-colors">Cancel</button>
+                <button class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl" id="updateDisaster">
+                    <i class="fas fa-save mr-2"></i>Update Disaster
                 </button>
             </div>
         </div>
     </div>
 </div>
-
-
-
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
-<script>
-    $(document).ready(function(){
-        $('.datepicker').datepicker({
-            format: 'yyyy-mm-dd',
-            todayHighlight: true,
-            autoclose: true
-        });
-
-        // Add your other JavaScript code here for disaster form handling, Chart.js initialization, etc.
-    });
-</script>
 {% endblock %}

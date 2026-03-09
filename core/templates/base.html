@@ -5,158 +5,149 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}DROMIC Management System{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://unpkg.com/unpoly@3.4.0/unpoly.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/unpoly@3.4.0/unpoly.min.css">
+    
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <style>
-        body { background-color: #FBF6E2; }
+        body { 
+            background-color: #FAFAF9; 
+            font-family: 'Poppins', sans-serif;
+        }
         .neumorphic {
             border-radius: 50px;
-            background: #ECCEAE;
+            background: #FFFFFF;
             box-shadow: 10px 10px 40px #bec3c9, -10px -10px 40px #ffffff;
         }
         .neumorphic-inset {
             border-radius: 50px;
-            background: #ECCEAE;
+            background: #FFFFFF;
             box-shadow: inset 20px 20px 60px #bec3c9, inset -20px -20px 60px #ffffff;
         }
+        /* Override border radius for sidebar/header */
+        .neumorphic-flat {
+            background: #FFFFFF;
+            box-shadow: 10px 10px 40px #bec3c9, -10px -10px 40px #ffffff;
+        }
         h1, h2, h3, h4, h6 {
-            font-family: 'Poppins', sans-serif;
             font-weight: 700;
-            color: #987070;
+            color: #EA580C;
         }
         .card-body .card-title {
-            font-family: 'Poppins', sans-serif;
             font-weight: 700;
-            color: #758694;
-            text-transform: uppercase;        }        
+            color: #334155;
+            text-transform: uppercase;
+        }        
         .nav-link {
-            font-family: 'Poppins', sans-serif;
             font-weight: 500;
             text-transform: capitalize;
         }
-        .content-wrapper {
-            font-size: 16px;
-        }
-        
-        .display-4 {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 700;
-            color: #987070;
-        }
-        .card-title {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 700;
-            color: #EEEDEB;
-        }
-        .card-title-1 {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 700;
-            color: #405D72;
-        }
-        
-        .card-text{
-                font-family: 'Poppins', sans-serif;
-                font-weight: 700;
-                color: #405D72;
-                text-transform: capitalize;
-        }
-        
+        .text-custom-dark { color: #1C1917; }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <div class="container-fluid">
-        <div class="row">
-            {% block sidebar %}
-            <!-- Sidebar -->
-            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-                <div class="position-sticky sidebar-sticky">
-                    <h3 class="sidebar-heading"><img src="{% static 'img/dromic_logo.png' %}" alt="DROMIC Logo" width="24" height="24"> DROMIC MIS</h3>                                        <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'dashboard' %}"><i class="fas fa-tachometer-alt text-success "></i> Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'overview' %}"><i class="fas fa-eye text-info"></i> Overview</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'disaster_info' %}"><i class="fas fa-info-circle text-warning"></i> Disaster Info</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'affected_area_list' %}"><i class="fas fa-map-marked-alt text-danger"></i> Affected Areas</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'evacuation_center_list' %}"><i class="fas fa-home text-secondary"></i> Evacuation Centers</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'disaster_impact' %}"><i class="fas fa-exclamation-triangle text-warning"></i> Disaster Impact</a>                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'report_list' %}"><i class="fas fa-chart-bar text-primary"></i> Reports</a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-            {% endblock %}
-            <!-- Main content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                {% block header %}
-                <header class="navbar navbar-expand-md navbar-light sticky-top p-0 shadow-sm">
-                    <div class="container-fluid">
-                        <button class="navbar-toggler d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation">
-                            <span class="navbar-toggler-icon"></span>
-                        </button>
-                        <div class="navbar-nav flex-row ms-auto">
-                            <div class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-user-circle me-2"></i>Welcome, admin
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                    <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
-                                    <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </header>
-                {% endblock %}
-                
-             
+<body class="bg-[#FAFAF9] text-[#1C1917] h-screen flex overflow-hidden w-full" x-data="{ sidebarOpen: false }">
 
-                <div class="content-wrapper">
-                    {% block content %}
-                    <!-- Content will be inserted here -->
-                    {% endblock %}
+    {% block sidebar %}
+    <!-- Sidebar background overlay for mobile -->
+    <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen = false" class="fixed inset-0 bg-black bg-opacity-40 z-20 md:hidden" style="display: none;"></div>
+    
+    <!-- Sidebar -->
+    <aside :class="{'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen}" class="w-64 bg-slate-900 shadow-2xl flex-shrink-0 flex flex-col transition-transform duration-300 transform fixed md:relative z-30 h-full md:translate-x-0 border-r border-slate-800" id="sidebar">
+        <div class="h-16 flex items-center px-6 border-b border-[#bec3c9]/50 shrink-0 justify-between">
+            <div class="flex items-center text-lg font-bold text-white">
+                <div class="w-8 h-8 bg-white/10 rounded overflow-hidden mr-2 p-1 border border-white/20">
+                    <img src="{% static 'img/dromic_logo.png' %}" alt="DROMIC Logo" class="h-full w-full object-contain">
                 </div>
-            </main>
+                <span>DROMIC MIS</span>
+            </div>
+            <button class="md:hidden text-[#EA580C] focus:outline-none" @click="sidebarOpen = false">
+                <i class="fas fa-times text-xl"></i>
+            </button>
         </div>
+        <nav class="flex-1 overflow-y-auto p-4 space-y-2">
+            <a class="flex items-center px-4 py-3 text-slate-300 hover:bg-white/10 hover:text-white rounded-xl font-medium transition-colors" href="{% url 'dashboard' %}" data-nav-link>
+                <i class="fas fa-tachometer-alt w-6 text-orange-500"></i> <span class="ml-2">Dashboard</span>
+            </a>
+            <a class="flex items-center px-4 py-3 text-slate-300 hover:bg-white/10 hover:text-white rounded-xl font-medium transition-colors" href="{% url 'overview' %}" data-nav-link>
+                <i class="fas fa-eye w-6 text-slate-400 group-hover:text-white"></i> <span class="ml-2">Overview</span>
+            </a>
+            <a class="flex items-center px-4 py-3 text-slate-300 hover:bg-white/10 hover:text-white rounded-xl font-medium transition-colors" href="{% url 'disaster_info' %}" data-nav-link>
+                <i class="fas fa-info-circle w-6 text-orange-500"></i> <span class="ml-2">Disaster Info</span>
+            </a>
+            <a class="flex items-center px-4 py-3 text-slate-300 hover:bg-white/10 hover:text-white rounded-xl font-medium transition-colors" href="{% url 'affected_area_list' %}" data-nav-link>
+                <i class="fas fa-map-marked-alt w-6 text-slate-400 group-hover:text-white"></i> <span class="ml-2">Affected Areas</span>
+            </a>
+            <a class="flex items-center px-4 py-3 text-slate-300 hover:bg-white/10 hover:text-white rounded-xl font-medium transition-colors" href="{% url 'evacuation_center_list' %}" data-nav-link>
+                <i class="fas fa-home w-6 text-slate-400 group-hover:text-white"></i> <span class="ml-2">Evacuation Centers</span>
+            </a>
+            <a class="flex items-center px-4 py-3 text-slate-300 hover:bg-white/10 hover:text-white rounded-xl font-medium transition-colors" href="{% url 'disaster_impact' %}" data-nav-link>
+                <i class="fas fa-exclamation-triangle w-6 text-orange-500"></i> <span class="ml-2">Disaster Impact</span>
+            </a>
+            <a class="flex items-center px-4 py-3 text-slate-300 hover:bg-white/10 hover:text-white rounded-xl font-medium transition-colors" href="{% url 'report_list' %}" data-nav-link>
+                <i class="fas fa-chart-bar w-6 text-slate-400 group-hover:text-white"></i> <span class="ml-2">Reports</span>
+            </a>
+        </nav>
+    </aside>
+    {% endblock %}
+
+    <!-- Main Content wrapper -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-transparent">
+        {% block header %}
+        <!-- Header -->
+        <header class="h-16 bg-white shadow-[0_4px_24px_rgba(190,195,201,0.6)] flex items-center justify-between px-6 z-10 border-b border-[#bec3c9]">
+            <div class="flex items-center">
+                <button class="md:hidden text-[#EA580C] mr-4 focus:outline-none hover:text-[#1C1917]" @click="sidebarOpen = true">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+            <div class="relative" x-data="{ open: false }">
+                <button @click="open = !open" class="flex items-center space-x-2 text-[#1C1917] focus:outline-none hover:text-[#EA580C] transition-colors">
+                    <i class="fas fa-user-circle text-2xl"></i>
+                    <span class="font-medium hidden sm:block truncate max-w-[150px]">Welcome, admin</span>
+                    <i class="fas fa-chevron-down text-sm transition-transform duration-200" :class="{'rotate-180': open}"></i>
+                </button>
+                <div x-show="open" @click.away="open = false" x-transition.opacity style="display: none;" class="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-lg border border-[#EA580C] z-50 overflow-hidden py-1">
+                    <a href="#" class="block px-4 py-2.5 text-sm text-[#1C1917] hover:bg-[#EA580C] hover:text-white transition-colors"><i class="fas fa-cog me-3"></i>Settings</a>
+                    <a href="#" class="block px-4 py-2.5 text-sm text-[#1C1917] hover:bg-[#EA580C] hover:text-white transition-colors"><i class="fas fa-user me-3"></i>Profile</a>
+                    <div class="border-t border-[#EA580C] my-1"></div>
+                    <a href="{% url 'logout' %}" class="block px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"><i class="fas fa-sign-out-alt me-3"></i>Logout</a>
+                </div>
+            </div>
+        </header>
+        {% endblock %}
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-auto p-4 md:p-6 lg:p-8 m-0" style="background-color: #FAFAF9;">
+            <div class="w-full">
+                {% block content %}
+                <!-- Content will be inserted here -->
+                {% endblock %}
+            </div>
+        </main>
     </div>
 
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Scripts -->
     <script src="{% static 'js/disaster_info.js' %}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
     <script src="{% static 'js/script.js' %}"></script>
     
     <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const currentPath = window.location.pathname;
-    const navLinks = document.querySelectorAll('.sidebar .nav-link');
-    navLinks.forEach(link => {
-      if (link.getAttribute('href') === currentPath) {
-        link.classList.add('active');
-      }
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('a[data-nav-link]');
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.remove('text-slate-300');
+                link.classList.add('bg-white/10', 'text-white', 'shadow-inner', 'border', 'border-white/10');
+            }
+        });
     });
-  });
-</script>
-
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

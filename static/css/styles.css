@@ -1,15 +1,16 @@
 :root {
-  --primary-color: #FEFBF6;
-  --secondary-color: #FEFBF6;
-  --accent-color: #EFBC9B;
-  --text-color: #2F3645;
-  --shadow-light: #FEFBF6;
-  --shadow-dark: #ECCEAE;
+  --primary-color: #EA580C;
+  --secondary-color: #334155;
+  --accent-color: #334155;
+  --text-color: #1C1917;
+  --shadow-light: #FFFFFF;
+  --shadow-dark: #CBD5E1;
+  --background-color: #FAFAF9;
 }
 
 body {
   font-family: 'Ubuntu', sans-serif;
-  background-color: var(--primary-color);
+  background-color: var(--background-color);
   color: var(--text-color);
 }
 
@@ -24,7 +25,7 @@ body {
     8px 8px 16px var(--shadow-dark), 
     -8px -8px 16px var(--shadow-light);
   border-radius: 0 20px 20px 0;
-  background-color: var(--primary-color);
+  background-color: var(--shadow-light);
   width: 240px;
 }
 
@@ -40,7 +41,7 @@ body {
   font-family: 'Poppins', sans-serif;
   font-weight: 700;
   font-size: 1.5rem;
-  color: var(--accent-color);
+  color: var(--primary-color);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 1.5rem;
@@ -65,7 +66,7 @@ body {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: var(--accent-color);
+  background: var(--primary-color);
   transition: all 0.3s ease;
   z-index: -1;
 }
@@ -75,12 +76,12 @@ body {
 }
 
 .sidebar .nav-link:hover {
-  color: var(--primary-color);
+  color: var(--shadow-light);
 }
 
 .sidebar .nav-link.active {
-  background-color: var(--accent-color);
-  color: var(--primary-color);
+  background-color: var(--primary-color);
+  color: var(--shadow-light);
   box-shadow: 
     inset 3px 3px 5px rgba(0,0,0,0.1), 
     inset -3px -3px 5px rgba(255,255,255,0.1);
@@ -101,7 +102,7 @@ main {
   right: 0;
   left: 240px;
   z-index: 1030;
-  background-color: var(--primary-color) !important;
+  background-color: var(--shadow-light) !important;
   box-shadow: 
     0 4px 6px var(--shadow-dark), 
     0 -2px 6px var(--shadow-light);
@@ -109,7 +110,7 @@ main {
 }
 
 .content-wrapper {
-  background-color: var(--primary-color);
+  background-color: var(--shadow-light);
   border-radius: 20px;
   box-shadow: 
     8px 8px 16px var(--shadow-dark), 
@@ -119,7 +120,7 @@ main {
 }
 
 .feature-card {
-  background-color: var(--primary-color);
+  background-color: var(--shadow-light);
   border-radius: 15px;
   padding: 20px;
   margin-bottom: 20px;
@@ -134,7 +135,7 @@ main {
 }
 
 .btn-explore {
-  background-color: var(--accent-color);
+  background-color: var(--primary-color);
   color: var(--shadow-light);
   padding: 10px 20px;
   border-radius: 10px;
@@ -152,12 +153,12 @@ main {
 }
 
 .main-title {
-  color: var(--accent-color);
+  color: var(--primary-color);
   text-shadow: 2px 2px 4px var(--shadow-light);
 }
 
 .welcome-card {
-  background-color: var(--primary-color);
+  background-color: var(--shadow-light);
   border-radius: 15px;
   padding: 2rem;
   margin-bottom: 2rem;
