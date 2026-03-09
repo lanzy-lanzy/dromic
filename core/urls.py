@@ -45,6 +45,25 @@ urlpatterns = [
     
     
     path('disaster_impact/', views.disaster_impact, name='disaster_impact'),
+    
+    # Relief Operations
+    path('relief-operations/', views.relief_operations_view, name='relief_operations'),
+    path('api/relief-operations/', views.get_relief_operations, name='get_relief_operations'),
+    path('api/relief-operations/add/', views.add_relief_operation, name='add_relief_operation'),
+    path('api/relief-operations/<int:op_id>/delete/', views.delete_relief_operation, name='delete_relief_operation'),
+    
+    # Distribution Tracking
+    path('relief-operations/<int:op_id>/distribution/', views.relief_operation_distribution_view, name='relief_operation_distribution'),
+    path('api/relief-operations/<int:op_id>/distribution/', views.get_distribution_families, name='get_distribution_families'),
+    path('api/relief-operations/<int:op_id>/toggle-distribution/', views.toggle_family_distribution, name='toggle_family_distribution'),
+    path('relief-operations/<int:op_id>/export-rds/', views.export_rds_pdf, name='export_rds_pdf'),
+    
+    # Early Recovery
+    path('early-recovery/', views.early_recovery_view, name='early_recovery'),
+    path('api/early-recovery/', views.get_early_recoveries, name='get_early_recoveries'),
+    path('api/early-recovery/add/', views.add_early_recovery, name='add_early_recovery'),
+    path('api/early-recovery/<int:rec_id>/delete/', views.delete_early_recovery, name='delete_early_recovery'),
+    
     # Other URL patterns
     
      path('api/add_family_member', views.add_family_member, name='add_family_member'),

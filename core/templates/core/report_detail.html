@@ -65,7 +65,7 @@
     {% endif %}
 
     <div class="flex justify-end">
-        <a href="{% url 'export_report_pdf' report.id %}" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-slate-600 to-slate-700 text-white font-medium hover:from-slate-700 hover:to-slate-800 transition-all shadow-lg">
+        <a href="{% url 'export_report_pdf' report.id %}" target="_blank" download="DROMIC_Report_{{ report.date|date:'Ymd' }}.pdf" up-follow="false" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-slate-600 to-slate-700 text-white font-medium hover:from-slate-700 hover:to-slate-800 transition-all shadow-lg">
             <i class="fas fa-file-export mr-2"></i>Export Report
         </a>
     </div>

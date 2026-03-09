@@ -12,7 +12,8 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import (
     Disaster, AffectedArea, EvacuationCenter, DROMICReport,
     DamagedHouse, DisplacedPopulation, SexAgeDistribution,
-    SectoralDistribution, ReliefOperation, Province, Municipality, Barangay, Family, FamilyMember
+    SectoralDistribution, ReliefOperation, Province, Municipality, Barangay, Family, FamilyMember,
+    FamilyDistribution
 )
 from .export import generate_report_pdf
 from django.db.models.functions import TruncDate
@@ -545,16 +546,206 @@ def report_detail(request, report_id):
     return render(request, 'core/report_detail.html', context)
 
 
+from django.utils.text import slugify
 def export_report_pdf(request, report_id):
     report = get_object_or_404(DROMICReport, id=report_id)
     pdf_buffer = generate_report_pdf(report)
-    return HttpResponse(pdf_buffer, content_type='application/pdf')
+    response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
+    
+    safe_location = slugify(f"{report.barangay.name}_{report.municipality.name}")
+    filename = f"DROMIC_Report_{safe_location}_{report.date.strftime('%Y%m%d')}.pdf"
+    
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 
 def disaster_info(request):
     disasters = Disaster.objects.all().order_by('-date_occurred')
     return render(request, 'core/disaster_info.html', {'disasters': disasters})
+
+
+# ----------------------------------------------------------------------
+# Relief Operations Views
+# ----------------------------------------------------------------------
+
+def relief_operations_view(request):
+    """View to manage Relief Operations."""
+    areas = AffectedArea.objects.all().select_related('disaster', 'province', 'municipality', 'barangay')
+    return render(request, 'core/relief_operations.html', {'areas': areas})
+
+def get_relief_operations(request):
+    """API to fetch all relief operations."""
+    ops = ReliefOperation.objects.all().select_related(
+        'area__disaster', 'area__province', 'area__municipality', 'area__barangay'
+    ).order_by('-date')
+    
+    data = []
+    for op in ops:
+        area_str = f"{op.area.barangay.name}, {op.area.municipality.name}, {op.area.province.name}" if op.area.barangay else f"{op.area.municipality.name}, {op.area.province.name}"
+        data.append({
+            'id': op.id,
+            'date': op.date.strftime('%b. %d, %Y'),
+            'disaster': op.area.disaster.name,
+            'area': area_str,
+            'food_items': op.food_items,
+            'non_food_items': op.non_food_items,
+            'financial_assistance': float(op.financial_assistance)
+        })
+    return JsonResponse(data, safe=False)
+
+def add_relief_operation(request):
+    """API to add a new relief operation."""
+    if request.method == 'POST':
+        try:
+            area_id = request.POST.get('area')
+            area = get_object_or_404(AffectedArea, id=area_id)
+            
+            ReliefOperation.objects.create(
+                area=area,
+                date=request.POST.get('date'),
+                food_items=request.POST.get('food_items', 0) or 0,
+                non_food_items=request.POST.get('non_food_items', 0) or 0,
+                financial_assistance=request.POST.get('financial_assistance', 0) or 0
+            )
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+def delete_relief_operation(request, op_id):
+    """API to delete a relief operation."""
+    if request.method == 'POST':
+        try:
+            op = get_object_or_404(ReliefOperation, id=op_id)
+            op.delete()
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+def relief_operation_distribution_view(request, op_id):
+    """View to manage family distribution for a specific operation."""
+    op = get_object_or_404(ReliefOperation, id=op_id)
+    return render(request, 'core/relief_distribution.html', {'operation': op})
+
+def get_distribution_families(request, op_id):
+    """API to fetch families and their distribution status for a specific operation."""
+    op = get_object_or_404(ReliefOperation, id=op_id)
+    # Get all families in the affected area of this operation
+    families = Family.objects.filter(area=op.area).order_by('head_of_family')
+    
+    # Get distribution records for these families in this operation
+    distributions = {d.family.id: d for d in FamilyDistribution.objects.filter(operation=op)}
+    
+    data = []
+    for f in families:
+        dist = distributions.get(f.id)
+        is_received = dist.is_received if dist else False
+        data.append({
+            'id': f.id,
+            'head_of_family': f.head_of_family,
+            'number_of_members': f.number_of_members,
+            'is_received': is_received
+        })
+    return JsonResponse(data, safe=False)
+
+import json
+def toggle_family_distribution(request, op_id):
+    """API to toggle the received status for a specific family in an operation."""
+    if request.method == 'POST':
+        try:
+            op = get_object_or_404(ReliefOperation, id=op_id)
+            data = json.loads(request.body)
+            family_id = data.get('family_id')
+            is_received = data.get('is_received', False)
+            
+            family = get_object_or_404(Family, id=family_id, area=op.area)
+            
+            # Update or create the distribution record
+            dist, created = FamilyDistribution.objects.update_or_create(
+                operation=op, family=family,
+                defaults={'is_received': is_received}
+            )
+            return JsonResponse({'status': 'success', 'is_received': dist.is_received})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+from .export import generate_rds_pdf
+from django.utils.text import slugify
+def export_rds_pdf(request, op_id):
+    """View to export the Relief Distribution Sheet (RDS) as PDF."""
+    op = get_object_or_404(ReliefOperation, id=op_id)
+    pdf_buffer = generate_rds_pdf(op)
+    response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
+    
+    safe_disaster_name = slugify(op.area.disaster.name)
+    filename = f"RDS_{safe_disaster_name}_{op.date.strftime('%Y%m%d')}.pdf"
+    
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+# ----------------------------------------------------------------------
+# Early Recovery Views
+# ----------------------------------------------------------------------
+
+def early_recovery_view(request):
+    """View to manage Early Recovery Activities."""
+    areas = AffectedArea.objects.all().select_related('disaster', 'province', 'municipality', 'barangay')
+    return render(request, 'core/early_recovery.html', {'areas': areas})
+
+def get_early_recoveries(request):
+    """API to fetch all early recovery activities."""
+    recoveries = EarlyRecovery.objects.all().select_related(
+        'area__disaster', 'area__province', 'area__municipality', 'area__barangay'
+    ).order_by('-date_started')
+    
+    data = []
+    for r in recoveries:
+        area_str = f"{r.area.barangay.name}, {r.area.municipality.name}, {r.area.province.name}" if r.area.barangay else f"{r.area.municipality.name}, {r.area.province.name}"
+        data.append({
+            'id': r.id,
+            'disaster': r.area.disaster.name,
+            'area': area_str,
+            'description': r.description,
+            'date_started': r.date_started.strftime('%b. %d, %Y'),
+            'date_completed': r.date_completed.strftime('%b. %d, %Y') if r.date_completed else None
+        })
+    return JsonResponse(data, safe=False)
+
+def add_early_recovery(request):
+    """API to add a new early recovery activity."""
+    if request.method == 'POST':
+        try:
+            area_id = request.POST.get('area')
+            area = get_object_or_404(AffectedArea, id=area_id)
+            
+            date_completed = request.POST.get('date_completed')
+            if not date_completed:
+                date_completed = None
+                
+            EarlyRecovery.objects.create(
+                area=area,
+                description=request.POST.get('description'),
+                date_started=request.POST.get('date_started'),
+                date_completed=date_completed
+            )
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+def delete_early_recovery(request, rec_id):
+    """API to delete an early recovery activity."""
+    if request.method == 'POST':
+        try:
+            r = get_object_or_404(EarlyRecovery, id=rec_id)
+            r.delete()
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
 
 
 def get_disasters(request):

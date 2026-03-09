@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Relief Distribution - DROMIC MIS{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="{ 
+    page: 1, 
+    perPage: 10, 
+    families: [],
+    search: '',
+    get filteredFamilies() {
+        if (this.search === '') return this.families;
+        return this.families.filter(f => f.head_of_family.toLowerCase().includes(this.search.toLowerCase()));
+    }
+}" @families-loaded.window="families = $event.detail; page = 1">
+    
+    <!-- Header Section -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <div class="flex items-center mb-2">
+                <a href="{% url 'relief_operations' %}" class="text-slate-400 hover:text-rose-500 mr-3 transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="text-3xl font-bold text-dromic-navy flex items-center">
+                    <i class="fas fa-clipboard-check text-rose-500 mr-3"></i>
+                    Distribution Tracking
+                </h1>
+            </div>
+            <p class="text-slate-500 ml-8 text-sm">
+                <b>Disaster:</b> {{ operation.area.disaster.name }} &bull;
+                <b>Location:</b> {{ operation.area.barangay.name|default:"" }} {{ operation.area.municipality.name }}, {{ operation.area.province.name }} &bull;
+                <b>Date:</b> {{ operation.date }}
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'export_rds_pdf' operation.id %}" target="_blank" download="Relief_Distribution_Sheet_{{ operation.date|date:'Ymd' }}.pdf" up-follow="false" class="bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold py-2.5 px-5 rounded-xl shadow-sm transition-all duration-300 flex items-center">
+                <i class="fas fa-file-pdf mr-2"></i>
+                Export RDS
+            </a>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div class="bg-white rounded-2xl shadow-md border border-slate-100 mb-6 overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
+            <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center mr-3">
+                    <i class="fas fa-users text-rose-500"></i>
+                </div>
+                Families List
+                <span class="ml-3 bg-rose-100 text-rose-600 px-2.5 py-0.5 rounded-full text-xs font-semibold" x-text="filteredFamilies.length"></span>
+            </h3>
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" x-model="search" @input="page = 1" placeholder="Search families..." class="pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-rose-500 focus:border-rose-500 w-64 outline-none">
+                </div>
+                <div class="flex items-center space-x-2 text-sm border-l border-slate-200 pl-4">
+                    <span class="text-slate-500">Rows:</span>
+                    <select x-model.number="perPage" @change="page = 1" class="border-slate-200 rounded-md text-sm focus:ring-rose-500 focus:border-rose-500 text-slate-600 py-1 pl-2 pr-8 outline-none">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="overflow-x-auto overflow-y-auto max-h-[600px]">
+            <table class="min-w-full">
+                <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                    <tr>
+                        <th class="px-5 py-4 w-12 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">#</th>
+                        <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Head of Family</th>
+                        <th class="px-5 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Members</th>
+                        <th class="px-5 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                        <th class="px-5 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <template x-for="(f, index) in filteredFamilies" :key="f.id">
+                        <tr class="hover:bg-slate-50 transition-colors" x-show="Math.ceil((index + 1) / perPage) === page">
+                            <td class="px-5 py-4 text-center text-slate-500 text-sm font-medium" x-text="index + 1"></td>
+                            <td class="px-5 py-4 text-slate-800 font-bold" x-text="f.head_of_family"></td>
+                            <td class="px-5 py-4 text-center text-slate-600">
+                                <span class="bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-xs font-semibold flex items-center justify-center w-12 mx-auto">
+                                    <i class="fas fa-users mr-1"></i> <span x-text="f.number_of_members"></span>
+                                </span>
+                            </td>
+                            <td class="px-5 py-4 text-center">
+                                <span x-show="f.is_received" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1"></i> Received
+                                </span>
+                                <span x-show="!f.is_received" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                                    <i class="fas fa-clock mr-1"></i> Pending
+                                </span>
+                            </td>
+                            <td class="px-5 py-4 text-center">
+                                <button @click="toggleStatus(f)" 
+                                        :class="f.is_received ? 'bg-slate-200 text-slate-600 hover:bg-slate-300' : 'bg-green-500 text-white hover:bg-green-600'"
+                                        class="px-4 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-slate-300">
+                                    <i class="fas" :class="f.is_received ? 'fa-undo mr-1' : 'fa-check mr-1'"></i>
+                                    <span x-text="f.is_received ? 'Mark Pending' : 'Mark Received'"></span>
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr x-show="filteredFamilies.length === 0" x-cloak>
+                        <td colspan="5" class="px-5 py-12 text-center text-slate-400">
+                            <i class="fas fa-users-slash text-4xl mb-3 block"></i>
+                            No families found matching your search.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination Controls -->
+        <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50" x-show="filteredFamilies.length > 0" x-cloak>
+            <div class="text-sm text-slate-500">
+                Showing <span class="font-medium text-slate-700" x-text="(page - 1) * perPage + 1"></span> to 
+                <span class="font-medium text-slate-700" x-text="Math.min(page * perPage, filteredFamilies.length)"></span> of 
+                <span class="font-medium text-slate-700" x-text="filteredFamilies.length"></span> results
+            </div>
+            <div class="flex items-center space-x-2">
+                <button @click="if(page > 1) page--" :disabled="page === 1" :class="{ 'opacity-50 cursor-not-allowed': page === 1 }" class="px-3 py-1.5 border border-slate-200 rounded-md text-slate-600 hover:bg-slate-100 transition-colors bg-white shadow-sm text-sm font-medium">
+                    <i class="fas fa-chevron-left mr-1"></i> Prev
+                </button>
+                <div class="text-sm text-slate-600 font-medium px-2">
+                    Page <span x-text="page"></span> of <span x-text="Math.ceil(filteredFamilies.length / perPage) || 1"></span>
+                </div>
+                <button @click="if(page < Math.ceil(filteredFamilies.length / perPage)) page++" :disabled="page >= Math.ceil(filteredFamilies.length / perPage)" :class="{ 'opacity-50 cursor-not-allowed': page >= Math.ceil(filteredFamilies.length / perPage) }" class="px-3 py-1.5 border border-slate-200 rounded-md text-slate-600 hover:bg-slate-100 transition-colors bg-white shadow-sm text-sm font-medium">
+                    Next <i class="fas fa-chevron-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<form id="csrf-form" style="display: none;">{% csrf_token %}</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function getCsrfToken() {
+    const csrfInput = document.querySelector('#csrf-form input[name="csrfmiddlewaretoken"]');
+    return csrfInput ? csrfInput.value : '';
+}
+
+function loadFamilies() {
+    fetch('{% url "get_distribution_families" operation.id %}')
+        .then(r => r.json())
+        .then(data => {
+            window.dispatchEvent(new CustomEvent('families-loaded', { detail: data }));
+        })
+        .catch(e => console.error('Error loading families:', e));
+}
+
+function toggleStatus(family) {
+    const newStatus = !family.is_received;
+    
+    // Optimistic UI update
+    family.is_received = newStatus;
+    
+    fetch('{% url "toggle_family_distribution" operation.id %}', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken() 
+        },
+        body: JSON.stringify({
+            family_id: family.id,
+            is_received: newStatus
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status !== 'success') {
+            // Revert on failure
+            family.is_received = !newStatus;
+            alert('Error updating status: ' + data.message);
+        }
+    })
+    .catch(e => {
+        family.is_received = !newStatus;
+        console.error(e);
+        alert('An error occurred while communicating with the server.');
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadFamilies();
+});
+</script>
+{% endblock %}

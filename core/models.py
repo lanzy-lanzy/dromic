@@ -149,3 +149,15 @@ class DROMICReport(models.Model):
         return sum(area.affected_persons for area in self.affected_areas.all())
     def __str__(self):
         return f"DROMIC Report for {self.barangay.name}, {self.municipality.name}, {self.province.name} on {self.date}"
+
+class FamilyDistribution(models.Model):
+    operation = models.ForeignKey(ReliefOperation, related_name='distributions', on_delete=models.CASCADE)
+    family = models.ForeignKey(Family, related_name='distributions', on_delete=models.CASCADE)
+    is_received = models.BooleanField(default=False)
+    
+    class Meta:
+        unique_together = ('operation', 'family')
+
+    def __str__(self):
+        status = "Received" if self.is_received else "Pending"
+        return f"{self.family.head_of_family} - {self.operation.date} ({status})"

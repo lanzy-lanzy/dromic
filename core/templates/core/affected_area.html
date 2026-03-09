@@ -113,19 +113,29 @@
     </div>
 
     <!-- Table View -->
-    <div x-show="viewMode === 'table'" x-transition>
-        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
-            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
+    <div x-show="viewMode === 'table'" x-transition x-data="{ page: 1, perPage: 10, areas: [] }" @areas-loaded.window="areas = $event.detail; page = 1">
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 mb-6 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
                 <h3 class="text-lg font-bold text-slate-800 flex items-center">
                     <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center mr-3">
                         <i class="fas fa-map-marked-alt text-orange-500"></i>
                     </div>
                     Affected Area List
+                    <span class="ml-3 bg-orange-100 text-orange-600 px-2.5 py-0.5 rounded-full text-xs font-semibold" x-text="areas.length"></span>
                 </h3>
+                <div class="flex items-center space-x-2 text-sm">
+                    <span class="text-slate-500">Rows per page:</span>
+                    <select x-model.number="perPage" @change="page = 1" class="border-slate-200 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 text-slate-600 py-1 pl-2 pr-8">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
             </div>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto overflow-y-auto max-h-[500px]">
                 <table class="min-w-full" id="areaTable">
-                    <thead class="bg-slate-50 border-b border-slate-200">
+                    <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10 shadow-sm">
                         <tr>
                             <th class="px-5 py-4 w-12">
                                 <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400 cursor-pointer"
@@ -141,8 +151,57 @@
                         </tr>
                     </thead>
                     <tbody id="areaTableBody" class="divide-y divide-slate-100">
+                        <template x-for="(a, index) in areas" :key="a.id">
+                            <tr class="hover:bg-slate-50 transition-colors" x-show="Math.ceil((index + 1) / perPage) === page">
+                                <td class="px-5 py-4">
+                                    <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400 cursor-pointer area-checkbox" :data-id="a.id" :checked="selectedIds.includes(a.id)" @change="if(selectedIds.includes(a.id)) { selectedIds = selectedIds.filter(id => id !== a.id) } else { selectedIds.push(a.id) }">
+                                </td>
+                                <td class="px-5 py-4">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-exclamation-triangle text-orange-500 mr-3 text-sm"></i>
+                                        <span class="font-semibold text-slate-800" x-text="a.disaster"></span>
+                                    </div>
+                                </td>
+                                <td class="px-5 py-4 text-slate-600" x-text="a.province"></td>
+                                <td class="px-5 py-4 text-slate-600" x-text="a.municipality"></td>
+                                <td class="px-5 py-4 text-slate-600" x-text="a.barangay"></td>
+                                <td class="px-5 py-4 text-slate-800 font-medium" x-text="a.affected_families.toLocaleString()"></td>
+                                <td class="px-5 py-4 text-slate-800 font-medium" x-text="a.affected_persons.toLocaleString()"></td>
+                                <td class="px-5 py-4 text-right">
+                                    <button @click="deleteArea(a.id)" class="delete-btn w-8 h-8 bg-red-100 rounded-lg inline-flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors">
+                                        <i class="fas fa-trash text-sm"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr x-show="areas.length === 0" x-cloak>
+                            <td colspan="8" class="px-5 py-12 text-center text-slate-400">
+                                <i class="fas fa-map-marked-alt text-4xl mb-3 block"></i>
+                                No affected areas recorded yet
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
+            </div>
+            
+            <!-- Pagination Controls -->
+            <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50" x-show="areas.length > 0" x-cloak>
+                <div class="text-sm text-slate-500">
+                    Showing <span class="font-medium text-slate-700" x-text="(page - 1) * perPage + 1"></span> to 
+                    <span class="font-medium text-slate-700" x-text="Math.min(page * perPage, areas.length)"></span> of 
+                    <span class="font-medium text-slate-700" x-text="areas.length"></span> results
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button @click="if(page > 1) page--" :disabled="page === 1" :class="{ 'opacity-50 cursor-not-allowed': page === 1 }" class="px-3 py-1.5 border border-slate-200 rounded-md text-slate-600 hover:bg-slate-100 transition-colors bg-white shadow-sm text-sm font-medium">
+                        <i class="fas fa-chevron-left mr-1"></i> Prev
+                    </button>
+                    <div class="text-sm text-slate-600 font-medium px-2">
+                        Page <span x-text="page"></span> of <span x-text="Math.ceil(areas.length / perPage) || 1"></span>
+                    </div>
+                    <button @click="if(page < Math.ceil(areas.length / perPage)) page++" :disabled="page >= Math.ceil(areas.length / perPage)" :class="{ 'opacity-50 cursor-not-allowed': page >= Math.ceil(areas.length / perPage) }" class="px-3 py-1.5 border border-slate-200 rounded-md text-slate-600 hover:bg-slate-100 transition-colors bg-white shadow-sm text-sm font-medium">
+                        Next <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -266,54 +325,8 @@ function loadAreas() {
 }
 
 function renderAreaTable(areas) {
-    const tbody = document.getElementById('areaTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    areas.forEach(a => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50 transition-colors';
-        tr.innerHTML = `
-            <td class="px-5 py-4">
-                <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400 cursor-pointer area-checkbox" data-id="${a.id}">
-            </td>
-            <td class="px-5 py-4">
-                <div class="flex items-center">
-                    <i class="fas fa-exclamation-triangle text-orange-500 mr-3 text-sm"></i>
-                    <span class="font-semibold text-slate-800">${a.disaster}</span>
-                </div>
-            </td>
-            <td class="px-5 py-4 text-slate-600">${a.province}</td>
-            <td class="px-5 py-4 text-slate-600">${a.municipality}</td>
-            <td class="px-5 py-4 text-slate-600">${a.barangay}</td>
-            <td class="px-5 py-4 text-slate-800 font-medium">${a.affected_families.toLocaleString()}</td>
-            <td class="px-5 py-4 text-slate-800 font-medium">${a.affected_persons.toLocaleString()}</td>
-            <td class="px-5 py-4 text-right">
-                <button class="delete-btn w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors">
-                    <i class="fas fa-trash text-sm"></i>
-                </button>
-            </td>
-        `;
-
-        // Bind checkbox
-        const cb = tr.querySelector('.area-checkbox');
-        const alpData = getAlpineData();
-        if (cb && alpData) {
-            cb.checked = alpData.selectedIds.indexOf(a.id) > -1;
-            cb.addEventListener('change', () => {
-                const d = getAlpineData();
-                if (!d) return;
-                const idx = d.selectedIds.indexOf(a.id);
-                if (idx > -1) d.selectedIds.splice(idx, 1);
-                else d.selectedIds.push(a.id);
-            });
-        }
-
-        // Bind delete
-        const delBtn = tr.querySelector('.delete-btn');
-        if (delBtn) delBtn.addEventListener('click', () => deleteArea(a.id));
-
-        tbody.appendChild(tr);
-    });
+    // Notify the Alpine component that areas have loaded so it can render the paginated template
+    window.dispatchEvent(new CustomEvent('areas-loaded', { detail: areas }));
 }
 
 function renderAreaCards(areas) {
