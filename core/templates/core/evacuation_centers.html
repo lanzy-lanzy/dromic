@@ -6,17 +6,65 @@
 {% block title %}DROMIC Evacuation Centers{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4" x-data="{ showModal: false }">
+<div class="container-fluid mt-4"
+     x-data="{
+        showModal: false,
+        viewMode: 'table',
+        selectedIds: [],
+        allSelected: false,
+        toggleAll(centers) {
+            if (this.allSelected) {
+                this.selectedIds = [];
+                this.allSelected = false;
+            } else {
+                this.selectedIds = centers.map(c => c.id);
+                this.allSelected = true;
+            }
+        },
+        toggleOne(id) {
+            const idx = this.selectedIds.indexOf(id);
+            if (idx > -1) this.selectedIds.splice(idx, 1);
+            else this.selectedIds.push(id);
+        },
+        isSelected(id) { return this.selectedIds.indexOf(id) > -1; }
+     }"
+     @close-modals.window="showModal = false">
+
     <!-- Page Header -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <div>
             <h1 class="text-3xl md:text-4xl font-bold text-dromic-navy">Evacuation Centers</h1>
             <p class="text-dromic-slate mt-1">Manage and monitor evacuation facilities</p>
         </div>
-        <button class="mt-4 md:mt-0 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center" @click="showModal = true">
-            <i class="fas fa-plus-circle mr-2"></i>
-            Add Evacuation Center
-        </button>
+        <div class="flex items-center gap-3 mt-4 md:mt-0">
+            <!-- View Toggle -->
+            <div class="flex bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <button @click="viewMode = 'cards'"
+                        :class="viewMode === 'cards' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'"
+                        class="px-4 py-2.5 flex items-center gap-2 font-medium text-sm transition-all duration-200">
+                    <i class="fas fa-th-large"></i>
+                    <span class="hidden sm:inline">Cards</span>
+                </button>
+                <button @click="viewMode = 'table'"
+                        :class="viewMode === 'table' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'"
+                        class="px-4 py-2.5 flex items-center gap-2 font-medium text-sm transition-all duration-200">
+                    <i class="fas fa-table"></i>
+                    <span class="hidden sm:inline">Table</span>
+                </button>
+            </div>
+            <!-- Bulk Delete -->
+            <button x-show="selectedIds.length > 0" x-transition
+                    @click="if(confirm('Delete ' + selectedIds.length + ' selected center(s)?')) { window.bulkDeleteCenters(selectedIds); }"
+                    class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center text-sm">
+                <i class="fas fa-trash-alt mr-2"></i>
+                Delete (<span x-text="selectedIds.length"></span>)
+            </button>
+            <!-- Add Button -->
+            <button class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center" @click="showModal = true">
+                <i class="fas fa-plus-circle mr-2"></i>
+                Add Center
+            </button>
+        </div>
     </div>
 
     <!-- Stats Cards -->
@@ -29,7 +77,7 @@
             </div>
             <div>
                 <p class="text-slate-500 text-sm font-semibold mb-1">Total Centers</p>
-                <h2 class="text-4xl font-bold text-slate-800">{{ total_centers }}</h2>
+                <h2 class="text-4xl font-bold text-slate-800" id="totalCenters">{{ total_centers }}</h2>
             </div>
         </div>
 
@@ -41,7 +89,7 @@
             </div>
             <div>
                 <p class="text-slate-500 text-sm font-semibold mb-1">Total Capacity</p>
-                <h2 class="text-4xl font-bold text-slate-800">{{ total_capacity|intcomma }}</h2>
+                <h2 class="text-4xl font-bold text-slate-800" id="totalCapacity">{{ total_capacity|intcomma }}</h2>
             </div>
         </div>
 
@@ -53,51 +101,121 @@
             </div>
             <div>
                 <p class="text-slate-500 text-sm font-semibold mb-1">Currently Occupied</p>
-                <h2 class="text-4xl font-bold text-slate-800">{{ total_occupied|intcomma }}</h2>
+                <h2 class="text-4xl font-bold text-slate-800" id="totalOccupied">{{ total_occupied|intcomma }}</h2>
             </div>
         </div>
     </div>
 
-    <!-- Evacuation Centers Table -->
-    <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
-            <h3 class="text-lg font-bold text-slate-800 flex items-center">
-                <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center mr-3">
-                    <i class="fas fa-building text-emerald-500"></i>
+    <!-- Card View -->
+    <div x-show="viewMode === 'cards'" x-transition class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="centerCardList">
+        {% for center in evacuation_centers %}
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100 bg-white">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <h5 class="text-lg font-bold text-slate-800 flex items-center">
+                            <i class="fas fa-building text-emerald-500 mr-2"></i>
+                            {{ center.name }}
+                        </h5>
+                    </div>
                 </div>
-                Evacuation Center List
-            </h3>
+            </div>
+            <div class="p-5">
+                <div class="space-y-3 mb-4">
+                    <div class="flex items-center text-sm text-slate-600">
+                        <i class="fas fa-map-marker-alt text-slate-400 mr-2 w-4"></i>
+                        {{ center.barangay.name }}, {{ center.municipality.name }}
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500"><i class="fas fa-users mr-1"></i> Capacity: <strong>{{ center.capacity|intcomma }}</strong></span>
+                        <span class="text-slate-500"><i class="fas fa-bed mr-1"></i> Occupied: <strong>{{ center.current_occupancy|intcomma }}</strong></span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2">
+                        {% widthratio center.current_occupancy center.capacity 100 as occupancy_pct %}
+                        <div class="bg-emerald-500 h-2 rounded-full" style="width: {% widthratio center.current_occupancy center.capacity 100 %}%"></div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <span class="px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">
+                        Available: {{ center.capacity|sub:center.current_occupancy|intcomma }}
+                    </span>
+                    <div class="flex space-x-2">
+                        <button class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors" onclick="deleteCenter({{ center.id }})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full">
-                <thead class="bg-emerald-50">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-emerald-600 font-semibold text-sm">Name</th>
-                        <th class="px-6 py-4 text-left text-emerald-600 font-semibold text-sm">Location</th>
-                        <th class="px-6 py-4 text-left text-emerald-600 font-semibold text-sm">Capacity</th>
-                        <th class="px-6 py-4 text-left text-emerald-600 font-semibold text-sm">Occupied</th>
-                        <th class="px-6 py-4 text-left text-emerald-600 font-semibold text-sm">Available</th>
-                        <th class="px-6 py-4 text-left text-emerald-600 font-semibold text-sm">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for center in evacuation_centers %}
-                    <tr class="border-b border-emerald-50 hover:bg-emerald-50/50">
-                        <td class="px-6 py-4 font-medium">{{ center.name }}</td>
-                        <td class="px-6 py-4">{{ center.barangay.name }}, {{ center.municipality.name }}</td>
-                        <td class="px-6 py-4">{{ center.capacity|intcomma }}</td>
-                        <td class="px-6 py-4">{{ center.current_occupancy|intcomma }}</td>
-                        <td class="px-6 py-4">{{ center.capacity|sub:center.current_occupancy|intcomma }}</td>
-                        <td class="px-6 py-4">
-                            <span class="px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">Normal</span>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        {% endfor %}
+    </div>
+
+    <!-- Table View -->
+    <div x-show="viewMode === 'table'" x-transition>
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center mr-3">
+                        <i class="fas fa-building text-emerald-500"></i>
+                    </div>
+                    Evacuation Center List
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full" id="centerTable">
+                    <thead class="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="px-5 py-4 w-12">
+                                <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-400 cursor-pointer"
+                                       :checked="allSelected" @change="toggleAll(window._centerData || [])">
+                            </th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Name</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Location</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Capacity</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Occupied</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Available</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                            <th class="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="centerTableBody" class="divide-y divide-slate-100">
+                        {% for center in evacuation_centers %}
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-5 py-4">
+                                <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-400 cursor-pointer center-checkbox" data-id="{{ center.id }}"
+                                       :checked="isSelected({{ center.id }})" @change="toggleOne({{ center.id }})">
+                            </td>
+                            <td class="px-5 py-4 font-semibold text-slate-800">
+                                <div class="flex items-center">
+                                    <i class="fas fa-building text-emerald-500 mr-3 text-sm"></i>
+                                    {{ center.name }}
+                                </div>
+                            </td>
+                            <td class="px-5 py-4 text-slate-600">{{ center.barangay.name }}, {{ center.municipality.name }}</td>
+                            <td class="px-5 py-4 text-slate-800 font-medium">{{ center.capacity|intcomma }}</td>
+                            <td class="px-5 py-4 text-slate-800">{{ center.current_occupancy|intcomma }}</td>
+                            <td class="px-5 py-4 text-slate-800">{{ center.capacity|sub:center.current_occupancy|intcomma }}</td>
+                            <td class="px-5 py-4">
+                                {% if center.is_full %}
+                                <span class="px-3 py-1 rounded-full bg-red-100 text-red-600 text-xs font-semibold">Full</span>
+                                {% elif center.current_occupancy > center.capacity|divisibleby:2 %}
+                                <span class="px-3 py-1 rounded-full bg-yellow-100 text-yellow-600 text-xs font-semibold">High</span>
+                                {% else %}
+                                <span class="px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">Normal</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-5 py-4 text-right">
+                                <button class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors" onclick="deleteCenter({{ center.id }})">
+                                    <i class="fas fa-trash text-sm"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
 
 <!-- Add Evacuation Center Modal -->
 <div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
@@ -164,12 +282,199 @@
         </div>
     </div>
 </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+// Alpine data helper
+function getAlpineData() {
+    if (!window.Alpine) return null;
+    const containers = document.querySelectorAll('[x-data]');
+    for (const el of containers) {
+        const data = Alpine.$data(el);
+        if (data && 'selectedIds' in data) return data;
+    }
+    return null;
+}
+
+function clearSelection() {
+    const data = getAlpineData();
+    if (data) {
+        data.selectedIds = [];
+        data.allSelected = false;
+    }
+}
+
+function getCsrfToken() {
+    const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    return csrfInput ? csrfInput.value : '';
+}
+
+window._centerData = [];
+
+function loadCenters() {
+    fetch('/api/evacuation-centers/')
+        .then(r => r.json())
+        .then(data => {
+            window._centerData = data;
+            // Update stats
+            const totalEl = document.getElementById('totalCenters');
+            const capEl = document.getElementById('totalCapacity');
+            const occEl = document.getElementById('totalOccupied');
+            if (totalEl) totalEl.textContent = data.length;
+            if (capEl) capEl.textContent = data.reduce((s, c) => s + c.capacity, 0).toLocaleString();
+            if (occEl) occEl.textContent = data.reduce((s, c) => s + c.current_occupancy, 0).toLocaleString();
+
+            // Render table
+            renderCenterTable(data);
+            // Render cards
+            renderCenterCards(data);
+        })
+        .catch(e => console.error('Error loading centers:', e));
+}
+
+function renderCenterTable(centers) {
+    const tbody = document.getElementById('centerTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    centers.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition-colors';
+        const pct = c.capacity > 0 ? (c.current_occupancy / c.capacity * 100) : 0;
+        let statusBadge = '<span class="px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">Normal</span>';
+        if (pct >= 100) statusBadge = '<span class="px-3 py-1 rounded-full bg-red-100 text-red-600 text-xs font-semibold">Full</span>';
+        else if (pct >= 75) statusBadge = '<span class="px-3 py-1 rounded-full bg-yellow-100 text-yellow-600 text-xs font-semibold">High</span>';
+
+        tr.innerHTML = `
+            <td class="px-5 py-4">
+                <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-400 cursor-pointer center-checkbox" data-id="${c.id}">
+            </td>
+            <td class="px-5 py-4 font-semibold text-slate-800">
+                <div class="flex items-center">
+                    <i class="fas fa-building text-emerald-500 mr-3 text-sm"></i>
+                    ${c.name}
+                </div>
+            </td>
+            <td class="px-5 py-4 text-slate-600">${c.barangay}, ${c.municipality}</td>
+            <td class="px-5 py-4 text-slate-800 font-medium">${c.capacity.toLocaleString()}</td>
+            <td class="px-5 py-4 text-slate-800">${c.current_occupancy.toLocaleString()}</td>
+            <td class="px-5 py-4 text-slate-800">${c.available.toLocaleString()}</td>
+            <td class="px-5 py-4">${statusBadge}</td>
+            <td class="px-5 py-4 text-right">
+                <button class="delete-btn w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors">
+                    <i class="fas fa-trash text-sm"></i>
+                </button>
+            </td>
+        `;
+
+        // Bind checkbox
+        const cb = tr.querySelector('.center-checkbox');
+        const data = getAlpineData();
+        if (cb && data) {
+            cb.checked = data.selectedIds.indexOf(c.id) > -1;
+            cb.addEventListener('change', () => {
+                const d = getAlpineData();
+                if (!d) return;
+                const idx = d.selectedIds.indexOf(c.id);
+                if (idx > -1) d.selectedIds.splice(idx, 1);
+                else d.selectedIds.push(c.id);
+            });
+        }
+
+        // Bind delete
+        const delBtn = tr.querySelector('.delete-btn');
+        if (delBtn) delBtn.addEventListener('click', () => deleteCenter(c.id));
+
+        tbody.appendChild(tr);
+    });
+}
+
+function renderCenterCards(centers) {
+    const container = document.getElementById('centerCardList');
+    if (!container) return;
+    container.innerHTML = '';
+    centers.forEach(c => {
+        const pct = c.capacity > 0 ? Math.min(100, Math.round(c.current_occupancy / c.capacity * 100)) : 0;
+        const div = document.createElement('div');
+        div.className = 'bg-white rounded-2xl shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 overflow-hidden';
+        div.innerHTML = `
+            <div class="px-5 py-4 border-b border-slate-100 bg-white">
+                <div class="flex items-center">
+                    <h5 class="text-lg font-bold text-slate-800 flex items-center">
+                        <i class="fas fa-building text-emerald-500 mr-2"></i>
+                        ${c.name}
+                    </h5>
+                </div>
+            </div>
+            <div class="p-5">
+                <div class="space-y-3 mb-4">
+                    <div class="flex items-center text-sm text-slate-600">
+                        <i class="fas fa-map-marker-alt text-slate-400 mr-2 w-4"></i>
+                        ${c.barangay}, ${c.municipality}
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500"><i class="fas fa-users mr-1"></i> Capacity: <strong>${c.capacity.toLocaleString()}</strong></span>
+                        <span class="text-slate-500"><i class="fas fa-bed mr-1"></i> Occupied: <strong>${c.current_occupancy.toLocaleString()}</strong></span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2">
+                        <div class="bg-emerald-500 h-2 rounded-full" style="width: ${pct}%"></div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <span class="px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">
+                        Available: ${c.available.toLocaleString()}
+                    </span>
+                    <button class="delete-btn w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        const delBtn = div.querySelector('.delete-btn');
+        if (delBtn) delBtn.addEventListener('click', () => deleteCenter(c.id));
+
+        container.appendChild(div);
+    });
+}
+
+function deleteCenter(id) {
+    if (!confirm('Are you sure you want to delete this evacuation center?')) return;
+    fetch('/api/evacuation-centers/' + id + '/delete/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCsrfToken() }
+    })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') loadCenters();
+            else alert('Error: ' + data.message);
+        })
+        .catch(e => { console.error(e); alert('An error occurred.'); });
+}
+
+window.bulkDeleteCenters = function(ids) {
+    fetch('/api/evacuation-centers/bulk-delete/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+        body: JSON.stringify({ ids: ids })
+    })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                clearSelection();
+                loadCenters();
+            } else alert('Error: ' + data.message);
+        })
+        .catch(e => { console.error(e); alert('An error occurred.'); });
+};
+
 $(document).ready(function() {
+    // Load centers via API for dynamic rendering
+    loadCenters();
+
+    // Province -> Municipality cascade
     $('#province').change(function() {
         var provinceId = $(this).val();
         if (provinceId) {
@@ -181,13 +486,12 @@ $(document).ready(function() {
                 $('#municipality').prop('disabled', false);
             });
         } else {
-            $('#municipality').html('<option value="">Select municipality</option>');
-            $('#municipality').prop('disabled', true);
+            $('#municipality').html('<option value="">Select municipality</option>').prop('disabled', true);
         }
-        $('#barangay').html('<option value="">Select Barangay</option>');
-        $('#barangay').prop('disabled', true);
+        $('#barangay').html('<option value="">Select Barangay</option>').prop('disabled', true);
     });
 
+    // Municipality -> Barangay cascade
     $('#municipality').change(function() {
         var municipalityId = $(this).val();
         if (municipalityId) {
@@ -199,11 +503,11 @@ $(document).ready(function() {
                 $('#barangay').prop('disabled', false);
             });
         } else {
-            $('#barangay').html('<option value="">Select Barangay</option>');
-            $('#barangay').prop('disabled', true);
+            $('#barangay').html('<option value="">Select Barangay</option>').prop('disabled', true);
         }
     });
 
+    // Submit new center
     $('#submitEvacuationCenter').click(function() {
         var formData = $('#addEvacuationCenterForm').serialize();
         $.ajax({
@@ -212,12 +516,16 @@ $(document).ready(function() {
             data: formData,
             success: function(response) {
                 if (response.status === 'success') {
-                    location.reload();
+                    window.dispatchEvent(new CustomEvent('close-modals'));
+                    $('#addEvacuationCenterForm')[0].reset();
+                    $('#municipality').prop('disabled', true);
+                    $('#barangay').prop('disabled', true);
+                    loadCenters();
                 } else {
                     alert('Error: ' + response.message);
                 }
             },
-            error: function(xhr, status, error) {
+            error: function() {
                 alert('An error occurred. Please try again.');
             }
         });

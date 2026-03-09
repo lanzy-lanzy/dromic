@@ -1,214 +1,73 @@
 {% extends 'base.html' %}
 {% load humanize %}
 
+{% block title %}DROMIC Report Detail{% endblock %}
+
 {% block content %}
 <div class="container-fluid mt-4">
-    <!-- Page Header -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+    <div class="flex items-center mb-8">
+        <a href="{% url 'report_list' %}" class="mr-4 w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
+            <i class="fas fa-arrow-left"></i>
+        </a>
         <div>
-            <h1 class="text-3xl md:text-4xl font-bold text-dromic-navy">DROMIC Report: {{ report.disaster.name }}</h1>
-            <p class="text-dromic-slate mt-1">{{ report.date|date:"F d, Y" }}</p>
-        </div>
-        <div class="flex space-x-3 mt-4 md:mt-0">
-            <a href="{% url 'report_list' %}" class="px-5 py-2.5 rounded-xl border border-gray-200 text-dromic-slate font-medium hover:bg-gray-50 transition-colors flex items-center">
-                <i class="fas fa-arrow-left mr-2"></i>Back
-            </a>
-            <a href="{% url 'export_report_pdf' report.id %}" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white font-medium hover:from-red-600 hover:to-red-700 transition-all shadow-lg hover:shadow-xl flex items-center">
-                <i class="fas fa-file-pdf mr-2"></i>Export PDF
-            </a>
+            <h1 class="text-3xl font-bold text-dromic-navy">Report Detail</h1>
+            <p class="text-dromic-slate mt-1">{{ report.disaster.name }} — {{ report.date }}</p>
         </div>
     </div>
 
-    <!-- Overview Cards -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
-                <h3 class="text-lg font-semibold text-white"><i class="fas fa-info-circle mr-2"></i>Report Overview</h3>
+    <div class="bg-white rounded-2xl shadow-md border border-slate-100 p-6 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+                <p class="text-slate-500 text-sm font-semibold">Disaster</p>
+                <p class="text-lg font-bold text-slate-800">{{ report.disaster.name }}</p>
             </div>
-            <div class="p-6">
-                <div class="space-y-4">
-                    <div class="flex items-center p-4 bg-blue-50 rounded-xl">
-                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                            <i class="fas fa-map-marker-alt text-blue-500"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm text-dromic-slate">Province</p>
-                            <p class="font-semibold text-dromic-navy">{{ report.province.name }}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center p-4 bg-blue-50 rounded-xl">
-                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                            <i class="fas fa-building text-blue-500"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm text-dromic-slate">Municipality</p>
-                            <p class="font-semibold text-dromic-navy">{{ report.municipality.name }}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center p-4 bg-blue-50 rounded-xl">
-                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                            <i class="fas fa-home text-blue-500"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm text-dromic-slate">Barangay</p>
-                            <p class="font-semibold text-dromic-navy">{{ report.barangay.name }}</p>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 pt-2">
-                        <div class="bg-green-50 rounded-xl p-4 text-center">
-                            <i class="fas fa-users text-green-500 text-xl mb-2"></i>
-                            <p class="text-sm text-dromic-slate">Affected Families</p>
-                            <p class="text-xl font-bold text-dromic-navy">{{ report.total_affected_families|intcomma }}</p>
-                        </div>
-                        <div class="bg-purple-50 rounded-xl p-4 text-center">
-                            <i class="fas fa-user-friends text-purple-500 text-xl mb-2"></i>
-                            <p class="text-sm text-dromic-slate">Affected Persons</p>
-                            <p class="text-xl font-bold text-dromic-navy">{{ report.total_affected_persons|intcomma }}</p>
-                        </div>
-                    </div>
-                </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold">Province</p>
+                <p class="text-lg font-bold text-slate-800">{{ report.province.name }}</p>
             </div>
-        </div>
-
-        <!-- Impact Chart -->
-        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
-                <h3 class="text-lg font-semibold text-white"><i class="fas fa-chart-pie mr-2"></i>Impact Visualization</h3>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold">Municipality</p>
+                <p class="text-lg font-bold text-slate-800">{{ report.municipality.name }}</p>
             </div>
-            <div class="p-6">
-                <div class="h-64">
-                    <canvas id="impactChart"></canvas>
-                </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold">Barangay</p>
+                <p class="text-lg font-bold text-slate-800">{{ report.barangay.name }}</p>
             </div>
         </div>
     </div>
 
-    <!-- Displaced Population & Damaged Houses -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
-                <h3 class="text-lg font-semibold text-white"><i class="fas fa-users mr-2"></i>Displaced Population</h3>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead class="bg-red-50">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-red-600 font-semibold text-sm">Category</th>
-                            <th class="px-4 py-3 text-left text-red-600 font-semibold text-sm">Cumulative</th>
-                            <th class="px-4 py-3 text-left text-red-600 font-semibold text-sm">Current</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for dp in report.displaced_populations.all %}
-                        <tr class="border-b border-red-50 hover:bg-red-50/50">
-                            <td class="px-4 py-3 font-medium">Families</td>
-                            <td class="px-4 py-3">{{ dp.cum_families|intcomma }}</td>
-                            <td class="px-4 py-3">{{ dp.now_families|intcomma }}</td>
-                        </tr>
-                        <tr class="border-b border-red-50 hover:bg-red-50/50">
-                            <td class="px-4 py-3 font-medium">Persons</td>
-                            <td class="px-4 py-3">{{ dp.cum_persons|intcomma }}</td>
-                            <td class="px-4 py-3">{{ dp.now_persons|intcomma }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
-                <h3 class="text-lg font-semibold text-white"><i class="fas fa-house-damage mr-2"></i>Damaged Houses</h3>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead class="bg-orange-50">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-orange-600 font-semibold text-sm">Category</th>
-                            <th class="px-4 py-3 text-left text-orange-600 font-semibold text-sm">Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for dh in report.damaged_houses.all %}
-                        <tr class="border-b border-orange-50 hover:bg-orange-50/50">
-                            <td class="px-4 py-3 font-medium">Partially Damaged</td>
-                            <td class="px-4 py-3">{{ dh.partially_damaged|intcomma }}</td>
-                        </tr>
-                        <tr class="border-b border-orange-50 hover:bg-orange-50/50">
-                            <td class="px-4 py-3 font-medium">Totally Damaged</td>
-                            <td class="px-4 py-3">{{ dh.totally_damaged|intcomma }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Relief Operations -->
-    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
-            <h3 class="text-lg font-semibold text-white"><i class="fas fa-hands-helping mr-2"></i>Relief Operations</h3>
+    {% if affected_areas %}
+    <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden mb-6">
+        <div class="px-6 py-5 border-b border-slate-100">
+            <h3 class="text-lg font-bold text-slate-800"><i class="fas fa-map-marked-alt text-orange-500 mr-2"></i>Affected Areas</h3>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full">
-                <thead class="bg-green-50">
+                <thead class="bg-slate-50">
                     <tr>
-                        <th class="px-6 py-4 text-left text-green-600 font-semibold text-sm">Date</th>
-                        <th class="px-6 py-4 text-left text-green-600 font-semibold text-sm">Food Items</th>
-                        <th class="px-6 py-4 text-left text-green-600 font-semibold text-sm">Non-Food Items</th>
-                        <th class="px-6 py-4 text-left text-green-600 font-semibold text-sm">Financial Assistance</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Location</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Families</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Persons</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for ro in report.relief_operations.all %}
-                    <tr class="border-b border-green-50 hover:bg-green-50/50">
-                        <td class="px-6 py-4">{{ ro.date|date:"F d, Y" }}</td>
-                        <td class="px-6 py-4">{{ ro.food_items|intcomma }}</td>
-                        <td class="px-6 py-4">{{ ro.non_food_items|intcomma }}</td>
-                        <td class="px-6 py-4 font-medium text-green-600">₱{{ ro.financial_assistance|intcomma }}</td>
+                <tbody class="divide-y divide-slate-100">
+                    {% for area in affected_areas %}
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-6 py-4 text-slate-800">{{ area.barangay.name }}, {{ area.municipality.name }}</td>
+                        <td class="px-6 py-4 text-slate-800 font-medium">{{ area.affected_families|intcomma }}</td>
+                        <td class="px-6 py-4 text-slate-800 font-medium">{{ area.affected_persons|intcomma }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-</div>
-{% endblock %}
+    {% endif %}
 
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    var ctx = document.getElementById('impactChart').getContext('2d');
-    var chart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Affected Families', 'Affected Persons'],
-            datasets: [{
-                data: [{{ report.total_affected_families }}, {{ report.total_affected_persons }}],
-                backgroundColor: [
-                    'rgba(16, 185, 129, 0.8)',
-                    'rgba(139, 92, 246, 0.8)'
-                ],
-                borderWidth: 0,
-                hoverOffset: 10
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '60%',
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 20,
-                        usePointStyle: true,
-                        pointStyle: 'circle'
-                    }
-                }
-            }
-        }
-    });
-</script>
+    <div class="flex justify-end">
+        <a href="{% url 'export_report_pdf' report.id %}" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-slate-600 to-slate-700 text-white font-medium hover:from-slate-700 hover:to-slate-800 transition-all shadow-lg">
+            <i class="fas fa-file-export mr-2"></i>Export Report
+        </a>
+    </div>
+</div>
 {% endblock %}

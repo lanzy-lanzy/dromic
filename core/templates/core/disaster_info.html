@@ -4,24 +4,74 @@
 {% block title %}DROMIC Disaster Information{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4" x-data="{ showAddModal: false, showEditModal: false }" @close-modals.window="showAddModal = false; showEditModal = false">
+<div class="container-fluid mt-4"
+     x-data="{
+        showAddModal: false,
+        showEditModal: false,
+        viewMode: 'cards',
+        selectedIds: [],
+        allSelected: false,
+        toggleAll(disasters) {
+            if (this.allSelected) {
+                this.selectedIds = [];
+                this.allSelected = false;
+            } else {
+                this.selectedIds = disasters.map(d => d.id);
+                this.allSelected = true;
+            }
+        },
+        toggleOne(id) {
+            const idx = this.selectedIds.indexOf(id);
+            if (idx > -1) this.selectedIds.splice(idx, 1);
+            else this.selectedIds.push(id);
+        },
+        isSelected(id) { return this.selectedIds.indexOf(id) > -1; }
+     }"
+     @close-modals.window="showAddModal = false; showEditModal = false"
+     @open-edit-modal.window="showEditModal = true">
+
     <!-- Page Header -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <div>
             <h1 class="text-3xl md:text-4xl font-bold text-dromic-navy">Disaster Information</h1>
             <p class="text-dromic-slate mt-1">Manage and track all disaster events</p>
         </div>
-        <button class="mt-4 md:mt-0 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center" @click="showAddModal = true">
-            <i class="fas fa-plus-circle mr-2"></i>
-            Add New Disaster
-        </button>
+        <div class="flex items-center gap-3 mt-4 md:mt-0">
+            <!-- View Toggle -->
+            <div class="flex bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <button @click="viewMode = 'cards'"
+                        :class="viewMode === 'cards' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'"
+                        class="px-4 py-2.5 flex items-center gap-2 font-medium text-sm transition-all duration-200">
+                    <i class="fas fa-th-large"></i>
+                    <span class="hidden sm:inline">Cards</span>
+                </button>
+                <button @click="viewMode = 'table'"
+                        :class="viewMode === 'table' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'"
+                        class="px-4 py-2.5 flex items-center gap-2 font-medium text-sm transition-all duration-200">
+                    <i class="fas fa-table"></i>
+                    <span class="hidden sm:inline">Table</span>
+                </button>
+            </div>
+            <!-- Bulk Delete -->
+            <button x-show="selectedIds.length > 0" x-transition
+                    @click="if(confirm('Delete ' + selectedIds.length + ' selected disaster(s)?')) { window.bulkDeleteDisasters(selectedIds); }"
+                    class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center text-sm">
+                <i class="fas fa-trash-alt mr-2"></i>
+                Delete (<span x-text="selectedIds.length"></span>)
+            </button>
+            <!-- Add Button -->
+            <button class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center" @click="showAddModal = true">
+                <i class="fas fa-plus-circle mr-2"></i>
+                Add New Disaster
+            </button>
+        </div>
     </div>
-    
+
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div class="stat-card bg-white rounded-2xl shadow-md border border-slate-100 hover:shadow-xl transition-all p-6 flex flex-col justify-between">
             <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center group-hover:bg-red-500 transition-colors">
+                <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center">
                     <i class="fas fa-exclamation-triangle text-red-500 text-xl stat-icon"></i>
                 </div>
             </div>
@@ -69,17 +119,21 @@
             </div>
         </div>
     </div>
-    
-    <!-- Disaster Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="disasterList">
+
+    <!-- Card View -->
+    <div x-show="viewMode === 'cards'" x-transition class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="disasterList">
         {% for disaster in disasters %}
             <div class="bg-white rounded-2xl shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 overflow-hidden group">
                 <div class="px-5 py-4 border-b border-slate-100 bg-white">
                     <div class="flex items-center justify-between">
-                        <h5 class="text-lg font-bold text-slate-800 flex items-center">
-                            <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
-                            {{ disaster.name|title }}
-                        </h5>
+                        <div class="flex items-center">
+                            <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-red-500 focus:ring-red-400 mr-3 cursor-pointer disaster-checkbox" data-id="{{ disaster.id }}"
+                                   :checked="isSelected({{ disaster.id }})" @change="toggleOne({{ disaster.id }})">
+                            <h5 class="text-lg font-bold text-slate-800 flex items-center">
+                                <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                                {{ disaster.name|title }}
+                            </h5>
+                        </div>
                         <button class="text-slate-400 hover:text-slate-600 transition-colors">
                             <i class="fas fa-ellipsis-v"></i>
                         </button>
@@ -93,10 +147,10 @@
                             {{ disaster.date_occurred|date:"M j, Y" }}
                         </div>
                         <div class="flex space-x-2">
-                            <button class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-500 hover:bg-blue-200 transition-colors">
+                            <button class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-500 hover:bg-blue-200 transition-colors" onclick="editDisaster({{ disaster.id }})">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors">
+                            <button class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors" onclick="deleteDisaster({{ disaster.id }})">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -105,7 +159,59 @@
             </div>
         {% endfor %}
     </div>
-</div>
+
+    <!-- Table View -->
+    <div x-show="viewMode === 'table'" x-transition>
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left" id="disasterTable">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200">
+                            <th class="px-5 py-4 w-12">
+                                <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-red-500 focus:ring-red-400 cursor-pointer"
+                                       :checked="allSelected" @change="toggleAll(window._disasterData || [])">
+                            </th>
+                            <th class="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Name</th>
+                            <th class="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Description</th>
+                            <th class="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date Occurred</th>
+                            <th class="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="disasterTableBody" class="divide-y divide-slate-100">
+                        {% for disaster in disasters %}
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-5 py-4">
+                                <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-red-500 focus:ring-red-400 cursor-pointer"
+                                       :checked="isSelected({{ disaster.id }})" @change="toggleOne({{ disaster.id }})">
+                            </td>
+                            <td class="px-5 py-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-exclamation-triangle text-red-500 mr-3 text-sm"></i>
+                                    <span class="font-semibold text-slate-800 capitalize">{{ disaster.name }}</span>
+                                </div>
+                            </td>
+                            <td class="px-5 py-4 text-slate-600 max-w-xs truncate">{{ disaster.description }}</td>
+                            <td class="px-5 py-4 text-slate-500 text-sm">
+                                <i class="fas fa-calendar-alt mr-2 text-slate-400"></i>
+                                {{ disaster.date_occurred|date:"M j, Y" }}
+                            </td>
+                            <td class="px-5 py-4 text-right">
+                                <div class="flex justify-end space-x-2">
+                                    <button class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-500 hover:bg-blue-200 transition-colors" onclick="editDisaster({{ disaster.id }})">
+                                        <i class="fas fa-edit text-sm"></i>
+                                    </button>
+                                    <button class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors" onclick="deleteDisaster({{ disaster.id }})">
+                                        <i class="fas fa-trash text-sm"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
 <!-- Add Disaster Modal -->
 <div x-show="showAddModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
@@ -192,5 +298,6 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

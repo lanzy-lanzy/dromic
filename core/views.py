@@ -204,6 +204,29 @@ def create_disaster(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
 @csrf_exempt
+@require_POST
+def delete_disaster(request, disaster_id):
+    try:
+        disaster = get_object_or_404(Disaster, id=disaster_id)
+        disaster.delete()
+        return JsonResponse({'status': 'success', 'message': 'Disaster deleted successfully'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
+@csrf_exempt
+@require_POST
+def bulk_delete_disasters(request):
+    try:
+        data = json.loads(request.body)
+        ids = data.get('ids', [])
+        if not ids:
+            return JsonResponse({'status': 'error', 'message': 'No disasters selected'})
+        deleted_count, _ = Disaster.objects.filter(id__in=ids).delete()
+        return JsonResponse({'status': 'success', 'message': f'{deleted_count} disaster(s) deleted successfully', 'deleted_count': deleted_count})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
+@csrf_exempt
 def create_province(request):
     if request.method == 'POST':
         try:
@@ -266,6 +289,44 @@ def add_affected_area(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
 
+def get_affected_areas(request):
+    areas = AffectedArea.objects.all().select_related('disaster', 'province', 'municipality', 'barangay')
+    data = []
+    for a in areas:
+        data.append({
+            'id': a.id,
+            'disaster': a.disaster.name if a.disaster else '',
+            'province': a.province.name if a.province else '',
+            'municipality': a.municipality.name if a.municipality else '',
+            'barangay': a.barangay.name if a.barangay else '',
+            'affected_families': a.affected_families,
+            'affected_persons': a.affected_persons,
+        })
+    return JsonResponse(data, safe=False)
+
+@csrf_exempt
+@require_POST
+def delete_affected_area(request, area_id):
+    try:
+        area = get_object_or_404(AffectedArea, id=area_id)
+        area.delete()
+        return JsonResponse({'status': 'success', 'message': 'Affected area deleted successfully'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
+@csrf_exempt
+@require_POST
+def bulk_delete_affected_areas(request):
+    try:
+        data = json.loads(request.body)
+        ids = data.get('ids', [])
+        if not ids:
+            return JsonResponse({'status': 'error', 'message': 'No areas selected'})
+        deleted_count, _ = AffectedArea.objects.filter(id__in=ids).delete()
+        return JsonResponse({'status': 'success', 'message': f'{deleted_count} area(s) deleted', 'deleted_count': deleted_count})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
 
 def evacuation_center_list(request):
     evacuation_centers = EvacuationCenter.objects.all().select_related('province', 'municipality', 'barangay')
@@ -280,6 +341,45 @@ def evacuation_center_list(request):
     }
     
     return render(request, 'core/evacuation_centers.html', context)
+
+def get_evacuation_centers(request):
+    centers = EvacuationCenter.objects.all().select_related('province', 'municipality', 'barangay')
+    data = []
+    for c in centers:
+        data.append({
+            'id': c.id,
+            'name': c.name,
+            'province': c.province.name if c.province else '',
+            'municipality': c.municipality.name if c.municipality else '',
+            'barangay': c.barangay.name if c.barangay else '',
+            'capacity': c.capacity,
+            'current_occupancy': c.current_occupancy,
+            'available': c.capacity - c.current_occupancy,
+        })
+    return JsonResponse(data, safe=False)
+
+@csrf_exempt
+@require_POST
+def delete_evacuation_center(request, center_id):
+    try:
+        center = get_object_or_404(EvacuationCenter, id=center_id)
+        center.delete()
+        return JsonResponse({'status': 'success', 'message': 'Evacuation center deleted successfully'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
+@csrf_exempt
+@require_POST
+def bulk_delete_evacuation_centers(request):
+    try:
+        data = json.loads(request.body)
+        ids = data.get('ids', [])
+        if not ids:
+            return JsonResponse({'status': 'error', 'message': 'No centers selected'})
+        deleted_count, _ = EvacuationCenter.objects.filter(id__in=ids).delete()
+        return JsonResponse({'status': 'success', 'message': f'{deleted_count} center(s) deleted', 'deleted_count': deleted_count})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
 
 def get_municipalities(request):
     province_id = request.GET.get('province_id')
@@ -297,7 +397,108 @@ def get_or_create_instance(model, instance_id, new_name, **kwargs):
     return model.objects.get(id=instance_id)
 
 def disaster_impact(request):
-    return render(request, 'core/disaster_impact.html')
+    """Comprehensive disaster impact page with real data from all models."""
+    from django.db.models import Sum, Count
+
+    # Family members
+    family_members = FamilyMember.objects.all().select_related('family', 'family__area')
+    total_members = family_members.count()
+    total_displaced_members = family_members.filter(is_displaced=True).count()
+    total_in_evac = family_members.filter(is_in_evacuation_center=True).count()
+
+    # Displaced population
+    displaced_all = DisplacedPopulation.objects.all().select_related('area', 'evacuation_center')
+    displaced_stats = displaced_all.aggregate(
+        cum_families=Sum('cum_families'),
+        now_families=Sum('now_families'),
+        cum_persons=Sum('cum_persons'),
+        now_persons=Sum('now_persons'),
+    )
+    total_displaced = {
+        'cum_families': displaced_stats['cum_families'] or 0,
+        'now_families': displaced_stats['now_families'] or 0,
+        'cum_persons': displaced_stats['cum_persons'] or 0,
+        'now_persons': displaced_stats['now_persons'] or 0,
+    }
+
+    # Sex and age distribution
+    sex_age_distributions = SexAgeDistribution.objects.all().select_related('population')
+
+    # Sectoral distribution
+    sectoral_distributions = SectoralDistribution.objects.all().select_related('population')
+
+    # Damaged houses
+    damaged_all = DamagedHouse.objects.all()
+    damaged_stats = damaged_all.aggregate(
+        total_partially=Sum('partially_damaged'),
+        total_totally=Sum('totally_damaged'),
+    )
+    damaged_houses = {
+        'total_partially': damaged_stats['total_partially'] or 0,
+        'total_totally': damaged_stats['total_totally'] or 0,
+        'total_damaged': (damaged_stats['total_partially'] or 0) + (damaged_stats['total_totally'] or 0),
+    }
+
+    # Relief operations
+    relief_all = ReliefOperation.objects.all()
+    relief_stats = relief_all.aggregate(
+        total_food=Sum('food_items'),
+        total_non_food=Sum('non_food_items'),
+        total_financial=Sum('financial_assistance'),
+    )
+    relief_operations = {
+        'total_food': relief_stats['total_food'] or 0,
+        'total_non_food': relief_stats['total_non_food'] or 0,
+        'total_financial': float(relief_stats['total_financial'] or 0),
+        'total_operations': relief_all.count(),
+    }
+
+    # Early recovery
+    from .models import EarlyRecovery
+    early_recoveries = EarlyRecovery.objects.all().select_related('area')
+
+    # Evacuation centers
+    evac_centers = EvacuationCenter.objects.all()
+    evac_stats = evac_centers.aggregate(
+        total_capacity=Sum('capacity'),
+        total_occupied=Sum('current_occupancy'),
+    )
+
+    # Affected areas
+    affected_areas = AffectedArea.objects.all().select_related('disaster', 'province', 'municipality', 'barangay')
+    area_stats = affected_areas.aggregate(
+        total_families=Sum('affected_families'),
+        total_persons=Sum('affected_persons'),
+    )
+
+    # Disasters for context
+    disasters = Disaster.objects.all()
+
+    context = {
+        'family_members': family_members,
+        'total_members': total_members,
+        'total_displaced_members': total_displaced_members,
+        'total_in_evac': total_in_evac,
+        'displaced_populations': displaced_all,
+        'total_displaced': total_displaced,
+        'sex_age_distributions': sex_age_distributions,
+        'sectoral_distributions': sectoral_distributions,
+        'damaged_houses_list': damaged_all,
+        'damaged_houses': damaged_houses,
+        'relief_operations_list': relief_all,
+        'relief_operations': relief_operations,
+        'early_recoveries': early_recoveries,
+        'evac_centers_count': evac_centers.count(),
+        'evac_capacity': evac_stats['total_capacity'] or 0,
+        'evac_occupied': evac_stats['total_occupied'] or 0,
+        'total_affected_areas': affected_areas.count(),
+        'total_affected_families': area_stats['total_families'] or 0,
+        'total_affected_persons': area_stats['total_persons'] or 0,
+        'total_disasters': disasters.count(),
+        'disasters': disasters,
+        'affected_areas': affected_areas,
+    }
+    return render(request, 'core/disaster_impact.html', context)
 
 
 def report_list(request):
@@ -352,7 +553,8 @@ def export_report_pdf(request, report_id):
 
 
 def disaster_info(request):
-    return render(request, 'core/disaster_info.html')
+    disasters = Disaster.objects.all().order_by('-date_occurred')
+    return render(request, 'core/disaster_info.html', {'disasters': disasters})
 
 
 def get_disasters(request):
@@ -388,3 +590,163 @@ def add_displaced_population(request):
         html_content = render_to_string('core/partials/displaced_population.html', {'displaced_population': displaced_population})
         return JsonResponse({'status': 'success', 'content': html_content})
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+
+def report_list(request):
+    """Comprehensive reports dashboard with real data from all models."""
+    # Affected areas data
+    affected_areas = AffectedArea.objects.all().select_related('disaster', 'province', 'municipality', 'barangay')
+    total_affected_families = affected_areas.aggregate(total=Sum('affected_families'))['total'] or 0
+    total_affected_persons = affected_areas.aggregate(total=Sum('affected_persons'))['total'] or 0
+
+    # Disasters
+    disasters = Disaster.objects.all()
+
+    # Evacuation centers
+    evacuation_centers = EvacuationCenter.objects.all()
+    total_centers = evacuation_centers.count()
+    total_capacity = evacuation_centers.aggregate(total=Sum('capacity'))['total'] or 0
+    total_occupancy = evacuation_centers.aggregate(total=Sum('current_occupancy'))['total'] or 0
+
+    # Displaced population
+    displaced = DisplacedPopulation.objects.all()
+    displaced_stats = displaced.aggregate(
+        cum_families=Sum('cum_families'),
+        now_families=Sum('now_families'),
+        cum_persons=Sum('cum_persons'),
+        now_persons=Sum('now_persons'),
+    )
+    total_displaced = {
+        'cum_families': displaced_stats['cum_families'] or 0,
+        'now_families': displaced_stats['now_families'] or 0,
+        'cum_persons': displaced_stats['cum_persons'] or 0,
+        'now_persons': displaced_stats['now_persons'] or 0,
+    }
+
+    # Sex and age distribution
+    sex_age_data = SexAgeDistribution.objects.values('sex', 'age_group').annotate(
+        cum_total=Sum('cum_count'),
+        now_total=Sum('now_count'),
+    ).order_by('sex', 'age_group')
+
+    # Sectoral distribution
+    sectoral_data = SectoralDistribution.objects.values('sector').annotate(
+        cum_total=Sum('cum_count'),
+        now_total=Sum('now_count'),
+    ).order_by('sector')
+
+    # Damaged houses
+    damaged_stats = DamagedHouse.objects.aggregate(
+        total_partially=Sum('partially_damaged'),
+        total_totally=Sum('totally_damaged'),
+    )
+    damaged_houses = {
+        'total_partially': damaged_stats['total_partially'] or 0,
+        'total_totally': damaged_stats['total_totally'] or 0,
+        'total_damaged': (damaged_stats['total_partially'] or 0) + (damaged_stats['total_totally'] or 0),
+    }
+
+    # Relief operations
+    relief_stats = ReliefOperation.objects.aggregate(
+        total_food=Sum('food_items'),
+        total_non_food=Sum('non_food_items'),
+        total_financial=Sum('financial_assistance'),
+    )
+    relief_operations = {
+        'total_food': relief_stats['total_food'] or 0,
+        'total_non_food': relief_stats['total_non_food'] or 0,
+        'total_financial': float(relief_stats['total_financial'] or 0),
+    }
+
+    # Per-disaster breakdown for charts
+    disaster_breakdown = []
+    for d in disasters:
+        areas = AffectedArea.objects.filter(disaster=d)
+        families = areas.aggregate(total=Sum('affected_families'))['total'] or 0
+        persons = areas.aggregate(total=Sum('affected_persons'))['total'] or 0
+        disaster_breakdown.append({
+            'name': d.name,
+            'families': families,
+            'persons': persons,
+        })
+
+    # Reports list
+    reports = DROMICReport.objects.all().select_related(
+        'disaster', 'province', 'municipality', 'barangay'
+    ).order_by('-date')
+
+    # Provinces for the create modal
+    provinces = Province.objects.all()
+
+    context = {
+        'total_disasters': disasters.count(),
+        'total_affected_areas': affected_areas.count(),
+        'total_affected_families': total_affected_families,
+        'total_affected_persons': total_affected_persons,
+        'total_centers': total_centers,
+        'total_capacity': total_capacity,
+        'total_occupancy': total_occupancy,
+        'total_displaced': total_displaced,
+        'sex_age_distribution': list(sex_age_data),
+        'sectoral_distribution': list(sectoral_data),
+        'damaged_houses': damaged_houses,
+        'relief_operations': relief_operations,
+        'disaster_breakdown': disaster_breakdown,
+        'reports': reports,
+        'total_reports': reports.count(),
+        'disasters': disasters,
+        'provinces': provinces,
+    }
+    return render(request, 'core/reports.html', context)
+
+
+def report_detail(request, report_id):
+    """View a single DROMIC report."""
+    report = get_object_or_404(DROMICReport, id=report_id)
+    context = {
+        'report': report,
+        'affected_areas': report.affected_areas.all(),
+        'displaced_populations': report.displaced_populations.all(),
+        'damaged_houses': report.damaged_houses.all(),
+        'relief_operations': report.relief_operations.all(),
+    }
+    return render(request, 'core/report_detail.html', context)
+
+
+def export_report_pdf(request, report_id):
+    """Export a DROMIC report as a text file (PDF generation placeholder)."""
+    report = get_object_or_404(DROMICReport, id=report_id)
+    content = f"DROMIC Report\n"
+    content += f"Disaster: {report.disaster.name}\n"
+    content += f"Location: {report.barangay.name}, {report.municipality.name}, {report.province.name}\n"
+    content += f"Date: {report.date}\n\n"
+
+    areas = report.affected_areas.all()
+    content += f"Affected Areas: {areas.count()}\n"
+    for area in areas:
+        content += f"  - {area.barangay.name}: {area.affected_families} families, {area.affected_persons} persons\n"
+
+    response = HttpResponse(content, content_type='text/plain')
+    response['Content-Disposition'] = f'attachment; filename="dromic_report_{report_id}.txt"'
+    return response
+
+
+@csrf_exempt
+@require_POST
+def save_report(request):
+    """Create a new DROMIC report."""
+    try:
+        report = DROMICReport.objects.create(
+            disaster_id=request.POST.get('disaster'),
+            province_id=request.POST.get('province'),
+            municipality_id=request.POST.get('municipality'),
+            barangay_id=request.POST.get('barangay'),
+            date=request.POST.get('date'),
+        )
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Report created successfully',
+            'report_id': report.id
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
