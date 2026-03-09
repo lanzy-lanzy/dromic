@@ -21,6 +21,48 @@ def generate_report_pdf(report):
 
 
     elements = []
+    
+    # --- LOGO HEADER ---
+    import os
+    from django.conf import settings
+    
+    static_dir = os.path.join(settings.BASE_DIR, 'core', 'static', 'img')
+    
+    def get_safe_image(filename, width, height):
+        try:
+            path = os.path.join(static_dir, filename)
+            if os.path.exists(path):
+                img = Image(path, width=width, height=height)
+                return img
+        except Exception:
+            pass
+        return ""
+
+    dromic_img = get_safe_image('dromic_logo.png', 3.2*cm, 3.2*cm)
+    dswd_img = get_safe_image('dswd_logo.png', 2.5*cm, 2.5*cm)
+
+    header_text = Paragraph(
+        "<font size=9>Republic of the Philippines</font><br/>"
+        "<font size=9>Department of Social Welfare and Development</font><br/>"
+        "<b><font size=11>DISASTER RESPONSE OPERATIONS MONITORING AND INFORMATION CENTER</font></b><br/>"
+        "<font size=9>Dumingag, Zamboanga del Sur</font>",
+        ParagraphStyle(name='CenterHeader', alignment=1, leading=12)
+    )
+    
+    header_table = Table(
+        [[dromic_img, header_text, dswd_img]], 
+        colWidths=[3.2*cm, 10.6*cm, 3*cm]
+    )
+    header_table.setStyle(TableStyle([
+        ('ALIGN', (0,0), (0,0), 'LEFT'),
+        ('ALIGN', (1,0), (1,0), 'CENTER'),
+        ('ALIGN', (2,0), (2,0), 'RIGHT'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+    ]))
+    
+    elements.append(header_table)
+    elements.append(Spacer(1, 0.5*cm))
+    # -------------------
 
     # Title
     elements.append(Paragraph(f"DROMIC Report: {report.disaster.name}", styles['Heading1']))
@@ -183,6 +225,48 @@ def generate_rds_pdf(operation):
     subtitle_style = ParagraphStyle(name='SubtitleStyle', fontSize=10, spaceAfter=20, alignment=1)
 
     elements = []
+
+    # --- LOGO HEADER ---
+    import os
+    from django.conf import settings
+    
+    static_dir = os.path.join(settings.BASE_DIR, 'core', 'static', 'img')
+    
+    def get_safe_image(filename, width, height):
+        try:
+            path = os.path.join(static_dir, filename)
+            if os.path.exists(path):
+                img = Image(path, width=width, height=height)
+                return img
+        except Exception:
+            pass
+        return ""
+
+    dromic_img = get_safe_image('dromic_logo.png', 3.2*cm, 3.2*cm)
+    dswd_img = get_safe_image('dswd_logo.png', 2.5*cm, 2.5*cm)
+
+    header_text = Paragraph(
+        "<font size=10>Republic of the Philippines</font><br/>"
+        "<font size=10>Department of Social Welfare and Development</font><br/>"
+        "<b><font size=12>DISASTER RESPONSE OPERATIONS MONITORING AND INFORMATION CENTER</font></b><br/>"
+        "<font size=10>Dumingag, Zamboanga del Sur</font>",
+        ParagraphStyle(name='CenterHeader', alignment=1, leading=14)
+    )
+    
+    header_table = Table(
+        [[dromic_img, header_text, dswd_img]], 
+        colWidths=[3.7*cm, 12*cm, 3.5*cm]
+    )
+    header_table.setStyle(TableStyle([
+        ('ALIGN', (0,0), (0,0), 'LEFT'),
+        ('ALIGN', (1,0), (1,0), 'CENTER'),
+        ('ALIGN', (2,0), (2,0), 'RIGHT'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+    ]))
+    
+    elements.append(header_table)
+    elements.append(Spacer(1, 0.5*cm))
+    # -------------------
 
     # Header
     elements.append(Paragraph("RELIEF DISTRIBUTION SHEET (RDS)", title_style))
