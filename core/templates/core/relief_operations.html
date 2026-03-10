@@ -170,8 +170,7 @@
                                 id="area" name="area" required>
                                 <option value="">Select Affected Area</option>
                                 {% for area in areas %}
-                                <option value="{{ area.id }}">{{ area.barangay|default:area.municipality.name }}, {{
-                                    area.province.name }} - {{ area.disaster.name }}</option>
+                                <option value="{{ area.id }}">{{ area.barangay|default:area.municipality.name }}, {{ area.province.name }} - {{ area.disaster.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>

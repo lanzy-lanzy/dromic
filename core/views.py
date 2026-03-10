@@ -4,7 +4,7 @@ from django.contrib.auth import logout, login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.db.models import Sum, Count, F, Case, When, Value, CharField
+from django.db.models import Sum, Count, F, Case, When, Value, CharField, Q
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
@@ -142,10 +142,31 @@ def save_report(request):
 @login_required
 def overview(request):
     reports = DROMICReport.objects.all().order_by('-date')
+    
+    # Calculate total affected families and persons from AffectedArea
+    affected_areas_stats = AffectedArea.objects.aggregate(
+        total_families=Sum('affected_families'),
+        total_persons=Sum('affected_persons')
+    )
+    total_families = affected_areas_stats['total_families'] or 0
+    total_persons = affected_areas_stats['total_persons'] or 0
+    
+    # Get relief summary with default values for None
+    relief_summary = ReliefOperation.objects.aggregate(
+        total_financial_assistance=Sum('financial_assistance'),
+        total_food_items=Sum('food_items'),
+        total_non_food_items=Sum('non_food_items')
+    )
+    relief_summary = {
+        'total_financial_assistance': relief_summary['total_financial_assistance'] or 0,
+        'total_food_items': relief_summary['total_food_items'] or 0,
+        'total_non_food_items': relief_summary['total_non_food_items'] or 0,
+    }
+    
     context = {
         'total_reports': reports.count(),
-        'total_affected_families': sum(report.total_affected_families() for report in reports),
-        'total_affected_persons': sum(report.total_affected_persons() for report in reports),
+        'total_affected_families': total_families or 0,
+        'total_affected_persons': total_persons or 0,
         'displaced_population': {
             'cum_families': 0,
             'now_families': FamilyMember.objects.filter(is_displaced=True).values('family').distinct().count(),
@@ -168,16 +189,13 @@ def overview(request):
              ).values('gender', 'age_group').annotate(now_total=Count('id'))
         ],
         'sectoral_distribution': FamilyMember.objects.exclude(sector='').values('sector').annotate(now_total=Count('id')),
-        'damaged_houses_summary': DamagedHouse.objects.aggregate(
-            total_damaged=Sum('partially_damaged') + Sum('totally_damaged'),
-            partially_damaged=Sum('partially_damaged'),
-            totally_damaged=Sum('totally_damaged')
-        ),
-        'relief_summary': ReliefOperation.objects.aggregate(
-            total_financial_assistance=Sum('financial_assistance'),
-            total_food_items=Sum('food_items'),
-            total_non_food_items=Sum('non_food_items')
-        ),
+        'damaged_houses_summary': {**Family.objects.aggregate(
+            total_partially=Count('id', filter=Q(house_condition='Partially Damaged')),
+            total_totally=Count('id', filter=Q(house_condition='Totally Damaged')),
+        ), **Family.objects.aggregate(
+            total_damaged=Count('id', filter=Q(house_condition__in=['Partially Damaged', 'Totally Damaged']))
+        )},
+        'relief_summary': relief_summary,
         'total_disasters': Disaster.objects.count(),
         'total_affected_areas': AffectedArea.objects.count(),
     }
@@ -497,17 +515,16 @@ def disaster_impact(request):
     # Sectoral distribution
     sectoral_distributions = FamilyMember.objects.exclude(sector='').values('sector').annotate(now_total=Count('id'))
 
-    # Damaged houses
-    damaged_all = DamagedHouse.objects.all()
-    damaged_stats = damaged_all.aggregate(
-        total_partially=Sum('partially_damaged'),
-        total_totally=Sum('totally_damaged'),
+    # Damaged houses (aggregated from families)
+    damaged_houses = Family.objects.aggregate(
+        total_partially=Count('id', filter=Q(house_condition='Partially Damaged')),
+        total_totally=Count('id', filter=Q(house_condition='Totally Damaged')),
     )
-    damaged_houses = {
-        'total_partially': damaged_stats['total_partially'] or 0,
-        'total_totally': damaged_stats['total_totally'] or 0,
-        'total_damaged': (damaged_stats['total_partially'] or 0) + (damaged_stats['total_totally'] or 0),
-    }
+    damaged_houses['total_damaged'] = damaged_houses['total_partially'] + damaged_houses['total_totally']
+
+    # Also keep the damaged_houses_list for the table, but maybe we should show details per family?
+    # For now, let's keep the damaged_all context but we might want to shift to family-based reporting.
+    damaged_all = DamagedHouse.objects.all() 
 
     # Relief operations
     relief_all = ReliefOperation.objects.all()
@@ -875,6 +892,28 @@ def add_family_member(request, family_id):
 
 @csrf_exempt
 @require_POST
+def edit_family_member(request, member_id):
+    try:
+        data = json.loads(request.body)
+        member = get_object_or_404(FamilyMember, id=member_id)
+        
+        member.name = data.get('name', member.name)
+        member.age = int(data.get('age', member.age))
+        member.gender = data.get('gender', member.gender)
+        member.relationship_to_head = data.get('relationship_to_head', member.relationship_to_head)
+        member.sector = data.get('sector', member.sector)
+        member.is_pwd = data.get('is_pwd', member.is_pwd)
+        member.is_pregnant_lactating = data.get('is_pregnant_lactating', member.is_pregnant_lactating)
+        member.is_displaced = data.get('is_displaced', member.is_displaced)
+        member.is_in_evacuation_center = data.get('is_in_evacuation_center', member.is_in_evacuation_center)
+        
+        member.save()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
+@csrf_exempt
+@require_POST
 def delete_family_member(request, member_id):
     try:
         member = get_object_or_404(FamilyMember, id=member_id)
@@ -1064,7 +1103,8 @@ def get_families(request):
             'recorded_members': f.familymember_set.count(), # Actual members
             'area_id': f.area.id,
             'area_name': area_str,
-            'disaster_name': f.area.disaster.name
+            'disaster_name': f.area.disaster.name,
+            'house_condition': f.house_condition
         })
     return JsonResponse(data, safe=False)
 
@@ -1078,7 +1118,8 @@ def add_family(request):
         family = Family.objects.create(
             area=area,
             head_of_family=data.get('head_of_family'),
-            number_of_members=int(data.get('number_of_members', 1))
+            number_of_members=int(data.get('number_of_members', 1)),
+            house_condition=data.get('house_condition', 'Not Damaged')
         )
         return JsonResponse({'status': 'success', 'family_id': family.id})
     except Exception as e:
@@ -1090,6 +1131,25 @@ def delete_family(request, family_id):
     try:
         family = get_object_or_404(Family, id=family_id)
         family.delete()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
+@csrf_exempt
+@require_POST
+def edit_family(request, family_id):
+    try:
+        data = json.loads(request.body)
+        family = get_object_or_404(Family, id=family_id)
+        
+        family.head_of_family = data.get('head_of_family', family.head_of_family)
+        family.number_of_members = int(data.get('number_of_members', family.number_of_members))
+        family.house_condition = data.get('house_condition', family.house_condition)
+        
+        if 'area_id' in data:
+            family.area = get_object_or_404(AffectedArea, id=data['area_id'])
+        
+        family.save()
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})

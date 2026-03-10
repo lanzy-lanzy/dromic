@@ -65,9 +65,19 @@ class EvacuationCenter(models.Model):
 
 
 class Family(models.Model):
+    HOUSE_CONDITION_CHOICES = [
+        ('Not Damaged', 'Not Damaged'),
+        ('Partially Damaged', 'Partially Damaged'),
+        ('Totally Damaged', 'Totally Damaged'),
+    ]
     area = models.ForeignKey(AffectedArea, on_delete=models.CASCADE)
     head_of_family = models.CharField(max_length=100)
     number_of_members = models.IntegerField()
+    house_condition = models.CharField(
+        max_length=20, 
+        choices=HOUSE_CONDITION_CHOICES, 
+        default='Not Damaged'
+    )
 
     def __str__(self):
         return f"Family of {self.head_of_family} in {self.area}"

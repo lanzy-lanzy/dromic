@@ -9,6 +9,7 @@
     .stat-card {
         transition: all 0.3s ease;
     }
+
     .stat-card:hover {
         transform: translateY(-8px);
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
@@ -83,7 +84,8 @@
                 <p class="text-slate-500 text-sm font-semibold mb-1">Affected Families</p>
                 <div class="flex items-end justify-between">
                     <h2 class="text-4xl font-bold text-slate-800" id="affectedFamilies">{{ total_affected_families|intcomma }}</h2>
-                    <div class="flex items-center text-orange-500 text-sm font-semibold bg-orange-50 px-2 py-1 rounded-lg">
+                    <div
+                        class="flex items-center text-orange-500 text-sm font-semibold bg-orange-50 px-2 py-1 rounded-lg">
                         <i class="fas fa-arrow-up mr-1 text-xs"></i>
                         <span>15%</span>
                     </div>
@@ -102,7 +104,8 @@
                 <p class="text-slate-500 text-sm font-semibold mb-1">Affected Persons</p>
                 <div class="flex items-end justify-between">
                     <h2 class="text-4xl font-bold text-slate-800" id="affectedPersons">{{ total_affected_persons|intcomma }}</h2>
-                    <div class="flex items-center text-emerald-500 text-sm font-semibold bg-emerald-50 px-2 py-1 rounded-lg">
+                    <div
+                        class="flex items-center text-emerald-500 text-sm font-semibold bg-emerald-50 px-2 py-1 rounded-lg">
                         <i class="fas fa-arrow-up mr-1 text-xs"></i>
                         <span>10%</span>
                     </div>
@@ -264,38 +267,38 @@
             datasets: [{
                 label: 'Cumulative',
                 data: [{{ displaced_population.cum_families }}, {{ displaced_population.cum_persons }}],
-                backgroundColor: 'rgba(79, 70, 229, 0.8)', // indigo-600
-                borderRadius: 8,
-            }, {
-                label: 'Current',
-                data: [{{ displaced_population.now_families }}, {{ displaced_population.now_persons }}],
-                backgroundColor: 'rgba(234, 88, 12, 0.8)', // dromic orange
-                borderRadius: 8,
+        backgroundColor: 'rgba(79, 70, 229, 0.8)', // indigo-600
+        borderRadius: 8,
+    }, {
+        label: 'Current',
+        data: [{{ displaced_population.now_families }}, {{ displaced_population.now_persons }}],
+    backgroundColor: 'rgba(234, 88, 12, 0.8)', // dromic orange
+        borderRadius: 8,
             }]
         },
-        options: {
-            responsive: true,
+    options: {
+        responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
+                plugins: {
+            legend: {
+                position: 'bottom',
                     labels: {
-                        padding: 20,
+                    padding: 20,
                         usePointStyle: true,
-                        pointStyle: 'circle'
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
-                },
-                x: {
-                    grid: { display: false }
+                            pointStyle: 'circle'
                 }
             }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
+            },
+            x: {
+                grid: { display: false }
+            }
         }
+    }
     });
 
     // Damaged Houses Chart
@@ -305,27 +308,27 @@
         data: {
             labels: ['Partially Damaged', 'Totally Damaged'],
             datasets: [{
-                data: [{{ damaged_houses_summary.partially_damaged }}, {{ damaged_houses_summary.totally_damaged }}],
-                backgroundColor: ['rgba(245, 158, 11, 0.8)', 'rgba(234, 88, 12, 0.8)'], // amber, orange
-                borderWidth: 0,
-                hoverOffset: 10
-            }]
+                data: [{{ damaged_houses_summary.total_partially }}, {{ damaged_houses_summary.total_totally }}],
+        backgroundColor: ['rgba(245, 158, 11, 0.8)', 'rgba(234, 88, 12, 0.8)'], // amber, orange
+        borderWidth: 0,
+        hoverOffset: 10
+    }]
         },
-        options: {
-            responsive: true,
+    options: {
+        responsive: true,
             maintainAspectRatio: false,
-            cutout: '60%',
-            plugins: {
-                legend: {
-                    position: 'bottom',
+                cutout: '60%',
+                    plugins: {
+            legend: {
+                position: 'bottom',
                     labels: {
-                        padding: 20,
+                    padding: 20,
                         usePointStyle: true,
-                        pointStyle: 'circle'
-                    }
+                            pointStyle: 'circle'
                 }
             }
         }
+    }
     });
 
     // Sex and Age Distribution Chart
@@ -334,31 +337,31 @@
         type: 'bar',
         data: {
             labels: [{% for item in sex_age_distribution %}'{{ item.sex }} - {{ item.age_group }}',{% endfor %}],
-            datasets: [{
-                label: 'Current Count',
-                data: [{% for item in sex_age_distribution %}{{ item.now_total }},{% endfor %}],
-                backgroundColor: 'rgba(100, 116, 139, 0.8)', // slate-500
-                borderRadius: 8,
+    datasets: [{
+        label: 'Current Count',
+        data: [{% for item in sex_age_distribution %}{{ item.now_total }}, {% endfor %}],
+        backgroundColor: 'rgba(100, 116, 139, 0.8)', // slate-500
+            borderRadius: 8,
             }]
         },
-        options: {
-            responsive: true,
+    options: {
+        responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
+                plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
                     grid: { color: 'rgba(0, 0, 0, 0.05)' }
-                },
-                x: {
-                    grid: { display: false }
-                }
+            },
+            x: {
+                grid: { display: false }
             }
         }
+    }
     });
 
     // Sectoral Distribution Chart
@@ -367,34 +370,34 @@
         type: 'doughnut',
         data: {
             labels: [{% for item in sectoral_distribution %}'{{ item.sector }}',{% endfor %}],
-            datasets: [{
-                data: [{% for item in sectoral_distribution %}{{ item.now_total }},{% endfor %}],
-                backgroundColor: [
-                    '#3b82f6', // blue-500
-                    '#ea580c', // dromic-orange
-                    '#10b981', // emerald-500
-                    '#64748b', // slate-500
-                    '#8b5cf6', // violet-500
-                ],
-                borderWidth: 0,
+    datasets: [{
+        data: [{% for item in sectoral_distribution %}{{ item.now_total }}, {% endfor %}],
+        backgroundColor: [
+            '#3b82f6', // blue-500
+            '#ea580c', // dromic-orange
+            '#10b981', // emerald-500
+            '#64748b', // slate-500
+            '#8b5cf6', // violet-500
+        ],
+            borderWidth: 0,
                 hoverOffset: 10
             }]
         },
-        options: {
-            responsive: true,
+    options: {
+        responsive: true,
             maintainAspectRatio: false,
-            cutout: '60%',
-            plugins: {
-                legend: {
-                    position: 'bottom',
+                cutout: '60%',
+                    plugins: {
+            legend: {
+                position: 'bottom',
                     labels: {
-                        padding: 15,
+                    padding: 15,
                         usePointStyle: true,
-                        pointStyle: 'circle'
-                    }
+                            pointStyle: 'circle'
                 }
             }
         }
+    }
     });
 
     // Relief Operations Chart
@@ -407,35 +410,35 @@
                 label: 'Relief Operations',
                 data: [
                     {{ relief_summary.total_financial_assistance }},
-                    {{ relief_summary.total_food_items }},
+            {{ relief_summary.total_food_items }},
                     {{ relief_summary.total_non_food_items }}
                 ],
-                backgroundColor: [
-                    '#10b981', // emerald
-                    '#3b82f6', // blue
-                    '#ea580c'  // orange
-                ],
-                borderRadius: 8
+    backgroundColor: [
+        '#10b981', // emerald
+        '#3b82f6', // blue
+        '#ea580c'  // orange
+    ],
+        borderRadius: 8
             }]
         },
-        options: {
-            responsive: true,
+    options: {
+        responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
+                plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
                     grid: { color: 'rgba(0, 0, 0, 0.05)' }
-                },
-                x: {
-                    grid: { display: false }
-                }
+            },
+            x: {
+                grid: { display: false }
             }
         }
+    }
     });
 </script>
 {% endblock %}

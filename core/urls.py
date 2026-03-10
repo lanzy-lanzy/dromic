@@ -65,10 +65,12 @@ urlpatterns = [
     path('api/families/', views.get_families, name='get_families'),
     path('api/families/add/', views.add_family, name='add_family'),
     path('api/families/<int:family_id>/delete/', views.delete_family, name='delete_family'),
+    path('api/families/<int:family_id>/edit/', views.edit_family, name='edit_family'),
     
     # Family Members Management
     path('api/families/<int:family_id>/members/', views.get_family_members, name='get_family_members'),
     path('api/families/<int:family_id>/members/add/', views.add_family_member, name='add_family_member'),
+    path('api/members/<int:member_id>/edit/', views.edit_family_member, name='edit_family_member'),
     path('api/members/<int:member_id>/delete/', views.delete_family_member, name='delete_family_member'),
 
     # Early Recovery
