@@ -233,6 +233,7 @@ def create_disaster(request):
             disaster = Disaster.objects.create(
                 name=data['name'],
                 description=data['description'],
+                category=data.get('category', 'other'),
                 date_occurred=data['date_occurred']
             )
             return JsonResponse({'status': 'success', 'id': disaster.id, 'name': disaster.name})
@@ -250,6 +251,8 @@ def edit_disaster(request, disaster_id):
             disaster.name = data['name']
         if 'description' in data and data['description']:
             disaster.description = data['description']
+        if 'category' in data and data['category']:
+            disaster.category = data['category']
         if 'date_occurred' in data and data['date_occurred']:
             disaster.date_occurred = data['date_occurred']
         disaster.save()
@@ -861,7 +864,7 @@ def delete_early_recovery(request, rec_id):
 
 
 def get_disasters(request):
-    disasters = Disaster.objects.all().values('id', 'name', 'description', 'date_occurred')
+    disasters = Disaster.objects.all().values('id', 'name', 'description', 'category', 'date_occurred')
     return JsonResponse(list(disasters), safe=False)
 
 
@@ -940,8 +943,8 @@ def delete_family_member(request, member_id):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
 
-def report_list(request):
-    """Comprehensive reports dashboard with real data from all models."""
+def _get_comprehensive_report_data():
+    """Helper function to get comprehensive report data."""
     # Affected areas data
     affected_areas = AffectedArea.objects.all().select_related('disaster', 'province', 'municipality', 'barangay')
     total_affected_families = affected_areas.aggregate(total=Sum('affected_families'))['total'] or 0
@@ -956,12 +959,11 @@ def report_list(request):
     total_capacity = evacuation_centers.aggregate(total=Sum('capacity'))['total'] or 0
     total_occupancy = evacuation_centers.aggregate(total=Sum('current_occupancy'))['total'] or 0
 
-    # Displaced population - count families with displaced members and total displaced persons
+    # Displaced population
     displaced_family_ids = FamilyMember.objects.filter(is_displaced=True).values_list('family_id', flat=True).distinct()
     displaced_families = Family.objects.filter(id__in=displaced_family_ids).count()
     displaced_persons = FamilyMember.objects.filter(is_displaced=True).count()
     
-    # If no displaced data, count from evacuation centers as alternative
     if displaced_families == 0 and displaced_persons == 0:
         displaced_families = EvacuationCenter.objects.filter(current_occupancy__gt=0).count()
         displaced_persons = EvacuationCenter.objects.aggregate(total=Sum('current_occupancy'))['total'] or 0
@@ -1018,7 +1020,7 @@ def report_list(request):
         'total_financial': float(relief_stats['total_financial'] or 0),
     }
 
-    # Per-disaster breakdown for charts
+    # Per-disaster breakdown
     disaster_breakdown = []
     for d in disasters:
         areas = AffectedArea.objects.filter(disaster=d)
@@ -1026,19 +1028,12 @@ def report_list(request):
         persons = areas.aggregate(total=Sum('affected_persons'))['total'] or 0
         disaster_breakdown.append({
             'name': d.name,
+            'category': d.category,
             'families': families,
             'persons': persons,
         })
 
-    # Reports list
-    reports = DROMICReport.objects.all().select_related(
-        'disaster', 'province', 'municipality', 'barangay'
-    ).order_by('-date')
-
-    # Provinces for the create modal
-    provinces = Province.objects.all()
-
-    context = {
+    return {
         'total_disasters': disasters.count(),
         'total_affected_areas': affected_areas.count(),
         'total_affected_families': total_affected_families,
@@ -1052,12 +1047,41 @@ def report_list(request):
         'damaged_houses': damaged_houses,
         'relief_operations': relief_operations,
         'disaster_breakdown': disaster_breakdown,
+        'affected_areas': affected_areas,
+        'disasters': disasters,
+        'evacuation_centers': evacuation_centers,
+    }
+
+def report_list(request):
+    """Comprehensive reports dashboard with real data from all models."""
+    data = _get_comprehensive_report_data()
+    
+    # Reports list
+    reports = DROMICReport.objects.all().select_related(
+        'disaster', 'province', 'municipality', 'barangay'
+    ).order_by('-date')
+
+    # Provinces for the create modal
+    provinces = Province.objects.all()
+
+    context = {
+        **data,
         'reports': reports,
         'total_reports': reports.count(),
-        'disasters': disasters,
         'provinces': provinces,
     }
     return render(request, 'core/reports.html', context)
+
+@login_required
+def export_comprehensive_report_pdf(request):
+    """Export comprehensive disaster response report as PDF."""
+    from .export import generate_comprehensive_report_pdf
+    
+    data = _get_comprehensive_report_data()
+    pdf_buffer = generate_comprehensive_report_pdf(data)
+    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="comprehensive_disaster_report.pdf"'
+    return response
 
 
 def report_detail(request, report_id):

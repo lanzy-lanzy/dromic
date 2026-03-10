@@ -178,13 +178,16 @@
                         </div>
                     </div>
                     <div class="p-5">
-                        <p class="text-slate-600 mb-4 line-clamp-2" x-text="d.description"></p>
-                        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-                            <div class="flex items-center text-sm text-gray-500">
-                                <i class="fas fa-calendar-alt mr-2"></i>
-                                <span
-                                    x-text="new Date(d.date_occurred).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'})"></span>
-                            </div>
+                         <p class="text-slate-600 mb-4 line-clamp-2" x-text="d.description"></p>
+                         <div class="mb-3">
+                             <span class="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full capitalize" x-text="d.category.replace('_', ' ')"></span>
+                         </div>
+                         <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                             <div class="flex items-center text-sm text-gray-500">
+                                 <i class="fas fa-calendar-alt mr-2"></i>
+                                 <span
+                                     x-text="new Date(d.date_occurred).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'})"></span>
+                             </div>
                             <div class="flex space-x-2">
                                 <button
                                     class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-500 hover:bg-blue-200 transition-colors"
@@ -267,6 +270,8 @@
                                     :checked="allSelected" @change="toggleAll()">
                             </th>
                             <th class="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Name</th>
+                            <th class="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Category
+                            </th>
                             <th class="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Description
                             </th>
                             <th class="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date
@@ -278,23 +283,26 @@
                     <tbody class="divide-y divide-slate-100">
                         <template x-for="d in paginatedDisasters" :key="d.id">
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-5 py-4">
-                                    <input type="checkbox"
-                                        class="w-4 h-4 rounded border-slate-300 text-red-500 focus:ring-red-400 cursor-pointer"
-                                        :checked="isSelected(d.id)" @change="toggleOne(d.id)">
-                                </td>
-                                <td class="px-5 py-4">
-                                    <div class="flex items-center">
-                                        <i class="fas fa-exclamation-triangle text-red-500 mr-3 text-sm"></i>
-                                        <span class="font-semibold text-slate-800 capitalize" x-text="d.name"></span>
-                                    </div>
-                                </td>
-                                <td class="px-5 py-4 text-slate-600 max-w-xs truncate" x-text="d.description"></td>
-                                <td class="px-5 py-4 text-slate-500 text-sm">
-                                    <i class="fas fa-calendar-alt mr-2 text-slate-400"></i>
-                                    <span
-                                        x-text="new Date(d.date_occurred).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'})"></span>
-                                </td>
+                                 <td class="px-5 py-4">
+                                     <input type="checkbox"
+                                         class="w-4 h-4 rounded border-slate-300 text-red-500 focus:ring-red-400 cursor-pointer"
+                                         :checked="isSelected(d.id)" @change="toggleOne(d.id)">
+                                 </td>
+                                 <td class="px-5 py-4">
+                                     <div class="flex items-center">
+                                         <i class="fas fa-exclamation-triangle text-red-500 mr-3 text-sm"></i>
+                                         <span class="font-semibold text-slate-800 capitalize" x-text="d.name"></span>
+                                     </div>
+                                 </td>
+                                 <td class="px-5 py-4">
+                                     <span class="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full capitalize" x-text="d.category.replace('_', ' ')"></span>
+                                 </td>
+                                 <td class="px-5 py-4 text-slate-600 max-w-xs truncate" x-text="d.description"></td>
+                                 <td class="px-5 py-4 text-slate-500 text-sm">
+                                     <i class="fas fa-calendar-alt mr-2 text-slate-400"></i>
+                                     <span
+                                         x-text="new Date(d.date_occurred).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'})"></span>
+                                 </td>
                                 <td class="px-5 py-4 text-right">
                                     <div class="flex justify-end space-x-2">
                                         <button
@@ -369,27 +377,52 @@
                     <form id="addDisasterForm">
                         {% csrf_token %}
                         <div class="mb-5">
-                            <label for="disasterName" class="block text-dromic-navy text-sm font-semibold mb-2">Disaster
-                                Name</label>
-                            <input type="text"
-                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all outline-none"
-                                id="disasterName" name="name" placeholder="Enter disaster name" required>
-                        </div>
-                        <div class="mb-5">
-                            <label for="disasterDescription"
-                                class="block text-dromic-navy text-sm font-semibold mb-2">Description</label>
-                            <textarea
-                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all outline-none"
-                                id="disasterDescription" name="description" rows="4" placeholder="Describe the disaster"
-                                required></textarea>
-                        </div>
-                        <div class="mb-5">
-                            <label for="disasterDate" class="block text-dromic-navy text-sm font-semibold mb-2">Date
-                                Occurred</label>
-                            <input type="date"
-                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all outline-none"
-                                id="disasterDate" name="date_occurred" required>
-                        </div>
+                             <label for="disasterName" class="block text-dromic-navy text-sm font-semibold mb-2">Disaster
+                                 Name</label>
+                             <input type="text"
+                                 class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all outline-none"
+                                 id="disasterName" name="name" placeholder="Enter disaster name" required>
+                         </div>
+                         <div class="mb-5">
+                             <label for="disasterCategory" class="block text-dromic-navy text-sm font-semibold mb-2">Category</label>
+                             <select
+                                 class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all outline-none"
+                                 id="disasterCategory" name="category" required>
+                                 <option value="">Select a category</option>
+                                 <option value="typhoon">Typhoon</option>
+                                 <option value="earthquake">Earthquake</option>
+                                 <option value="flood">Flood</option>
+                                 <option value="landslide">Landslide</option>
+                                 <option value="landslip">Landslip</option>
+                                 <option value="volcanic_eruption">Volcanic Eruption</option>
+                                 <option value="drought">Drought</option>
+                                 <option value="tsunami">Tsunami</option>
+                                 <option value="wildfire">Wildfire</option>
+                                 <option value="fire">Fire</option>
+                                 <option value="storm_surge">Storm Surge</option>
+                                 <option value="strong_wind">Strong Wind</option>
+                                 <option value="heavy_rain">Heavy Rain</option>
+                                 <option value="thunderstorm">Thunderstorm</option>
+                                 <option value="fallen_trees">Fallen Trees</option>
+                                 <option value="disease_outbreak">Disease Outbreak</option>
+                                 <option value="other">Other</option>
+                             </select>
+                         </div>
+                         <div class="mb-5">
+                             <label for="disasterDescription"
+                                 class="block text-dromic-navy text-sm font-semibold mb-2">Description</label>
+                             <textarea
+                                 class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all outline-none"
+                                 id="disasterDescription" name="description" rows="4" placeholder="Describe the disaster"
+                                 required></textarea>
+                         </div>
+                         <div class="mb-5">
+                             <label for="disasterDate" class="block text-dromic-navy text-sm font-semibold mb-2">Date
+                                 Occurred</label>
+                             <input type="date"
+                                 class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all outline-none"
+                                 id="disasterDate" name="date_occurred" required>
+                         </div>
                     </form>
                 </div>
                 <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
@@ -432,6 +465,31 @@
                             <input type="text"
                                 class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
                                 id="editDisasterName" name="name" required>
+                        </div>
+                        <div class="mb-5">
+                           <label for="editDisasterCategory" class="block text-dromic-navy text-sm font-semibold mb-2">Category</label>
+                           <select
+                               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+                               id="editDisasterCategory" name="category" required>
+                               <option value="">Select a category</option>
+                               <option value="typhoon">Typhoon</option>
+                               <option value="earthquake">Earthquake</option>
+                               <option value="flood">Flood</option>
+                               <option value="landslide">Landslide</option>
+                               <option value="landslip">Landslip</option>
+                               <option value="volcanic_eruption">Volcanic Eruption</option>
+                               <option value="drought">Drought</option>
+                               <option value="tsunami">Tsunami</option>
+                               <option value="wildfire">Wildfire</option>
+                               <option value="fire">Fire</option>
+                               <option value="storm_surge">Storm Surge</option>
+                               <option value="strong_wind">Strong Wind</option>
+                               <option value="heavy_rain">Heavy Rain</option>
+                               <option value="thunderstorm">Thunderstorm</option>
+                               <option value="fallen_trees">Fallen Trees</option>
+                               <option value="disease_outbreak">Disease Outbreak</option>
+                               <option value="other">Other</option>
+                           </select>
                         </div>
                         <div class="mb-5">
                             <label for="editDisasterDescription"

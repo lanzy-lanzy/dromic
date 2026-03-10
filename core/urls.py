@@ -20,6 +20,7 @@ urlpatterns = [
     path('save_report/', views.save_report, name='save_report'),
     
     path('reports/', views.report_list, name='report_list'),
+    path('reports/export-comprehensive-pdf/', views.export_comprehensive_report_pdf, name='export_comprehensive_report_pdf'),
     path('reports/<int:report_id>/', views.report_detail, name='report_detail'),
     path('reports/<int:report_id>/export-pdf/', views.export_report_pdf, name='export_report_pdf'),
 

@@ -31,8 +31,29 @@ class Barangay(models.Model):
         return self.name
 
 class Disaster(models.Model):
+    CATEGORY_CHOICES = [
+        ('typhoon', 'Typhoon'),
+        ('earthquake', 'Earthquake'),
+        ('flood', 'Flood'),
+        ('landslide', 'Landslide'),
+        ('volcanic_eruption', 'Volcanic Eruption'),
+        ('drought', 'Drought'),
+        ('tsunami', 'Tsunami'),
+        ('wildfire', 'Wildfire'),
+        ('fire', 'Fire'),
+        ('storm_surge', 'Storm Surge'),
+        ('strong_wind', 'Strong Wind'),
+        ('heavy_rain', 'Heavy Rain'),
+        ('thunderstorm', 'Thunderstorm'),
+        ('fallen_trees', 'Fallen Trees'),
+        ('landslip', 'Landslip'),
+        ('disease_outbreak', 'Disease Outbreak'),
+        ('other', 'Other'),
+    ]
+    
     name = models.CharField(max_length=255)
     description = models.TextField()
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='other')
     date_occurred = models.DateField()
 
     def __str__(self):

@@ -10,15 +10,21 @@
      @close-modals.window="showModal = false">
 
     <!-- Page Header -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
             <h1 class="text-3xl md:text-4xl font-bold text-dromic-navy">Reports Dashboard</h1>
             <p class="text-dromic-slate mt-1">Comprehensive disaster response overview with real-time data</p>
         </div>
-        <button class="mt-4 md:mt-0 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center" @click="showModal = true">
-            <i class="fas fa-plus-circle mr-2"></i>
-            Create New Report
-        </button>
+        <div class="flex flex-col sm:flex-row gap-3">
+            <a href="{% url 'export_comprehensive_report_pdf' %}" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center">
+                <i class="fas fa-file-pdf mr-2"></i>
+                Export Report
+            </a>
+            <button class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center" @click="showModal = true">
+                <i class="fas fa-plus-circle mr-2"></i>
+                Create New Report
+            </button>
+        </div>
     </div>
 
     <!-- Primary Stats Row -->

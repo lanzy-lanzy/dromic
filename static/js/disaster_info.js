@@ -92,6 +92,20 @@ function createDisasterChart(disasters) {
 function saveDisaster() {
     const form = document.getElementById('addDisasterForm');
     const formData = new FormData(form);
+    
+    const disasterName = formData.get('name');
+    const disasterCategory = formData.get('category');
+    
+    // Check if a disaster with the same name and category already exists
+    const existingDisaster = window._disasterData.find(d => 
+        d.name.toLowerCase() === disasterName.toLowerCase() && 
+        d.category === disasterCategory
+    );
+    
+    // If same disaster exists, auto-populate date from existing record
+    if (existingDisaster && !formData.get('date_occurred')) {
+        formData.set('date_occurred', existingDisaster.date_occurred);
+    }
 
     fetch('/api/disasters/create/', {
         method: 'POST',
@@ -118,6 +132,21 @@ function updateDisaster() {
     const form = document.getElementById('editDisasterForm');
     const formData = new FormData(form);
     const id = document.getElementById('editDisasterId').value;
+    
+    const disasterName = formData.get('name');
+    const disasterCategory = formData.get('category');
+    
+    // Check if another disaster with the same name and category already exists
+    const otherExistingDisaster = window._disasterData.find(d => 
+        d.id !== parseInt(id) &&
+        d.name.toLowerCase() === disasterName.toLowerCase() && 
+        d.category === disasterCategory
+    );
+    
+    // If same disaster exists (different ID), optionally use its date
+    if (otherExistingDisaster && !formData.get('date_occurred')) {
+        formData.set('date_occurred', otherExistingDisaster.date_occurred);
+    }
 
     fetch(`/api/disasters/${id}/update/`, {
         method: 'POST',
@@ -145,6 +174,7 @@ window.editDisaster = function(id) {
     if (disaster) {
         document.getElementById('editDisasterId').value = disaster.id;
         document.getElementById('editDisasterName').value = disaster.name;
+        document.getElementById('editDisasterCategory').value = disaster.category || 'other';
         document.getElementById('editDisasterDescription').value = disaster.description;
         document.getElementById('editDisasterDate').value = disaster.date_occurred;
         window.dispatchEvent(new CustomEvent('open-edit-modal'));

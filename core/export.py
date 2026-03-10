@@ -2,12 +2,13 @@ from io import BytesIO
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.piecharts import Pie
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 from django.db.models import Sum
+from django.utils import timezone
 
 def generate_report_pdf(report):
     buffer = BytesIO()
@@ -724,6 +725,342 @@ def generate_rds_pdf(operation):
             
     table.setStyle(table_style)
     elements.append(table)
+
+    # Build PDF
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+
+def generate_comprehensive_report_pdf(report_data):
+    """Generate a comprehensive DROMIC report covering all statistics and distributions."""
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=60, bottomMargin=30)
+
+    styles = getSampleStyleSheet()
+    if 'Heading1' not in styles:
+        styles.add(ParagraphStyle(name='Heading1', fontSize=20, spaceAfter=12, alignment=1, fontName='Helvetica-Bold'))
+    if 'Heading2' not in styles:
+        styles.add(ParagraphStyle(name='Heading2', fontSize=14, spaceAfter=10, fontName='Helvetica-Bold'))
+    if 'Heading3' not in styles:
+        styles.add(ParagraphStyle(name='Heading3', fontSize=12, spaceAfter=8, fontName='Helvetica-Bold'))
+
+    elements = []
+    
+    # --- LOGO HEADER ---
+    import os
+    from django.conf import settings
+    
+    static_dir = os.path.join(settings.BASE_DIR, 'core', 'static', 'img')
+    
+    def get_safe_image(filename, width, height):
+        try:
+            path = os.path.join(static_dir, filename)
+            if os.path.exists(path):
+                img = Image(path, width=width, height=height)
+                return img
+        except Exception:
+            pass
+        return ""
+
+    dromic_img = get_safe_image('dromic_logo.png', 3*cm, 3*cm)
+    dswd_img = get_safe_image('dswd_logo.png', 2.2*cm, 2.2*cm)
+
+    header_text = Paragraph(
+        "<font size=8>Republic of the Philippines</font><br/>"
+        "<font size=8>Department of Social Welfare and Development</font><br/>"
+        "<b><font size=10>DISASTER RESPONSE OPERATIONS MONITORING AND INFORMATION CENTER</font></b><br/>"
+        "<font size=8>Dumingag, Zamboanga del Sur</font>",
+        ParagraphStyle(name='CenterHeader', alignment=1, leading=10)
+    )
+    
+    header_table = Table(
+        [[dromic_img, header_text, dswd_img]], 
+        colWidths=[2.5*cm, 12*cm, 2.5*cm]
+    )
+    header_table.setStyle(TableStyle([
+        ('ALIGN', (0,0), (0,0), 'LEFT'),
+        ('ALIGN', (1,0), (1,0), 'CENTER'),
+        ('ALIGN', (2,0), (2,0), 'RIGHT'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+    ]))
+    
+    elements.append(header_table)
+    elements.append(Spacer(1, 0.3*cm))
+    
+    # Title and Date
+    elements.append(Paragraph("COMPREHENSIVE DISASTER RESPONSE REPORT", styles['Heading1']))
+    elements.append(Paragraph(f"Generated: {timezone.now().strftime('%B %d, %Y at %I:%M %p')}", styles['Normal']))
+    elements.append(Spacer(1, 0.5*cm))
+
+    # ==== PAGE 1: EXECUTIVE SUMMARY ====
+    elements.append(Paragraph("1. EXECUTIVE SUMMARY", styles['Heading2']))
+    elements.append(Spacer(1, 0.2*cm))
+    
+    summary_data = [
+        ["METRIC", "VALUE"],
+        ["Total Disasters", str(report_data['total_disasters'])],
+        ["Affected Areas", str(report_data['total_affected_areas'])],
+        ["Total Affected Families", f"{report_data['total_affected_families']:,}"],
+        ["Total Affected Persons", f"{report_data['total_affected_persons']:,}"],
+        ["Evacuation Centers", str(report_data['total_centers'])],
+        ["Center Capacity", f"{report_data['total_capacity']:,}"],
+        ["Current Occupancy", f"{report_data['total_occupancy']:,}"],
+        ["Displaced Families (Current)", f"{report_data['total_displaced']['now_families']:,}"],
+        ["Displaced Persons (Current)", f"{report_data['total_displaced']['now_persons']:,}"],
+        ["Partially Damaged Houses", f"{report_data['damaged_houses']['total_partially']:,}"],
+        ["Totally Damaged Houses", f"{report_data['damaged_houses']['total_totally']:,}"],
+        ["Food Items Distributed", f"{report_data['relief_operations']['total_food']:,}"],
+        ["Non-Food Items Distributed", f"{report_data['relief_operations']['total_non_food']:,}"],
+        ["Financial Assistance (₱)", f"₱{report_data['relief_operations']['total_financial']:,.2f}"],
+    ]
+    
+    summary_table = Table(summary_data, colWidths=[10.5*cm, 7*cm])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1F2937')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 10),
+        ('BOTTOMPADDING', (0,0), (-1,0), 8),
+        ('TOPPADDING', (0,0), (-1,0), 8),
+        ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#F3F4F6')),
+        ('TEXTCOLOR', (0,1), (-1,-1), colors.black),
+        ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+        ('FONTSIZE', (0,1), (-1,-1), 9),
+        ('TOPPADDING', (0,1), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 5),
+        ('GRID', (0,0), (-1,-1), 1, colors.grey)
+    ]))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 0.5*cm))
+
+    # ==== DISASTER BREAKDOWN ====
+    elements.append(Paragraph("2. IMPACT BY DISASTER TYPE", styles['Heading2']))
+    elements.append(Spacer(1, 0.2*cm))
+    
+    disaster_data = [["DISASTER NAME", "CATEGORY", "AFFECTED FAMILIES", "AFFECTED PERSONS"]]
+    for d in report_data['disaster_breakdown']:
+        disaster_data.append([
+            truncate_with_ellipsis(d['name'], 25),
+            d.get('category', 'Other').title().replace('_', ' '),
+            f"{d['families']:,}",
+            f"{d['persons']:,}"
+        ])
+    
+    if len(disaster_data) > 1:
+        disaster_table = Table(disaster_data, colWidths=[5.5*cm, 5*cm, 4.5*cm, 4.5*cm])
+        disaster_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#EA580C')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+            ('ALIGN', (0,0), (0,-1), 'LEFT'),
+            ('ALIGN', (1,-1), (-1,-1), 'RIGHT'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,0), 9),
+            ('BOTTOMPADDING', (0,0), (-1,0), 6),
+            ('TOPPADDING', (0,0), (-1,0), 6),
+            ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+            ('FONTSIZE', (0,1), (-1,-1), 8),
+            ('TOPPADDING', (0,1), (-1,-1), 4),
+            ('BOTTOMPADDING', (0,1), (-1,-1), 4),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey)
+        ]))
+        elements.append(disaster_table)
+    elements.append(Spacer(1, 0.5*cm))
+
+    # ==== SEX AND AGE DISTRIBUTION ====
+    elements.append(Paragraph("3. SEX AND AGE DISTRIBUTION", styles['Heading2']))
+    elements.append(Spacer(1, 0.2*cm))
+    
+    sex_age_data = [["SEX", "AGE GROUP", "CUMULATIVE", "CURRENT"]]
+    for item in report_data['sex_age_distribution']:
+        sex_age_data.append([
+            item.get('gender', '-'),
+            item.get('age_group', '-'),
+            f"{item.get('cum_total', 0):,}",
+            f"{item.get('now_total', 0):,}"
+        ])
+    
+    if len(sex_age_data) > 1:
+        sex_age_table = Table(sex_age_data, colWidths=[3.5*cm, 5*cm, 4*cm, 4*cm])
+        sex_age_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#8B5CF6')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,0), 9),
+            ('BOTTOMPADDING', (0,0), (-1,0), 6),
+            ('TOPPADDING', (0,0), (-1,0), 6),
+            ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#F3E8FF')),
+            ('FONTSIZE', (0,1), (-1,-1), 8),
+            ('TOPPADDING', (0,1), (-1,-1), 4),
+            ('BOTTOMPADDING', (0,1), (-1,-1), 4),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey)
+        ]))
+        elements.append(sex_age_table)
+    elements.append(Spacer(1, 0.5*cm))
+
+    # ==== SECTORAL DISTRIBUTION ====
+    elements.append(Paragraph("4. SECTORAL DISTRIBUTION", styles['Heading2']))
+    elements.append(Spacer(1, 0.2*cm))
+    
+    sectoral_data = [["SECTOR", "CUMULATIVE", "CURRENT"]]
+    for item in report_data['sectoral_distribution']:
+        sectoral_data.append([
+            item.get('sector', '-'),
+            f"{item.get('cum_total', 0):,}",
+            f"{item.get('now_total', 0):,}"
+        ])
+    
+    if len(sectoral_data) > 1:
+        sectoral_table = Table(sectoral_data, colWidths=[7*cm, 5.5*cm, 5.5*cm])
+        sectoral_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#06B6D4')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('ALIGN', (1,-1), (-1,-1), 'RIGHT'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,0), 9),
+            ('BOTTOMPADDING', (0,0), (-1,0), 6),
+            ('TOPPADDING', (0,0), (-1,0), 6),
+            ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#ECFDF5')),
+            ('FONTSIZE', (0,1), (-1,-1), 8),
+            ('TOPPADDING', (0,1), (-1,-1), 4),
+            ('BOTTOMPADDING', (0,1), (-1,-1), 4),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey)
+        ]))
+        elements.append(sectoral_table)
+    elements.append(Spacer(1, 0.5*cm))
+
+    # ==== PAGE BREAK ====
+    elements.append(PageBreak())
+
+    # ==== HOUSE DAMAGE SUMMARY ====
+    elements.append(Paragraph("5. HOUSE DAMAGE SUMMARY", styles['Heading2']))
+    elements.append(Spacer(1, 0.2*cm))
+    
+    damage_data = [
+        ["STATUS", "COUNT"],
+        ["Partially Damaged", f"{report_data['damaged_houses']['total_partially']:,}"],
+        ["Totally Damaged", f"{report_data['damaged_houses']['total_totally']:,}"],
+        ["TOTAL DAMAGED", f"{report_data['damaged_houses']['total_damaged']:,}"],
+    ]
+    
+    damage_table = Table(damage_data, colWidths=[8.5*cm, 8.5*cm])
+    damage_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#F43F5E')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 10),
+        ('BOTTOMPADDING', (0,0), (-1,0), 6),
+        ('TOPPADDING', (0,0), (-1,0), 6),
+        ('BACKGROUND', (0,1), (-1,2), colors.HexColor('#FFE4E6')),
+        ('BACKGROUND', (0,3), (-1,3), colors.HexColor('#FB7185')),
+        ('TEXTCOLOR', (0,3), (-1,3), colors.whitesmoke),
+        ('FONTNAME', (0,3), (-1,3), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,1), (-1,-1), 9),
+        ('TOPPADDING', (0,1), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 5),
+        ('GRID', (0,0), (-1,-1), 1, colors.grey)
+    ]))
+    elements.append(damage_table)
+    elements.append(Spacer(1, 0.5*cm))
+
+    # ==== RELIEF OPERATIONS SUMMARY ====
+    elements.append(Paragraph("6. RELIEF OPERATIONS SUMMARY", styles['Heading2']))
+    elements.append(Spacer(1, 0.2*cm))
+    
+    relief_data = [
+        ["ASSISTANCE TYPE", "TOTAL"],
+        ["Food Items", f"{report_data['relief_operations']['total_food']:,}"],
+        ["Non-Food Items", f"{report_data['relief_operations']['total_non_food']:,}"],
+        ["Financial Assistance (₱)", f"₱{report_data['relief_operations']['total_financial']:,.2f}"],
+    ]
+    
+    relief_table = Table(relief_data, colWidths=[8.5*cm, 8.5*cm])
+    relief_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#10B981')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 10),
+        ('BOTTOMPADDING', (0,0), (-1,0), 6),
+        ('TOPPADDING', (0,0), (-1,0), 6),
+        ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#ECFDF5')),
+        ('FONTSIZE', (0,1), (-1,-1), 9),
+        ('TOPPADDING', (0,1), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 5),
+        ('GRID', (0,0), (-1,-1), 1, colors.grey)
+    ]))
+    elements.append(relief_table)
+    elements.append(Spacer(1, 0.5*cm))
+
+    # ==== EVACUATION CENTERS ====
+    elements.append(Paragraph("7. EVACUATION CENTERS STATUS", styles['Heading2']))
+    elements.append(Spacer(1, 0.2*cm))
+    
+    evac_data = [
+        ["METRIC", "VALUE"],
+        ["Total Centers", str(report_data['total_centers'])],
+        ["Total Capacity", f"{report_data['total_capacity']:,}"],
+        ["Current Occupancy", f"{report_data['total_occupancy']:,}"],
+        ["Available Capacity", f"{max(0, report_data['total_capacity'] - report_data['total_occupancy']):,}"],
+    ]
+    
+    evac_table = Table(evac_data, colWidths=[8.5*cm, 8.5*cm])
+    evac_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0891B2')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 10),
+        ('BOTTOMPADDING', (0,0), (-1,0), 6),
+        ('TOPPADDING', (0,0), (-1,0), 6),
+        ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#CFFAFE')),
+        ('FONTSIZE', (0,1), (-1,-1), 9),
+        ('TOPPADDING', (0,1), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 5),
+        ('GRID', (0,0), (-1,-1), 1, colors.grey)
+    ]))
+    elements.append(evac_table)
+    elements.append(Spacer(1, 0.5*cm))
+
+    # ==== DISPLACED POPULATION ====
+    elements.append(Paragraph("8. DISPLACED POPULATION", styles['Heading2']))
+    elements.append(Spacer(1, 0.2*cm))
+    
+    displaced_data = [
+        ["CATEGORY", "CUMULATIVE", "CURRENT"],
+        ["Families", f"{report_data['total_displaced']['cum_families']:,}", f"{report_data['total_displaced']['now_families']:,}"],
+        ["Persons", f"{report_data['total_displaced']['cum_persons']:,}", f"{report_data['total_displaced']['now_persons']:,}"],
+    ]
+    
+    displaced_table = Table(displaced_data, colWidths=[5.5*cm, 5.5*cm, 5.5*cm])
+    displaced_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#7C3AED')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 10),
+        ('BOTTOMPADDING', (0,0), (-1,0), 6),
+        ('TOPPADDING', (0,0), (-1,0), 6),
+        ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#F3E8FF')),
+        ('FONTSIZE', (0,1), (-1,-1), 9),
+        ('TOPPADDING', (0,1), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,1), (-1,-1), 5),
+        ('GRID', (0,0), (-1,-1), 1, colors.grey)
+    ]))
+    elements.append(displaced_table)
+    elements.append(Spacer(1, 1*cm))
+
+    # Footer
+    footer_text = f"<font size=8>Report Generated by DROMIC System | {timezone.now().strftime('%B %d, %Y at %I:%M %p')}</font>"
+    elements.append(Paragraph(footer_text, ParagraphStyle(name='Footer', alignment=1, fontSize=8, textColor=colors.grey)))
 
     # Build PDF
     doc.build(elements)

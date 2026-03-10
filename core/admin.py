@@ -25,8 +25,8 @@ class BarangayAdmin(admin.ModelAdmin):
 
 @admin.register(Disaster)
 class DisasterAdmin(admin.ModelAdmin):
-    list_display = ('name', 'date_occurred')
-    list_filter = ('date_occurred',)
+    list_display = ('name', 'category', 'date_occurred')
+    list_filter = ('category', 'date_occurred')
     search_fields = ('name', 'description')
 
 @admin.register(AffectedArea)
