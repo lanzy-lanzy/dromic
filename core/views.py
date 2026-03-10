@@ -215,6 +215,23 @@ def create_disaster(request):
 
 @csrf_exempt
 @require_POST
+def edit_disaster(request, disaster_id):
+    try:
+        disaster = get_object_or_404(Disaster, id=disaster_id)
+        data = request.POST
+        if 'name' in data and data['name']:
+            disaster.name = data['name']
+        if 'description' in data and data['description']:
+            disaster.description = data['description']
+        if 'date_occurred' in data and data['date_occurred']:
+            disaster.date_occurred = data['date_occurred']
+        disaster.save()
+        return JsonResponse({'status': 'success', 'message': 'Disaster updated successfully'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
+@csrf_exempt
+@require_POST
 def delete_disaster(request, disaster_id):
     try:
         disaster = get_object_or_404(Disaster, id=disaster_id)
@@ -306,13 +323,42 @@ def get_affected_areas(request):
         data.append({
             'id': a.id,
             'disaster': a.disaster.name if a.disaster else '',
+            'disaster_id': a.disaster_id if a.disaster else '',
             'province': a.province.name if a.province else '',
+            'province_id': a.province_id if a.province else '',
             'municipality': a.municipality.name if a.municipality else '',
+            'municipality_id': a.municipality_id if a.municipality else '',
             'barangay': a.barangay.name if a.barangay else '',
+            'barangay_id': a.barangay_id if a.barangay else '',
             'affected_families': a.affected_families,
             'affected_persons': a.affected_persons,
         })
     return JsonResponse(data, safe=False)
+
+@csrf_exempt
+@require_POST
+def edit_affected_area(request, area_id):
+    try:
+        area = get_object_or_404(AffectedArea, id=area_id)
+        data = request.POST
+        if 'disaster' in data and data['disaster']:
+            area.disaster_id = data['disaster']
+        if 'province' in data and data['province']:
+            area.province_id = data['province']
+        if 'municipality' in data and data['municipality']:
+            area.municipality_id = data['municipality']
+        if 'barangay' in data and data['barangay']:
+            area.barangay_id = data['barangay']
+            
+        if 'affected_families' in data:
+            area.affected_families = data['affected_families']
+        if 'affected_persons' in data:
+            area.affected_persons = data['affected_persons']
+            
+        area.save()
+        return JsonResponse({'status': 'success', 'message': 'Affected area updated successfully'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
 
 @csrf_exempt
 @require_POST

@@ -4,10 +4,13 @@
 {% block title %}Early Recovery - DROMIC MIS{% endblock %}
 
 {% block content %}
-<div class="space-y-6" x-data="{ viewMode: 'table', showModal: false, selectedIds: [], allSelected: false, toggleAll(areas) { this.allSelected = !this.allSelected; this.selectedIds = this.allSelected ? areas.map(a => a.id) : []; } }">
-    
+<div class="space-y-6"
+    x-data="{ viewMode: 'table', showModal: false, selectedIds: [], allSelected: false, toggleAll(areas) { this.allSelected = !this.allSelected; this.selectedIds = this.allSelected ? areas.map(a => a.id) : []; } }"
+    @close-modal.window="showModal = false">
+
     <!-- Header Section -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div
+        class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
             <h1 class="text-3xl font-bold text-dromic-navy mb-2 flex items-center">
                 <i class="fas fa-clipboard-check text-emerald-500 mr-3"></i>
@@ -17,7 +20,9 @@
         </div>
         <div class="flex items-center gap-3">
             <!-- Add Button -->
-            <button class="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center" @click="showModal = true">
+            <button
+                class="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center"
+                @click="showModal = true">
                 <i class="fas fa-plus-circle mr-2"></i>
                 Add Activity
             </button>
@@ -25,19 +30,23 @@
     </div>
 
     <!-- Table View -->
-    <div x-show="viewMode === 'table'" x-transition x-data="{ page: 1, perPage: 10, activities: [] }" @activities-loaded.window="activities = $event.detail; page = 1">
+    <div x-show="viewMode === 'table'" x-transition x-data="{ page: 1, perPage: 10, activities: [] }"
+        @activities-loaded.window="activities = $event.detail; page = 1">
         <div class="bg-white rounded-2xl shadow-md border border-slate-100 mb-6 overflow-hidden">
-            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
+            <div
+                class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
                 <h3 class="text-lg font-bold text-slate-800 flex items-center">
                     <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center mr-3">
                         <i class="fas fa-list-ul text-emerald-500"></i>
                     </div>
                     Recovery Activities List
-                    <span class="ml-3 bg-emerald-100 text-emerald-600 px-2.5 py-0.5 rounded-full text-xs font-semibold" x-text="activities.length"></span>
+                    <span class="ml-3 bg-emerald-100 text-emerald-600 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                        x-text="activities.length"></span>
                 </h3>
                 <div class="flex items-center space-x-2 text-sm">
                     <span class="text-slate-500">Rows per page:</span>
-                    <select x-model.number="perPage" @change="page = 1" class="border-slate-200 rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500 text-slate-600 py-1 pl-2 pr-8">
+                    <select x-model.number="perPage" @change="page = 1"
+                        class="border-slate-200 rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500 text-slate-600 py-1 pl-2 pr-8">
                         <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="25">25</option>
@@ -49,17 +58,25 @@
                 <table class="min-w-full">
                     <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10 shadow-sm">
                         <tr>
-                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Date Started</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Description</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Disaster / Area</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                            <th class="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Date Started</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Description</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Disaster / Area</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Status</th>
+                            <th class="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">
+                                Actions</th>
                         </tr>
                     </thead>
                     <tbody id="activityTableBody" class="divide-y divide-slate-100">
                         <template x-for="(a, index) in activities" :key="a.id">
-                            <tr class="hover:bg-slate-50 transition-colors" x-show="Math.ceil((index + 1) / perPage) === page">
-                                <td class="px-5 py-4 text-slate-600"><i class="fas fa-calendar mr-2 text-slate-400"></i><span x-text="a.date_started"></span></td>
+                            <tr class="hover:bg-slate-50 transition-colors"
+                                x-show="Math.ceil((index + 1) / perPage) === page">
+                                <td class="px-5 py-4 text-slate-600"><i
+                                        class="fas fa-calendar mr-2 text-slate-400"></i><span
+                                        x-text="a.date_started"></span></td>
                                 <td class="px-5 py-4 text-slate-800 font-medium" x-text="a.description"></td>
                                 <td class="px-5 py-4 text-sm text-slate-600">
                                     <div class="font-semibold text-slate-800" x-text="a.disaster"></div>
@@ -67,14 +84,18 @@
                                 </td>
                                 <td class="px-5 py-4">
                                     <template x-if="a.date_completed">
-                                        <span class="px-2.5 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-semibold">Completed: <span x-text="a.date_completed"></span></span>
+                                        <span
+                                            class="px-2.5 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-semibold">Completed:
+                                            <span x-text="a.date_completed"></span></span>
                                     </template>
                                     <template x-if="!a.date_completed">
-                                        <span class="px-2.5 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-xs font-semibold">Ongoing</span>
+                                        <span
+                                            class="px-2.5 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-xs font-semibold">Ongoing</span>
                                     </template>
                                 </td>
                                 <td class="px-5 py-4 text-right">
-                                    <button @click="deleteActivity(a.id)" class="w-8 h-8 bg-red-100 rounded-lg inline-flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors">
+                                    <button @click="deleteActivity(a.id)"
+                                        class="w-8 h-8 bg-red-100 rounded-lg inline-flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors">
                                         <i class="fas fa-trash text-sm"></i>
                                     </button>
                                 </td>
@@ -89,22 +110,30 @@
                     </tbody>
                 </table>
             </div>
-            
+
             <!-- Pagination Controls -->
-            <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50" x-show="activities.length > 0" x-cloak>
+            <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50"
+                x-show="activities.length > 0" x-cloak>
                 <div class="text-sm text-slate-500">
-                    Showing <span class="font-medium text-slate-700" x-text="(page - 1) * perPage + 1"></span> to 
-                    <span class="font-medium text-slate-700" x-text="Math.min(page * perPage, activities.length)"></span> of 
+                    Showing <span class="font-medium text-slate-700" x-text="(page - 1) * perPage + 1"></span> to
+                    <span class="font-medium text-slate-700"
+                        x-text="Math.min(page * perPage, activities.length)"></span> of
                     <span class="font-medium text-slate-700" x-text="activities.length"></span> results
                 </div>
                 <div class="flex items-center space-x-2">
-                    <button @click="if(page > 1) page--" :disabled="page === 1" :class="{ 'opacity-50 cursor-not-allowed': page === 1 }" class="px-3 py-1.5 border border-slate-200 rounded-md text-slate-600 hover:bg-slate-100 transition-colors bg-white shadow-sm text-sm font-medium">
+                    <button @click="if(page > 1) page--" :disabled="page === 1"
+                        :class="{ 'opacity-50 cursor-not-allowed': page === 1 }"
+                        class="px-3 py-1.5 border border-slate-200 rounded-md text-slate-600 hover:bg-slate-100 transition-colors bg-white shadow-sm text-sm font-medium">
                         <i class="fas fa-chevron-left mr-1"></i> Prev
                     </button>
                     <div class="text-sm text-slate-600 font-medium px-2">
-                        Page <span x-text="page"></span> of <span x-text="Math.ceil(activities.length / perPage) || 1"></span>
+                        Page <span x-text="page"></span> of <span
+                            x-text="Math.ceil(activities.length / perPage) || 1"></span>
                     </div>
-                    <button @click="if(page < Math.ceil(activities.length / perPage)) page++" :disabled="page >= Math.ceil(activities.length / perPage)" :class="{ 'opacity-50 cursor-not-allowed': page >= Math.ceil(activities.length / perPage) }" class="px-3 py-1.5 border border-slate-200 rounded-md text-slate-600 hover:bg-slate-100 transition-colors bg-white shadow-sm text-sm font-medium">
+                    <button @click="if(page < Math.ceil(activities.length / perPage)) page++"
+                        :disabled="page >= Math.ceil(activities.length / perPage)"
+                        :class="{ 'opacity-50 cursor-not-allowed': page >= Math.ceil(activities.length / perPage) }"
+                        class="px-3 py-1.5 border border-slate-200 rounded-md text-slate-600 hover:bg-slate-100 transition-colors bg-white shadow-sm text-sm font-medium">
                         Next <i class="fas fa-chevron-right ml-1"></i>
                     </button>
                 </div>
@@ -133,33 +162,45 @@
                         {% csrf_token %}
                         <div class="mb-5">
                             <label class="block text-dromic-navy text-sm font-semibold mb-2">Affected Area</label>
-                            <select class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none" id="area" name="area" required>
+                            <select
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                                id="area" name="area" required>
                                 <option value="">Select Affected Area</option>
                                 {% for area in areas %}
-                                <option value="{{ area.id }}">{{ area.barangay|default:area.municipality.name }}, {{ area.province.name }} - {{ area.disaster.name }}</option>
+                                <option value="{{ area.id }}">{{ area.barangay|default:area.municipality.name }}, {{
+                                    area.province.name }} - {{ area.disaster.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="mb-5">
                             <label class="block text-dromic-navy text-sm font-semibold mb-2">Description</label>
-                            <textarea class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none" id="description" name="description" rows="3" required></textarea>
+                            <textarea
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                                id="description" name="description" rows="3" required></textarea>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="mb-5">
                                 <label class="block text-dromic-navy text-sm font-semibold mb-2">Date Started</label>
-                                <input type="date" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none" id="date_started" name="date_started" required>
+                                <input type="date"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                                    id="date_started" name="date_started" required>
                             </div>
                             <div class="mb-5">
                                 <label class="block text-dromic-navy text-sm font-semibold mb-2">Date Completed</label>
-                                <input type="date" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none text-slate-500" id="date_completed" name="date_completed">
+                                <input type="date"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none text-slate-500"
+                                    id="date_completed" name="date_completed">
                                 <p class="text-xs text-slate-400 mt-1">Leave blank if ongoing</p>
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
-                    <button @click="showModal = false" class="px-5 py-2.5 rounded-xl border border-gray-200 text-dromic-slate font-medium hover:bg-gray-100 transition-colors">Cancel</button>
-                    <button class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl" id="saveActivityBtn">
+                    <button type="button" @click="showModal = false"
+                        class="px-5 py-2.5 rounded-xl border border-gray-200 text-dromic-slate font-medium hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit" form="addRecoveryForm"
+                        class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl"
+                        id="saveActivityBtn">
                         <i class="fas fa-save mr-2"></i>Save Activity
                     </button>
                 </div>
@@ -172,55 +213,60 @@
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-function getCsrfToken() {
-    const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
-    return csrfInput ? csrfInput.value : '';
-}
+    function getCsrfToken() {
+        const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        return csrfInput ? csrfInput.value : '';
+    }
 
-function loadActivities() {
-    fetch('/api/early-recovery/')
-        .then(r => r.json())
-        .then(data => {
-            window.dispatchEvent(new CustomEvent('activities-loaded', { detail: data }));
+    function loadActivities() {
+        fetch('/api/early-recovery/')
+            .then(r => r.json())
+            .then(data => {
+                window.dispatchEvent(new CustomEvent('activities-loaded', { detail: data }));
+            })
+            .catch(e => console.error('Error loading activities:', e));
+    }
+
+    function deleteActivity(id) {
+        if (!confirm('Are you sure you want to delete this activity?')) return;
+        fetch('/api/early-recovery/' + id + '/delete/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrfToken() }
         })
-        .catch(e => console.error('Error loading activities:', e));
-}
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') loadActivities();
+                else alert('Error: ' + data.message);
+            })
+            .catch(e => { console.error(e); alert('An error occurred.'); });
+    }
 
-function deleteActivity(id) {
-    if (!confirm('Are you sure you want to delete this activity?')) return;
-    fetch('/api/early-recovery/' + id + '/delete/', {
-        method: 'POST',
-        headers: { 'X-CSRFToken': getCsrfToken() }
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.status === 'success') loadActivities();
-        else alert('Error: ' + data.message);
-    })
-    .catch(e => { console.error(e); alert('An error occurred.'); });
-}
+    $(document).ready(function () {
+        loadActivities();
 
-$(document).ready(function() {
-    loadActivities();
-
-    $('#saveActivityBtn').click(function() {
-        var formData = $('#addRecoveryForm').serialize();
-        $.ajax({
-            url: '{% url "add_early_recovery" %}',
-            type: 'POST',
-            data: formData,
-            success: function(response) {
-                if (response.status === 'success') {
-                    // Close modal via Alpine
-                    document.querySelector('[x-data]').__x.$data.showModal = false;
-                    $('#addRecoveryForm')[0].reset();
-                    loadActivities();
-                } else {
-                    alert('Error: ' + response.message);
+        $('#addRecoveryForm').submit(function (e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+            $.ajax({
+                url: '{% url "add_early_recovery" %}',
+                type: 'POST',
+                data: formData,
+                headers: { 'X-CSRFToken': getCsrfToken() },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        // Close modal via Alpine custom event
+                        window.dispatchEvent(new CustomEvent('close-modal'));
+                        $('#addRecoveryForm')[0].reset();
+                        loadActivities();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function (xhr, errmsg, err) {
+                    alert('Request failed. Make sure all fields are valid.');
                 }
-            }
+            });
         });
     });
-});
 </script>
 {% endblock %}

@@ -5,9 +5,10 @@
 {% block title %}DROMIC Affected Areas{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4"
-     x-data="{
+<div class="container-fluid mt-4" x-data="{
         showModal: false,
+        showEditModal: false,
+        editAreaId: null,
         viewMode: 'table',
         selectedIds: [],
         allSelected: false,
@@ -26,8 +27,7 @@
             else this.selectedIds.push(id);
         },
         isSelected(id) { return this.selectedIds.indexOf(id) > -1; }
-     }"
-     @close-modals.window="showModal = false">
+     }" @close-modals.window="showModal = false; showEditModal = false;">
 
     <!-- Page Header -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
@@ -39,27 +39,29 @@
             <!-- View Toggle -->
             <div class="flex bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <button @click="viewMode = 'cards'"
-                        :class="viewMode === 'cards' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'"
-                        class="px-4 py-2.5 flex items-center gap-2 font-medium text-sm transition-all duration-200">
+                    :class="viewMode === 'cards' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'"
+                    class="px-4 py-2.5 flex items-center gap-2 font-medium text-sm transition-all duration-200">
                     <i class="fas fa-th-large"></i>
                     <span class="hidden sm:inline">Cards</span>
                 </button>
                 <button @click="viewMode = 'table'"
-                        :class="viewMode === 'table' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'"
-                        class="px-4 py-2.5 flex items-center gap-2 font-medium text-sm transition-all duration-200">
+                    :class="viewMode === 'table' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'"
+                    class="px-4 py-2.5 flex items-center gap-2 font-medium text-sm transition-all duration-200">
                     <i class="fas fa-table"></i>
                     <span class="hidden sm:inline">Table</span>
                 </button>
             </div>
             <!-- Bulk Delete -->
             <button x-show="selectedIds.length > 0" x-transition
-                    @click="if(confirm('Delete ' + selectedIds.length + ' selected area(s)?')) { window.bulkDeleteAreas(selectedIds); }"
-                    class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center text-sm">
+                @click="if(confirm('Delete ' + selectedIds.length + ' selected area(s)?')) { window.bulkDeleteAreas(selectedIds); }"
+                class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center text-sm">
                 <i class="fas fa-trash-alt mr-2"></i>
                 Delete (<span x-text="selectedIds.length"></span>)
             </button>
             <!-- Add Button -->
-            <button class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center" @click="showModal = true">
+            <button
+                class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center"
+                @click="showModal = true">
                 <i class="fas fa-plus-circle mr-2"></i>
                 Add Area
             </button>
@@ -88,7 +90,8 @@
             </div>
             <div>
                 <p class="text-slate-500 text-sm font-semibold mb-1">Total Affected Families</p>
-                <h2 class="text-4xl font-bold text-slate-800" id="totalFamilies">{{ total_affected_families|intcomma }}</h2>
+                <h2 class="text-4xl font-bold text-slate-800" id="totalFamilies">{{ total_affected_families|intcomma }}
+                </h2>
             </div>
         </div>
 
@@ -100,7 +103,8 @@
             </div>
             <div>
                 <p class="text-slate-500 text-sm font-semibold mb-1">Total Affected Persons</p>
-                <h2 class="text-4xl font-bold text-slate-800" id="totalPersons">{{ total_affected_persons|intcomma }}</h2>
+                <h2 class="text-4xl font-bold text-slate-800" id="totalPersons">{{ total_affected_persons|intcomma }}
+                </h2>
             </div>
         </div>
     </div>
@@ -113,19 +117,23 @@
     </div>
 
     <!-- Table View -->
-    <div x-show="viewMode === 'table'" x-transition x-data="{ page: 1, perPage: 10, areas: [] }" @areas-loaded.window="areas = $event.detail; page = 1">
+    <div x-show="viewMode === 'table'" x-transition x-data="{ page: 1, perPage: 10, areas: [] }"
+        @areas-loaded.window="areas = $event.detail; page = 1">
         <div class="bg-white rounded-2xl shadow-md border border-slate-100 mb-6 overflow-hidden">
-            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
+            <div
+                class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
                 <h3 class="text-lg font-bold text-slate-800 flex items-center">
                     <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center mr-3">
                         <i class="fas fa-map-marked-alt text-orange-500"></i>
                     </div>
                     Affected Area List
-                    <span class="ml-3 bg-orange-100 text-orange-600 px-2.5 py-0.5 rounded-full text-xs font-semibold" x-text="areas.length"></span>
+                    <span class="ml-3 bg-orange-100 text-orange-600 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                        x-text="areas.length"></span>
                 </h3>
                 <div class="flex items-center space-x-2 text-sm">
                     <span class="text-slate-500">Rows per page:</span>
-                    <select x-model.number="perPage" @change="page = 1" class="border-slate-200 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 text-slate-600 py-1 pl-2 pr-8">
+                    <select x-model.number="perPage" @change="page = 1"
+                        class="border-slate-200 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 text-slate-600 py-1 pl-2 pr-8">
                         <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="25">25</option>
@@ -138,23 +146,35 @@
                     <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10 shadow-sm">
                         <tr>
                             <th class="px-5 py-4 w-12">
-                                <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400 cursor-pointer"
-                                       :checked="allSelected" @change="toggleAll(window._areaData || [])">
+                                <input type="checkbox"
+                                    class="w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400 cursor-pointer"
+                                    :checked="allSelected" @change="toggleAll(window._areaData || [])">
                             </th>
-                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Disaster</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Province</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Municipality</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Barangay</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Families</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Persons</th>
-                            <th class="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Disaster</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Province</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Municipality</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Barangay</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Families</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Persons</th>
+                            <th class="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">
+                                Actions</th>
                         </tr>
                     </thead>
                     <tbody id="areaTableBody" class="divide-y divide-slate-100">
                         <template x-for="(a, index) in areas" :key="a.id">
-                            <tr class="hover:bg-slate-50 transition-colors" x-show="Math.ceil((index + 1) / perPage) === page">
+                            <tr class="hover:bg-slate-50 transition-colors"
+                                x-show="Math.ceil((index + 1) / perPage) === page">
                                 <td class="px-5 py-4">
-                                    <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400 cursor-pointer area-checkbox" :data-id="a.id" :checked="selectedIds.includes(a.id)" @change="if(selectedIds.includes(a.id)) { selectedIds = selectedIds.filter(id => id !== a.id) } else { selectedIds.push(a.id) }">
+                                    <input type="checkbox"
+                                        class="w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400 cursor-pointer area-checkbox"
+                                        :data-id="a.id" :checked="selectedIds.includes(a.id)"
+                                        @change="if(selectedIds.includes(a.id)) { selectedIds = selectedIds.filter(id => id !== a.id) } else { selectedIds.push(a.id) }">
                                 </td>
                                 <td class="px-5 py-4">
                                     <div class="flex items-center">
@@ -165,12 +185,21 @@
                                 <td class="px-5 py-4 text-slate-600" x-text="a.province"></td>
                                 <td class="px-5 py-4 text-slate-600" x-text="a.municipality"></td>
                                 <td class="px-5 py-4 text-slate-600" x-text="a.barangay"></td>
-                                <td class="px-5 py-4 text-slate-800 font-medium" x-text="a.affected_families.toLocaleString()"></td>
-                                <td class="px-5 py-4 text-slate-800 font-medium" x-text="a.affected_persons.toLocaleString()"></td>
+                                <td class="px-5 py-4 text-slate-800 font-medium"
+                                    x-text="a.affected_families.toLocaleString()"></td>
+                                <td class="px-5 py-4 text-slate-800 font-medium"
+                                    x-text="a.affected_persons.toLocaleString()"></td>
                                 <td class="px-5 py-4 text-right">
-                                    <button @click="deleteArea(a.id)" class="delete-btn w-8 h-8 bg-red-100 rounded-lg inline-flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors">
-                                        <i class="fas fa-trash text-sm"></i>
-                                    </button>
+                                    <div class="flex items-center justify-end space-x-2">
+                                        <button @click="window.openEditModal(a)"
+                                            class="w-8 h-8 bg-blue-100 rounded-lg inline-flex items-center justify-center text-blue-500 hover:bg-blue-200 transition-colors">
+                                            <i class="fas fa-edit text-sm"></i>
+                                        </button>
+                                        <button @click="deleteArea(a.id)"
+                                            class="delete-btn w-8 h-8 bg-red-100 rounded-lg inline-flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors">
+                                            <i class="fas fa-trash text-sm"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         </template>
@@ -183,22 +212,29 @@
                     </tbody>
                 </table>
             </div>
-            
+
             <!-- Pagination Controls -->
-            <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50" x-show="areas.length > 0" x-cloak>
+            <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50"
+                x-show="areas.length > 0" x-cloak>
                 <div class="text-sm text-slate-500">
-                    Showing <span class="font-medium text-slate-700" x-text="(page - 1) * perPage + 1"></span> to 
-                    <span class="font-medium text-slate-700" x-text="Math.min(page * perPage, areas.length)"></span> of 
+                    Showing <span class="font-medium text-slate-700" x-text="(page - 1) * perPage + 1"></span> to
+                    <span class="font-medium text-slate-700" x-text="Math.min(page * perPage, areas.length)"></span> of
                     <span class="font-medium text-slate-700" x-text="areas.length"></span> results
                 </div>
                 <div class="flex items-center space-x-2">
-                    <button @click="if(page > 1) page--" :disabled="page === 1" :class="{ 'opacity-50 cursor-not-allowed': page === 1 }" class="px-3 py-1.5 border border-slate-200 rounded-md text-slate-600 hover:bg-slate-100 transition-colors bg-white shadow-sm text-sm font-medium">
+                    <button @click="if(page > 1) page--" :disabled="page === 1"
+                        :class="{ 'opacity-50 cursor-not-allowed': page === 1 }"
+                        class="px-3 py-1.5 border border-slate-200 rounded-md text-slate-600 hover:bg-slate-100 transition-colors bg-white shadow-sm text-sm font-medium">
                         <i class="fas fa-chevron-left mr-1"></i> Prev
                     </button>
                     <div class="text-sm text-slate-600 font-medium px-2">
-                        Page <span x-text="page"></span> of <span x-text="Math.ceil(areas.length / perPage) || 1"></span>
+                        Page <span x-text="page"></span> of <span
+                            x-text="Math.ceil(areas.length / perPage) || 1"></span>
                     </div>
-                    <button @click="if(page < Math.ceil(areas.length / perPage)) page++" :disabled="page >= Math.ceil(areas.length / perPage)" :class="{ 'opacity-50 cursor-not-allowed': page >= Math.ceil(areas.length / perPage) }" class="px-3 py-1.5 border border-slate-200 rounded-md text-slate-600 hover:bg-slate-100 transition-colors bg-white shadow-sm text-sm font-medium">
+                    <button @click="if(page < Math.ceil(areas.length / perPage)) page++"
+                        :disabled="page >= Math.ceil(areas.length / perPage)"
+                        :class="{ 'opacity-50 cursor-not-allowed': page >= Math.ceil(areas.length / perPage) }"
+                        class="px-3 py-1.5 border border-slate-200 rounded-md text-slate-600 hover:bg-slate-100 transition-colors bg-white shadow-sm text-sm font-medium">
                         Next <i class="fas fa-chevron-right ml-1"></i>
                     </button>
                 </div>
@@ -206,177 +242,288 @@
         </div>
     </div>
 
-<!-- Add Affected Area Modal -->
-<div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-    <div class="flex items-center justify-center min-h-screen px-4">
-        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="showModal = false"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full z-10">
-            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center rounded-t-2xl">
-                <h5 class="text-lg font-bold text-slate-800 flex items-center">
-                    <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center mr-3">
-                        <i class="fas fa-map-marker-alt text-orange-500"></i>
-                    </div>
-                    Add Affected Area
-                </h5>
-                <button @click="showModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <div class="p-6">
-                <form id="addAffectedAreaForm">
-                    {% csrf_token %}
-                    <div class="mb-5">
-                        <label class="block text-dromic-navy text-sm font-semibold mb-2">Disaster</label>
-                        <select class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none" id="disaster" name="disaster" required>
-                            <option value="">Select Disaster</option>
-                            {% for disaster in disasters %}
-                            <option value="{{ disaster.id }}">{{ disaster.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-5">
-                        <label class="block text-dromic-navy text-sm font-semibold mb-2">Province</label>
-                        <select class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none" id="province" name="province" required>
-                            <option value="">Select Province</option>
-                            {% for province in provinces %}
-                            <option value="{{ province.id }}">{{ province.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-5">
-                        <label class="block text-dromic-navy text-sm font-semibold mb-2">Municipality</label>
-                        <select class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none" id="municipality" name="municipality" required disabled>
-                            <option value="">Select Municipality</option>
-                        </select>
-                    </div>
-                    <div class="mb-5">
-                        <label class="block text-dromic-navy text-sm font-semibold mb-2">Barangay</label>
-                        <select class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none" id="barangay" name="barangay" required disabled>
-                            <option value="">Select Barangay</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
+    <!-- Add Affected Area Modal -->
+    <div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="showModal = false"></div>
+            <div class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full z-10">
+                <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center rounded-t-2xl">
+                    <h5 class="text-lg font-bold text-slate-800 flex items-center">
+                        <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center mr-3">
+                            <i class="fas fa-map-marker-alt text-orange-500"></i>
+                        </div>
+                        Add Affected Area
+                    </h5>
+                    <button @click="showModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <form id="addAffectedAreaForm">
+                        {% csrf_token %}
                         <div class="mb-5">
-                            <label class="block text-dromic-navy text-sm font-semibold mb-2">Affected Families</label>
-                            <input type="number" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none" id="affected_families" name="affected_families" required>
+                            <label class="block text-dromic-navy text-sm font-semibold mb-2">Disaster</label>
+                            <select
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none"
+                                id="disaster" name="disaster" required>
+                                <option value="">Select Disaster</option>
+                                {% for disaster in disasters %}
+                                <option value="{{ disaster.id }}">{{ disaster.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="mb-5">
-                            <label class="block text-dromic-navy text-sm font-semibold mb-2">Affected Persons</label>
-                            <input type="number" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none" id="affected_persons" name="affected_persons" required>
+                            <label class="block text-dromic-navy text-sm font-semibold mb-2">Province</label>
+                            <select
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none"
+                                id="province" name="province" required>
+                                <option value="">Select Province</option>
+                                {% for province in provinces %}
+                                <option value="{{ province.id }}">{{ province.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                    </div>
-                </form>
-            </div>
-            <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
-                <button @click="showModal = false" class="px-5 py-2.5 rounded-xl border border-gray-200 text-dromic-slate font-medium hover:bg-gray-100 transition-colors">Cancel</button>
-                <button class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl" id="saveAffectedArea">
-                    <i class="fas fa-save mr-2"></i>Save Area
-                </button>
+                        <div class="mb-5">
+                            <label class="block text-dromic-navy text-sm font-semibold mb-2">Municipality</label>
+                            <select
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none"
+                                id="municipality" name="municipality" required disabled>
+                                <option value="">Select Municipality</option>
+                            </select>
+                        </div>
+                        <div class="mb-5">
+                            <label class="block text-dromic-navy text-sm font-semibold mb-2">Barangay</label>
+                            <select
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none"
+                                id="barangay" name="barangay" required disabled>
+                                <option value="">Select Barangay</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="mb-5">
+                                <label class="block text-dromic-navy text-sm font-semibold mb-2">Affected
+                                    Families</label>
+                                <input type="number"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none"
+                                    id="affected_families" name="affected_families" required>
+                            </div>
+                            <div class="mb-5">
+                                <label class="block text-dromic-navy text-sm font-semibold mb-2">Affected
+                                    Persons</label>
+                                <input type="number"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none"
+                                    id="affected_persons" name="affected_persons" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                    <button type="button" @click="showModal = false"
+                        class="px-5 py-2.5 rounded-xl border border-gray-200 text-dromic-slate font-medium hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit" form="addAffectedAreaForm"
+                        class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl"
+                        id="saveAffectedArea">
+                        <i class="fas fa-save mr-2"></i>Save Area
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Edit Affected Area Modal -->
+    <div x-show="showEditModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="showEditModal = false"></div>
+            <div class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full z-10">
+                <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center rounded-t-2xl">
+                    <h5 class="text-lg font-bold text-slate-800 flex items-center">
+                        <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center mr-3">
+                            <i class="fas fa-edit text-blue-500"></i>
+                        </div>
+                        Edit Affected Area
+                    </h5>
+                    <button @click="showEditModal = false"
+                        class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <form id="editAffectedAreaForm">
+                        {% csrf_token %}
+                        <input type="hidden" id="edit_area_id" name="area_id">
+                        <div class="mb-5">
+                            <label class="block text-dromic-navy text-sm font-semibold mb-2">Disaster</label>
+                            <select
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+                                id="edit-disaster" name="disaster" required>
+                                <option value="">Select Disaster</option>
+                                {% for disaster in disasters %}
+                                <option value="{{ disaster.id }}">{{ disaster.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-5">
+                            <label class="block text-dromic-navy text-sm font-semibold mb-2">Province</label>
+                            <select
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+                                id="edit-province" name="province" required>
+                                <option value="">Select Province</option>
+                                {% for province in provinces %}
+                                <option value="{{ province.id }}">{{ province.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-5">
+                            <label class="block text-dromic-navy text-sm font-semibold mb-2">Municipality</label>
+                            <select
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+                                id="edit-municipality" name="municipality" required disabled>
+                                <option value="">Select Municipality</option>
+                            </select>
+                        </div>
+                        <div class="mb-5">
+                            <label class="block text-dromic-navy text-sm font-semibold mb-2">Barangay</label>
+                            <select
+                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+                                id="edit-barangay" name="barangay" required disabled>
+                                <option value="">Select Barangay</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="mb-5">
+                                <label class="block text-dromic-navy text-sm font-semibold mb-2">Affected
+                                    Families</label>
+                                <input type="number"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+                                    id="edit_affected_families" name="affected_families" required>
+                            </div>
+                            <div class="mb-5">
+                                <label class="block text-dromic-navy text-sm font-semibold mb-2">Affected
+                                    Persons</label>
+                                <input type="number"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+                                    id="edit_affected_persons" name="affected_persons" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                    <button type="button" @click="showEditModal = false"
+                        class="px-5 py-2.5 rounded-xl border border-gray-200 text-dromic-slate font-medium hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit" form="editAffectedAreaForm"
+                        class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl">
+                        <i class="fas fa-save mr-2"></i>Update Area
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-// Alpine data helper
-function getAlpineData() {
-    if (!window.Alpine) return null;
-    const containers = document.querySelectorAll('[x-data]');
-    for (const el of containers) {
-        const data = Alpine.$data(el);
-        if (data && 'selectedIds' in data) return data;
+    // Alpine data helper
+    function getAlpineData() {
+        if (!window.Alpine) return null;
+        const containers = document.querySelectorAll('[x-data]');
+        for (const el of containers) {
+            const data = Alpine.$data(el);
+            if (data && 'selectedIds' in data) return data;
+        }
+        return null;
     }
-    return null;
-}
 
-function clearSelection() {
-    const data = getAlpineData();
-    if (data) { data.selectedIds = []; data.allSelected = false; }
-}
+    function clearSelection() {
+        const data = getAlpineData();
+        if (data) { data.selectedIds = []; data.allSelected = false; }
+    }
 
-function getCsrfToken() {
-    const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
-    return csrfInput ? csrfInput.value : '';
-}
+    function getCsrfToken() {
+        const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        return csrfInput ? csrfInput.value : '';
+    }
 
-window._areaData = [];
+    window._areaData = [];
 
-function loadAreas() {
-    fetch('/api/affected-areas/')
-        .then(r => r.json())
-        .then(data => {
-            window._areaData = data;
-            // Update stats
-            const totalEl = document.getElementById('totalAreas');
-            const famEl = document.getElementById('totalFamilies');
-            const persEl = document.getElementById('totalPersons');
-            if (totalEl) totalEl.textContent = data.length.toLocaleString();
-            if (famEl) famEl.textContent = data.reduce((s, a) => s + a.affected_families, 0).toLocaleString();
-            if (persEl) persEl.textContent = data.reduce((s, a) => s + a.affected_persons, 0).toLocaleString();
+    function loadAreas() {
+        fetch('/api/affected-areas/')
+            .then(r => r.json())
+            .then(data => {
+                window._areaData = data;
+                // Update stats
+                const totalEl = document.getElementById('totalAreas');
+                const famEl = document.getElementById('totalFamilies');
+                const persEl = document.getElementById('totalPersons');
+                if (totalEl) totalEl.textContent = data.length.toLocaleString();
+                if (famEl) famEl.textContent = data.reduce((s, a) => s + a.affected_families, 0).toLocaleString();
+                if (persEl) persEl.textContent = data.reduce((s, a) => s + a.affected_persons, 0).toLocaleString();
 
-            renderAreaTable(data);
-            renderAreaCards(data);
-        })
-        .catch(e => console.error('Error loading areas:', e));
-}
+                renderAreaTable(data);
+                renderAreaCards(data);
+            })
+            .catch(e => console.error('Error loading areas:', e));
+    }
 
-function renderAreaTable(areas) {
-    // Notify the Alpine component that areas have loaded so it can render the paginated template
-    window.dispatchEvent(new CustomEvent('areas-loaded', { detail: areas }));
-}
+    function renderAreaTable(areas) {
+        // Notify the Alpine component that areas have loaded so it can render the paginated template
+        window.dispatchEvent(new CustomEvent('areas-loaded', { detail: areas }));
+    }
 
-function renderAreaCards(areas) {
-    const container = document.getElementById('areaGroupedCards');
-    if (!container) return;
-    container.innerHTML = '';
+    function renderAreaCards(areas) {
+        const container = document.getElementById('areaGroupedCards');
+        if (!container) return;
+        container.innerHTML = '';
 
-    // Group by disaster
-    const grouped = {};
-    areas.forEach(a => {
-        if (!grouped[a.disaster]) grouped[a.disaster] = [];
-        grouped[a.disaster].push(a);
-    });
-
-    Object.keys(grouped).sort().forEach(disasterName => {
-        const disasterAreas = grouped[disasterName];
-
-        // Group by province within disaster
-        const byProvince = {};
-        disasterAreas.forEach(a => {
-            if (!byProvince[a.province]) byProvince[a.province] = [];
-            byProvince[a.province].push(a);
+        // Group by disaster
+        const grouped = {};
+        areas.forEach(a => {
+            if (!grouped[a.disaster]) grouped[a.disaster] = [];
+            grouped[a.disaster].push(a);
         });
 
-        const section = document.createElement('div');
-        section.className = 'bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden';
+        Object.keys(grouped).sort().forEach(disasterName => {
+            const disasterAreas = grouped[disasterName];
 
-        let provinceHTML = '';
-        Object.keys(byProvince).sort().forEach(provName => {
-            const provAreas = byProvince[provName];
-
-            // Group by municipality
-            const byMuni = {};
-            provAreas.forEach(a => {
-                if (!byMuni[a.municipality]) byMuni[a.municipality] = [];
-                byMuni[a.municipality].push(a);
+            // Group by province within disaster
+            const byProvince = {};
+            disasterAreas.forEach(a => {
+                if (!byProvince[a.province]) byProvince[a.province] = [];
+                byProvince[a.province].push(a);
             });
 
-            let muniHTML = '';
-            Object.keys(byMuni).sort().forEach(muniName => {
-                const muniAreas = byMuni[muniName];
-                let areaCards = '';
-                muniAreas.forEach(a => {
-                    areaCards += `
+            const section = document.createElement('div');
+            section.className = 'bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden';
+
+            let provinceHTML = '';
+            Object.keys(byProvince).sort().forEach(provName => {
+                const provAreas = byProvince[provName];
+
+                // Group by municipality
+                const byMuni = {};
+                provAreas.forEach(a => {
+                    if (!byMuni[a.municipality]) byMuni[a.municipality] = [];
+                    byMuni[a.municipality].push(a);
+                });
+
+                let muniHTML = '';
+                Object.keys(byMuni).sort().forEach(muniName => {
+                    const muniAreas = byMuni[muniName];
+                    let areaCards = '';
+                    muniAreas.forEach(a => {
+                        areaCards += `
                         <div class="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors group" data-area-id="${a.id}">
                             <div class="flex items-center justify-between">
                                 <span class="font-medium text-slate-800">${a.barangay}</span>
-                                <button class="delete-area-btn opacity-0 group-hover:opacity-100 w-6 h-6 bg-red-100 rounded flex items-center justify-center text-red-500 hover:bg-red-200 transition-all text-xs">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <div class="opacity-0 group-hover:opacity-100 transition-all flex items-center space-x-1">
+                                    <button class="edit-area-btn w-6 h-6 bg-blue-100 rounded flex items-center justify-center text-blue-500 hover:bg-blue-200 text-xs">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="delete-area-btn w-6 h-6 bg-red-100 rounded flex items-center justify-center text-red-500 hover:bg-red-200 text-xs">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="mt-2 flex items-center text-sm">
                                 <span class="bg-blue-100 text-blue-600 px-2 py-0.5 rounded text-xs mr-2">
@@ -388,9 +535,9 @@ function renderAreaCards(areas) {
                             </div>
                         </div>
                     `;
-                });
+                    });
 
-                muniHTML += `
+                    muniHTML += `
                     <div class="ml-4 mb-4">
                         <div class="bg-blue-50 rounded-lg px-3 py-2 mb-3">
                             <h5 class="font-medium text-slate-600">${muniName}</h5>
@@ -400,9 +547,9 @@ function renderAreaCards(areas) {
                         </div>
                     </div>
                 `;
-            });
+                });
 
-            provinceHTML += `
+                provinceHTML += `
                 <div class="mb-6 last:mb-0">
                     <div class="bg-orange-50 rounded-xl px-4 py-3 mb-4">
                         <h4 class="text-lg font-semibold text-slate-800">${provName}</h4>
@@ -410,9 +557,9 @@ function renderAreaCards(areas) {
                     ${muniHTML}
                 </div>
             `;
-        });
+            });
 
-        section.innerHTML = `
+            section.innerHTML = `
             <div class="px-6 py-5 border-b border-slate-100">
                 <div class="flex items-center">
                     <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center mr-3">
@@ -427,103 +574,217 @@ function renderAreaCards(areas) {
             </div>
         `;
 
-        // Bind delete buttons for card view
-        section.querySelectorAll('.delete-area-btn').forEach(btn => {
-            const areaDiv = btn.closest('[data-area-id]');
-            if (areaDiv) {
-                const areaId = parseInt(areaDiv.dataset.areaId);
-                btn.addEventListener('click', () => deleteArea(areaId));
-            }
-        });
-
-        container.appendChild(section);
-    });
-}
-
-function deleteArea(id) {
-    if (!confirm('Are you sure you want to delete this affected area?')) return;
-    fetch('/api/affected-areas/' + id + '/delete/', {
-        method: 'POST',
-        headers: { 'X-CSRFToken': getCsrfToken() }
-    })
-        .then(r => r.json())
-        .then(data => {
-            if (data.status === 'success') loadAreas();
-            else alert('Error: ' + data.message);
-        })
-        .catch(e => { console.error(e); alert('An error occurred.'); });
-}
-
-window.bulkDeleteAreas = function(ids) {
-    fetch('/api/affected-areas/bulk-delete/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
-        body: JSON.stringify({ ids: ids })
-    })
-        .then(r => r.json())
-        .then(data => {
-            if (data.status === 'success') { clearSelection(); loadAreas(); }
-            else alert('Error: ' + data.message);
-        })
-        .catch(e => { console.error(e); alert('An error occurred.'); });
-};
-
-$(document).ready(function() {
-    loadAreas();
-
-    // Province -> Municipality cascade
-    $('#province').change(function() {
-        var provinceId = $(this).val();
-        if (provinceId) {
-            $.get('{% url "get_municipalities" %}', {province_id: provinceId}, function(data) {
-                $('#municipality').html('<option value="">Select municipality</option>');
-                $.each(data.municipalities, function(index, item) {
-                    $('#municipality').append('<option value="' + item.id + '">' + item.name + '</option>');
-                });
-                $('#municipality').prop('disabled', false);
-            });
-        } else {
-            $('#municipality').html('<option value="">Select municipality</option>').prop('disabled', true);
-        }
-        $('#barangay').html('<option value="">Select Barangay</option>').prop('disabled', true);
-    });
-
-    // Municipality -> Barangay cascade
-    $('#municipality').change(function() {
-        var municipalityId = $(this).val();
-        if (municipalityId) {
-            $.get('{% url "get_barangays" %}', {municipality_id: municipalityId}, function(data) {
-                $('#barangay').html('<option value="">Select Barangay</option>');
-                $.each(data.barangays, function(index, item) {
-                    $('#barangay').append('<option value="' + item.id + '">' + item.name + '</option>');
-                });
-                $('#barangay').prop('disabled', false);
-            });
-        } else {
-            $('#barangay').html('<option value="">Select Barangay</option>').prop('disabled', true);
-        }
-    });
-
-    // Submit new affected area
-    $('#saveAffectedArea').click(function() {
-        var formData = $('#addAffectedAreaForm').serialize();
-        $.ajax({
-            url: '{% url "add_affected_area" %}',
-            type: 'POST',
-            data: formData,
-            success: function(response) {
-                if (response.status === 'success') {
-                    window.dispatchEvent(new CustomEvent('close-modals'));
-                    $('#addAffectedAreaForm')[0].reset();
-                    $('#municipality').prop('disabled', true);
-                    $('#barangay').prop('disabled', true);
-                    loadAreas();
-                } else {
-                    alert('Error: ' + response.message);
+            section.querySelectorAll('.delete-area-btn').forEach(btn => {
+                const areaDiv = btn.closest('[data-area-id]');
+                if (areaDiv) {
+                    const areaId = parseInt(areaDiv.dataset.areaId);
+                    btn.addEventListener('click', () => deleteArea(areaId));
                 }
+            });
+
+            // Bind edit buttons for card view
+            section.querySelectorAll('.edit-area-btn').forEach(btn => {
+                const areaDiv = btn.closest('[data-area-id]');
+                if (areaDiv) {
+                    const areaId = parseInt(areaDiv.dataset.areaId);
+                    btn.addEventListener('click', () => {
+                        const area = window._areaData.find(x => x.id === areaId);
+                        if (area) window.openEditModal(area);
+                    });
+                }
+            });
+
+            container.appendChild(section);
+        });
+    }
+
+    window.openEditModal = function (area) {
+        // Show modal using Alpine event
+        window.dispatchEvent(new CustomEvent('close-modals')); // Close any open ones
+        setTimeout(() => {
+            const data = getAlpineData();
+            if (data) {
+                data.editAreaId = area.id;
+                data.showEditModal = true;
+            }
+        }, 50);
+
+        $('#edit_area_id').val(area.id);
+        $('#edit-disaster').val(area.disaster_id || '');
+        $('#edit_affected_families').val(area.affected_families);
+        $('#edit_affected_persons').val(area.affected_persons);
+
+        // Trigger cascades
+        const provinceId = area.province_id;
+        $('#edit-province').val(provinceId || '');
+
+        if (provinceId) {
+            $.get('{% url "get_municipalities" %}', { province_id: provinceId }, function (data) {
+                $('#edit-municipality').html('<option value="">Select municipality</option>');
+                $.each(data.municipalities, function (index, item) {
+                    $('#edit-municipality').append('<option value="' + item.id + '">' + item.name + '</option>');
+                });
+                $('#edit-municipality').val(area.municipality_id || '').prop('disabled', false);
+
+                if (area.municipality_id) {
+                    $.get('{% url "get_barangays" %}', { municipality_id: area.municipality_id }, function (bData) {
+                        $('#edit-barangay').html('<option value="">Select Barangay</option>');
+                        $.each(bData.barangays, function (index, item) {
+                            $('#edit-barangay').append('<option value="' + item.id + '">' + item.name + '</option>');
+                        });
+                        $('#edit-barangay').val(area.barangay_id || '').prop('disabled', false);
+                    });
+                } else {
+                    $('#edit-barangay').html('<option value="">Select Barangay</option>').prop('disabled', true);
+                }
+            });
+        } else {
+            $('#edit-municipality').html('<option value="">Select municipality</option>').prop('disabled', true);
+            $('#edit-barangay').html('<option value="">Select Barangay</option>').prop('disabled', true);
+        }
+    };
+
+    function deleteArea(id) {
+        if (!confirm('Are you sure you want to delete this affected area?')) return;
+        fetch('/api/affected-areas/' + id + '/delete/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrfToken() }
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') loadAreas();
+                else alert('Error: ' + data.message);
+            })
+            .catch(e => { console.error(e); alert('An error occurred.'); });
+    }
+
+    window.bulkDeleteAreas = function (ids) {
+        fetch('/api/affected-areas/bulk-delete/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+            body: JSON.stringify({ ids: ids })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') { clearSelection(); loadAreas(); }
+                else alert('Error: ' + data.message);
+            })
+            .catch(e => { console.error(e); alert('An error occurred.'); });
+    };
+
+    $(document).ready(function () {
+        loadAreas();
+
+        // Province -> Municipality cascade
+        $('#province').change(function () {
+            var provinceId = $(this).val();
+            if (provinceId) {
+                $.get('{% url "get_municipalities" %}', { province_id: provinceId }, function (data) {
+                    $('#municipality').html('<option value="">Select municipality</option>');
+                    $.each(data.municipalities, function (index, item) {
+                        $('#municipality').append('<option value="' + item.id + '">' + item.name + '</option>');
+                    });
+                    $('#municipality').prop('disabled', false);
+                });
+            } else {
+                $('#municipality').html('<option value="">Select municipality</option>').prop('disabled', true);
+            }
+            $('#barangay').html('<option value="">Select Barangay</option>').prop('disabled', true);
+        });
+
+        // Municipality -> Barangay cascade
+        $('#municipality').change(function () {
+            var municipalityId = $(this).val();
+            if (municipalityId) {
+                $.get('{% url "get_barangays" %}', { municipality_id: municipalityId }, function (data) {
+                    $('#barangay').html('<option value="">Select Barangay</option>');
+                    $.each(data.barangays, function (index, item) {
+                        $('#barangay').append('<option value="' + item.id + '">' + item.name + '</option>');
+                    });
+                    $('#barangay').prop('disabled', false);
+                });
+            } else {
+                $('#barangay').html('<option value="">Select Barangay</option>').prop('disabled', true);
             }
         });
+
+        // Submit new affected area
+        $('#saveAffectedArea').click(function (e) {
+            e.preventDefault();
+            var formData = $('#addAffectedAreaForm').serialize();
+            $.ajax({
+                url: '{% url "add_affected_area" %}',
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    if (response.status === 'success') {
+                        window.dispatchEvent(new CustomEvent('close-modals'));
+                        $('#addAffectedAreaForm')[0].reset();
+                        $('#municipality').prop('disabled', true);
+                        $('#barangay').prop('disabled', true);
+                        loadAreas();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                }
+            });
+        });
+
+        // Edit Modal cascacades
+        $('#edit-province').change(function () {
+            var provinceId = $(this).val();
+            if (provinceId) {
+                $.get('{% url "get_municipalities" %}', { province_id: provinceId }, function (data) {
+                    $('#edit-municipality').html('<option value="">Select municipality</option>');
+                    $.each(data.municipalities, function (index, item) {
+                        $('#edit-municipality').append('<option value="' + item.id + '">' + item.name + '</option>');
+                    });
+                    $('#edit-municipality').prop('disabled', false);
+                });
+            } else {
+                $('#edit-municipality').html('<option value="">Select municipality</option>').prop('disabled', true);
+            }
+            $('#edit-barangay').html('<option value="">Select Barangay</option>').prop('disabled', true);
+        });
+
+        $('#edit-municipality').change(function () {
+            var municipalityId = $(this).val();
+            if (municipalityId) {
+                $.get('{% url "get_barangays" %}', { municipality_id: municipalityId }, function (data) {
+                    $('#edit-barangay').html('<option value="">Select Barangay</option>');
+                    $.each(data.barangays, function (index, item) {
+                        $('#edit-barangay').append('<option value="' + item.id + '">' + item.name + '</option>');
+                    });
+                    $('#edit-barangay').prop('disabled', false);
+                });
+            } else {
+                $('#edit-barangay').html('<option value="">Select Barangay</option>').prop('disabled', true);
+            }
+        });
+
+        // Submit edit affected area
+        $('#editAffectedAreaForm').submit(function (e) {
+            e.preventDefault();
+            var areaId = $('#edit_area_id').val();
+            var formData = $(this).serialize();
+            $.ajax({
+                url: '/api/affected-areas/' + areaId + '/edit/',
+                type: 'POST',
+                data: formData,
+                headers: { 'X-CSRFToken': getCsrfToken() },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        window.dispatchEvent(new CustomEvent('close-modals'));
+                        loadAreas();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function (xhr) {
+                    alert('An error occurred during update: Status ' + xhr.status + ' - ' + xhr.statusText + '\nResponse: ' + xhr.responseText);
+                }
+            });
+        });
     });
-});
 </script>
 {% endblock %}

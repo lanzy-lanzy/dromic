@@ -1,108 +1,100 @@
-# location/management/commands/populate_locations.py
-import requests
 from django.core.management.base import BaseCommand
-from django.conf import settings
 from core.models import Province, Municipality, Barangay
-import time
 
-BASE_API_URL = "https://psgc.gitlab.io/api"
-
-# Specific province codes for Zamboanga Peninsula
-ZAMBOANGA_PROVINCES = [
-    # {'code': '097200000', 'name': 'Zamboanga Del Norte'},
-    # {'code': '097300000', 'name': 'Zamboanga Del Sur'},
-    {'code': '098300000', 'name': 'Zamboanga Sibugay'}
+# Official PSGC barangays of Dumingag, Zamboanga del Sur
+# Source: https://psgc.gitlab.io/api/municipalities/097308000/barangays.json
+DUMINGAG_BARANGAYS = [
+    {"code": "097308002", "name": "Bag-ong Valencia", "lat": 8.1331, "lng": 123.282},
+    {"code": "097308003", "name": "Bucayan", "lat": 8.1365, "lng": 123.3139},
+    {"code": "097308004", "name": "Calumanggi", "lat": 8.0977, "lng": 123.2895},
+    {"code": "097308005", "name": "Caridad", "lat": 8.1503, "lng": 123.3601},
+    {"code": "097308006", "name": "Danlugan", "lat": 8.1458, "lng": 123.2174},
+    {"code": "097308007", "name": "Datu Totocan", "lat": 8.1261, "lng": 123.2239},
+    {"code": "097308008", "name": "Dilud", "lat": 8.1857, "lng": 123.3335},
+    {"code": "097308009", "name": "Ditulan", "lat": 8.1803, "lng": 123.2857},
+    {"code": "097308010", "name": "Dulian", "lat": 8.1161, "lng": 123.229},
+    {"code": "097308011", "name": "Dulop", "lat": 8.2137, "lng": 123.2318},
+    {"code": "097308012", "name": "Guintananan", "lat": 8.1799, "lng": 123.2601},
+    {"code": "097308013", "name": "Guitran", "lat": 8.1599, "lng": 123.367},
+    {"code": "097308014", "name": "Gumpingan", "lat": 8.1018, "lng": 123.2622},
+    {"code": "097308015", "name": "La Fortuna", "lat": 8.1488, "lng": 123.2897},
+    {"code": "097308016", "name": "Libertad", "lat": 8.1402, "lng": 123.3544},
+    {"code": "097308017", "name": "Licabang", "lat": 8.1986, "lng": 123.2535},
+    {"code": "097308018", "name": "Lipawan", "lat": 8.1718, "lng": 123.3453},
+    {"code": "097308019", "name": "Lower Landing", "lat": 8.1535, "lng": 123.3313},
+    {"code": "097308020", "name": "Lower Timonan", "lat": 8.1155, "lng": 123.361},
+    {"code": "097308021", "name": "Macasing", "lat": 8.1361, "lng": 123.2419},
+    {"code": "097308022", "name": "Mahayahay", "lat": 8.1621, "lng": 123.3154},
+    {"code": "097308023", "name": "Malagalad", "lat": 8.1528, "lng": 123.2394},
+    {"code": "097308024", "name": "Manlabay", "lat": 8.127, "lng": 123.3257},
+    {"code": "097308025", "name": "Maralag", "lat": 8.1403, "lng": 123.3696},
+    {"code": "097308026", "name": "Marangan", "lat": 8.1028, "lng": 123.3395},
+    {"code": "097308027", "name": "New Basak", "lat": 8.1357, "lng": 123.3352},
+    {"code": "097308030", "name": "Bagong Kauswagan", "lat": 8.1256, "lng": 123.2968},
+    {"code": "097308032", "name": "Saad", "lat": 8.2297, "lng": 123.3175},
+    {"code": "097308033", "name": "Salvador", "lat": 8.234, "lng": 123.2462},
+    {"code": "097308034", "name": "San Pablo (Pob.)", "lat": 8.1544, "lng": 123.3454},
+    {"code": "097308035", "name": "San Pedro (Pob.)", "lat": 8.1573, "lng": 123.3427},
+    {"code": "097308037", "name": "San Vicente", "lat": 8.1059, "lng": 123.2937},
+    {"code": "097308038", "name": "Senote", "lat": 8.1201, "lng": 123.267},
+    {"code": "097308039", "name": "Sinonok", "lat": 8.2197, "lng": 123.3},
+    {"code": "097308041", "name": "Sunop", "lat": 8.2063, "lng": 123.3704},
+    {"code": "097308042", "name": "Tagun", "lat": 8.1448, "lng": 123.2629},
+    {"code": "097308043", "name": "Tamurayan", "lat": 8.1378, "lng": 123.2649},
+    {"code": "097308045", "name": "Upper Landing", "lat": 8.1637, "lng": 123.334},
+    {"code": "097308046", "name": "Upper Timonan", "lat": 8.1228, "lng": 123.3455},
+    {"code": "097308047", "name": "Bagong Silang", "lat": 8.1113, "lng": 123.2461},
+    {"code": "097308048", "name": "Dapiwak", "lat": 8.199, "lng": 123.2875},
+    {"code": "097308049", "name": "Labangon", "lat": 8.1262, "lng": 123.1863},
+    {"code": "097308050", "name": "San Juan", "lat": 8.0887, "lng": 123.2977},
+    {"code": "097308051", "name": "Canibongan", "lat": 8.1686, "lng": 123.2301}
 ]
 
-MAX_RETRIES = 2
-
-RETRY_DELAY = 1  # seconds
-
 class Command(BaseCommand):
-    help = 'Populates the database with provinces, municipalities, and barangays for Zamboanga Peninsula'
-
-    def fetch_data_with_retry(self, endpoint):
-        url = f"{BASE_API_URL}/{endpoint}/"
-        for attempt in range(MAX_RETRIES):
-            try:
-                self.stdout.write(f"Fetching data from URL: {url} (Attempt {attempt + 1})")
-                response = requests.get(url)
-                response.raise_for_status()
-                return response.json()
-            except requests.RequestException as e:
-                self.stderr.write(self.style.WARNING(f"Attempt {attempt + 1} failed: {str(e)}"))
-                if attempt < MAX_RETRIES - 1:
-                    self.stdout.write(f"Retrying in {RETRY_DELAY} seconds...")
-                    time.sleep(RETRY_DELAY)
-                else:
-                    self.stderr.write(self.style.ERROR(f"Failed to fetch {endpoint} data after {MAX_RETRIES} attempts"))
-                    return None
-
-    def fetch_geolocation_with_retry(self, name):
-        for attempt in range(MAX_RETRIES):
-            try:
-                response = requests.get(
-                    'https://maps.googleapis.com/maps/api/geocode/json',
-                    params={'address': name, 'key': settings.GOOGLE_MAPS_API_KEY}
-                )
-                response.raise_for_status()
-                response_data = response.json()
-                if response_data['status'] == 'OK':
-                    location = response_data['results'][0]['geometry']['location']
-                    return location['lat'], location['lng']
-                else:
-                    raise requests.RequestException(f"Geolocation API returned status: {response_data['status']}")
-            except requests.RequestException as e:
-                self.stderr.write(self.style.WARNING(f"Attempt {attempt + 1} failed to fetch geolocation for {name}: {str(e)}"))
-                if attempt < MAX_RETRIES - 1:
-                    self.stdout.write(f"Retrying in {RETRY_DELAY} seconds...")
-                    time.sleep(RETRY_DELAY)
-                else:
-                    self.stderr.write(self.style.ERROR(f"Failed to fetch geolocation for {name} after {MAX_RETRIES} attempts"))
-                    return None, None
+    help = 'Populates the database exclusively with Zamboanga del Sur and Dumingag locations'
 
     def handle(self, *args, **kwargs):
-        for province_info in ZAMBOANGA_PROVINCES:
-            province_code = province_info['code']
-            province_name = province_info['name']
+        self.stdout.write('Creating Province (Zamboanga del Sur)...')
+        province, _ = Province.objects.get_or_create(
+            code="097300000",
+            defaults={
+                "name": "Zamboanga Del Sur",
+                "longitude": 123.3112,
+                "latitude": 7.8357,
+            }
+        )
 
-            self.stdout.write(f"Processing province: {province_name} (Code: {province_code})")
+        self.stdout.write('Creating Municipality (Dumingag)...')
+        municipality, _ = Municipality.objects.get_or_create(
+            code="097308000",
+            defaults={
+                "name": "Dumingag",
+                "province": province,
+                "longitude": 123.3469,
+                "latitude": 7.8458,
+            }
+        )
 
-            lat, lng = self.fetch_geolocation_with_retry(province_name)
-            province, created = Province.objects.get_or_create(
-                code=province_code,
-                defaults={'name': province_name, 'latitude': lat, 'longitude': lng}
+        self.stdout.write('Creating Barangays for Dumingag...')
+        created_count = 0
+        for brgy_data in DUMINGAG_BARANGAYS:
+            name_val = "Barangay " + brgy_data["name"] if not brgy_data["name"].startswith("Barangay") else brgy_data["name"]
+            
+            # Use the provided name for getting or creating to maintain consistency.
+            # If the original database had them without "Barangay ", they might be duplicated otherwise.
+            # We will use exactly the name from array.
+            name_val = brgy_data["name"]
+
+            _, created = Barangay.objects.get_or_create(
+                code=brgy_data["code"],
+                defaults={
+                    "name": name_val,
+                    "municipality": municipality,
+                    "longitude": brgy_data["lng"],
+                    "latitude": brgy_data["lat"],
+                }
             )
+            if created:
+                created_count += 1
 
-            # Fetch municipalities for the province
-            municipalities = self.fetch_data_with_retry(f"provinces/{province_code}/municipalities")
-            if not municipalities:
-                self.stderr.write(self.style.ERROR(f"No municipalities found for province {province_name} (Code: {province_code})"))
-                continue
-
-            for municipality_data in municipalities:
-                self.stdout.write(f"Processing municipality: {municipality_data['name']} (Code: {municipality_data['code']})")
-                lat, lng = self.fetch_geolocation_with_retry(municipality_data['name'])
-                municipality, created = Municipality.objects.get_or_create(
-                    code=municipality_data['code'],
-                    province=province,
-                    defaults={'name': municipality_data['name'], 'latitude': lat, 'longitude': lng}
-                )
-
-                # Fetch barangays for the municipality
-                barangays = self.fetch_data_with_retry(f"municipalities/{municipality_data['code']}/barangays")
-                if not barangays:
-                    self.stderr.write(self.style.ERROR(f"No barangays found for municipality {municipality_data['name']} (Code: {municipality_data['code']})"))
-                    continue
-
-                for barangay_data in barangays:
-                    self.stdout.write(f"Processing barangay: {barangay_data['name']} (Code: {barangay_data['code']})")
-                    lat, lng = self.fetch_geolocation_with_retry(barangay_data['name'])
-                    Barangay.objects.get_or_create(
-                        code=barangay_data['code'],
-                        municipality=municipality,
-                        defaults={'name': barangay_data['name'], 'latitude': lat, 'longitude': lng}
-                    )
-
-        self.stdout.write(self.style.SUCCESS('Successfully populated the locations data'))
-        
+        self.stdout.write(self.style.SUCCESS(f'Successfully ensured {len(DUMINGAG_BARANGAYS)} barangays exist for Dumingag! ({created_count} newly created)'))
