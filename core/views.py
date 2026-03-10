@@ -16,7 +16,7 @@ from .models import (
     SectoralDistribution, ReliefOperation, Province, Municipality, Barangay, Family, FamilyMember,
     FamilyDistribution
 )
-from .export import generate_report_pdf
+from .export import generate_report_pdf, generate_affected_areas_pdf, generate_families_pdf, generate_relief_operations_pdf
 from django.db.models.functions import TruncDate
 
 def login_view(request):
@@ -215,6 +215,15 @@ def affected_area_list(request):
         'total_affected_persons': sum(area.affected_persons for area in affected_areas),
     }
     return render(request, 'core/affected_area.html', context)
+
+@login_required
+def export_affected_areas_pdf(request):
+    """Export all affected areas as PDF."""
+    affected_areas = AffectedArea.objects.all().select_related('disaster', 'province', 'municipality', 'barangay')
+    pdf_buffer = generate_affected_areas_pdf(affected_areas)
+    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="affected_areas_report.pdf"'
+    return response
 
 @csrf_exempt
 def create_disaster(request):
@@ -668,6 +677,15 @@ def relief_operations_view(request):
     areas = AffectedArea.objects.all().select_related('disaster', 'province', 'municipality', 'barangay')
     return render(request, 'core/relief_operations.html', {'areas': areas})
 
+@login_required
+def export_relief_operations_pdf(request):
+    """Export all relief operations as PDF."""
+    operations = ReliefOperation.objects.all().select_related('area__disaster', 'area__province', 'area__municipality', 'area__barangay').order_by('-date')
+    pdf_buffer = generate_relief_operations_pdf(operations)
+    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="relief_operations_report.pdf"'
+    return response
+
 def get_relief_operations(request):
     """API to fetch all relief operations."""
     ops = ReliefOperation.objects.all().select_related(
@@ -938,37 +956,49 @@ def report_list(request):
     total_capacity = evacuation_centers.aggregate(total=Sum('capacity'))['total'] or 0
     total_occupancy = evacuation_centers.aggregate(total=Sum('current_occupancy'))['total'] or 0
 
-    # Displaced population
-    displaced = DisplacedPopulation.objects.all()
-    displaced_stats = displaced.aggregate(
-        cum_families=Sum('cum_families'),
-        now_families=Sum('now_families'),
-        cum_persons=Sum('cum_persons'),
-        now_persons=Sum('now_persons'),
-    )
+    # Displaced population - count families with displaced members and total displaced persons
+    displaced_family_ids = FamilyMember.objects.filter(is_displaced=True).values_list('family_id', flat=True).distinct()
+    displaced_families = Family.objects.filter(id__in=displaced_family_ids).count()
+    displaced_persons = FamilyMember.objects.filter(is_displaced=True).count()
+    
+    # If no displaced data, count from evacuation centers as alternative
+    if displaced_families == 0 and displaced_persons == 0:
+        displaced_families = EvacuationCenter.objects.filter(current_occupancy__gt=0).count()
+        displaced_persons = EvacuationCenter.objects.aggregate(total=Sum('current_occupancy'))['total'] or 0
+    
     total_displaced = {
-        'cum_families': displaced_stats['cum_families'] or 0,
-        'now_families': displaced_stats['now_families'] or 0,
-        'cum_persons': displaced_stats['cum_persons'] or 0,
-        'now_persons': displaced_stats['now_persons'] or 0,
+        'cum_families': 0,
+        'now_families': displaced_families,
+        'cum_persons': 0,
+        'now_persons': displaced_persons,
     }
 
     # Sex and age distribution
-    sex_age_data = SexAgeDistribution.objects.values('sex', 'age_group').annotate(
-        cum_total=Sum('cum_count'),
-        now_total=Sum('now_count'),
-    ).order_by('sex', 'age_group')
+    sex_age_data = FamilyMember.objects.values('gender').annotate(
+        age_group=Case(
+            When(age__lt=1, then=Value('Infant')),
+            When(age__gte=1, age__lte=2, then=Value('Toddler')),
+            When(age__gte=3, age__lte=5, then=Value('Preschool')),
+            When(age__gte=6, age__lte=12, then=Value('School Age')),
+            When(age__gte=13, age__lte=17, then=Value('Teenage')),
+            When(age__gte=18, age__lte=59, then=Value('Adult')),
+            default=Value('Senior Citizen'),
+            output_field=models.CharField()
+        ),
+        cum_total=Value(0),
+        now_total=Count('id')
+    ).values('gender', 'age_group', 'cum_total', 'now_total').order_by('gender', 'age_group')
 
     # Sectoral distribution
-    sectoral_data = SectoralDistribution.objects.values('sector').annotate(
-        cum_total=Sum('cum_count'),
-        now_total=Sum('now_count'),
+    sectoral_data = FamilyMember.objects.exclude(sector='').values('sector').annotate(
+        cum_total=Value(0),
+        now_total=Count('id')
     ).order_by('sector')
 
     # Damaged houses
-    damaged_stats = DamagedHouse.objects.aggregate(
-        total_partially=Sum('partially_damaged'),
-        total_totally=Sum('totally_damaged'),
+    damaged_stats = Family.objects.aggregate(
+        total_partially=Count('id', filter=Q(house_condition='Partially Damaged')),
+        total_totally=Count('id', filter=Q(house_condition='Totally Damaged')),
     )
     damaged_houses = {
         'total_partially': damaged_stats['total_partially'] or 0,
@@ -1089,6 +1119,15 @@ def family_list(request):
     """View to manage families belonging to affected areas."""
     areas = AffectedArea.objects.all().select_related('disaster', 'province', 'municipality', 'barangay')
     return render(request, 'core/family_list.html', {'areas': areas})
+
+@login_required
+def export_families_pdf(request):
+    """Export all families as PDF."""
+    families = Family.objects.all().select_related('area__disaster', 'area__province', 'area__municipality', 'area__barangay')
+    pdf_buffer = generate_families_pdf(families)
+    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="families_report.pdf"'
+    return response
 
 def get_families(request):
     """API to fetch all families."""

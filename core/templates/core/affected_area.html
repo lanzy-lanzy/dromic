@@ -52,6 +52,12 @@
                     <span class="hidden sm:inline">Table</span>
                 </button>
             </div>
+            <!-- Export PDF Button -->
+            <a href="{% url 'export_affected_areas_pdf' %}"
+                class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center text-sm">
+                <i class="fas fa-file-pdf mr-2"></i>
+                Export PDF
+            </a>
             <!-- Bulk Delete -->
             <button x-show="selectedIds.length > 0" x-transition
                 @click="if(confirm('Delete ' + selectedIds.length + ' selected area(s)?')) { window.bulkDeleteAreas(selectedIds); }"

@@ -24,6 +24,7 @@ urlpatterns = [
     path('reports/<int:report_id>/export-pdf/', views.export_report_pdf, name='export_report_pdf'),
 
     path('affected-areas/', views.affected_area_list, name='affected_area_list'),
+    path('affected-areas/export-pdf/', views.export_affected_areas_pdf, name='export_affected_areas_pdf'),
     path('add-affected-area/', views.add_affected_area, name='add_affected_area'),
     path('api/affected-areas/<int:area_id>/edit/', views.edit_affected_area, name='edit_affected_area'),
     path('api/affected-areas/', views.get_affected_areas, name='get_affected_areas'),
@@ -50,6 +51,7 @@ urlpatterns = [
     
     # Relief Operations
     path('relief-operations/', views.relief_operations_view, name='relief_operations'),
+    path('relief-operations/export-pdf/', views.export_relief_operations_pdf, name='export_relief_operations_pdf'),
     path('api/relief-operations/', views.get_relief_operations, name='get_relief_operations'),
     path('api/relief-operations/add/', views.add_relief_operation, name='add_relief_operation'),
     path('api/relief-operations/<int:op_id>/delete/', views.delete_relief_operation, name='delete_relief_operation'),
@@ -62,6 +64,7 @@ urlpatterns = [
     
     # Family Management
     path('families/', views.family_list, name='family_list'),
+    path('families/export-pdf/', views.export_families_pdf, name='export_families_pdf'),
     path('api/families/', views.get_families, name='get_families'),
     path('api/families/add/', views.add_family, name='add_family'),
     path('api/families/<int:family_id>/delete/', views.delete_family, name='delete_family'),
