@@ -31,6 +31,13 @@
                 this.currentPage = 1;
                 this.filterFamilies();
             });
+            
+            // Re-fetch families when members modal is closed to refresh the recorded count
+            this.$watch('showMembersModal', (val) => {
+                if (!val) {
+                    this.loadFamilies(); 
+                }
+            });
         },
         
         loadFamilies() {
@@ -188,6 +195,10 @@
         async deleteMember(memberId) {
             console.log('Attempting to delete member:', memberId);
             if(!window.confirm('Remove this member?')) return;
+            
+            // Optimistic UI update: instantly remove from list before network completes
+            this.currentFamilyMembers = this.currentFamilyMembers.filter(m => m.id !== memberId);
+            
             try {
                 const response = await fetch(`/api/members/${memberId}/delete/`, {
                     method: 'POST',
@@ -198,19 +209,21 @@
                     const text = await response.text();
                     console.error('Server returned non-ok status:', response.status, text);
                     alert('Server error while deleting. See console.');
+                    this.loadFamilyMembers(this.activeFamily.id); // Revert optimistic update
                     return;
                 }
                 
                 const data = await response.json();
-                if(data.status === 'success') {
-                    this.loadFamilyMembers(this.activeFamily.id);
-                    this.loadFamilies(); // Update main dashboard members count
-                } else {
+                if(data.status !== 'success') {
                     alert('Error: ' + data.message);
+                    this.loadFamilyMembers(this.activeFamily.id); // Revert optimistic update
+                } else {
+                    this.loadFamilies(); // Update main dashboard members count in background
                 }
             } catch(e) {
                 console.error('Error deleting member:', e);
                 alert('Network or syntax error while deleting member.');
+                this.loadFamilyMembers(this.activeFamily.id); // Revert optimistic update
             }
         }
      }"
@@ -255,8 +268,8 @@
                 </div>
             </div>
             <div>
-                <p class="text-slate-500 text-sm font-semibold mb-1">Total Family Members</p>
-                <h2 class="text-4xl font-bold text-slate-800" x-text="families.reduce((sum, f) => sum + f.number_of_members, 0).toLocaleString()">0</h2>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Total Members Recorded</p>
+                <h2 class="text-4xl font-bold text-slate-800" x-text="families.reduce((sum, f) => sum + f.recorded_members, 0).toLocaleString()">0</h2>
             </div>
         </div>
     </div>
@@ -324,8 +337,13 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800"
-                                          x-text="family.number_of_members"></span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-1 inline-flex text-[11px] leading-5 font-bold rounded bg-emerald-100 text-emerald-800"
+                                              x-text="family.recorded_members + ' recorded'"></span>
+                                        <span class="text-slate-300">/</span>
+                                        <span class="px-2 py-1 inline-flex text-[11px] leading-5 font-medium rounded bg-slate-100 text-slate-600"
+                                              x-text="family.number_of_members + ' expected'"></span>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                                     <div class="flex items-center gap-2">

@@ -1007,14 +1007,15 @@ def family_list(request):
 
 def get_families(request):
     """API to fetch all families."""
-    families = Family.objects.all().select_related('area__barangay', 'area__municipality', 'area__province', 'area__disaster')
+    families = Family.objects.all().select_related('area__barangay', 'area__municipality', 'area__province', 'area__disaster').prefetch_related('familymember_set')
     data = []
     for f in families:
         area_str = f"{f.area.barangay.name}, {f.area.municipality.name}, {f.area.province.name}" if hasattr(f.area, 'barangay') and f.area.barangay else f"{f.area.municipality.name}, {f.area.province.name}"
         data.append({
             'id': f.id,
             'head_of_family': f.head_of_family,
-            'number_of_members': f.number_of_members,
+            'number_of_members': f.number_of_members, # Anticipated members
+            'recorded_members': f.familymember_set.count(), # Actual members
             'area_id': f.area.id,
             'area_name': area_str,
             'disaster_name': f.area.disaster.name
