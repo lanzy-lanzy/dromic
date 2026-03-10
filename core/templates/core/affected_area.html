@@ -10,6 +10,7 @@
         showEditModal: false,
         editAreaId: null,
         viewMode: 'table',
+        searchQuery: '',
         selectedIds: [],
         allSelected: false,
         toggleAll(areas) {
@@ -109,6 +110,23 @@
         </div>
     </div>
 
+    <!-- Search Bar -->
+    <div class="bg-white rounded-2xl shadow-md border border-slate-100 p-4 mb-6">
+        <div class="flex items-center gap-3">
+            <div class="relative flex-1">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" x-model="searchQuery"
+                    @input="window.dispatchEvent(new CustomEvent('search-changed', { detail: searchQuery }))"
+                    placeholder="Search by disaster, province, municipality, or barangay..."
+                    class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none text-sm">
+            </div>
+            <div class="text-sm text-slate-500 whitespace-nowrap px-3 py-2 bg-slate-50 rounded-lg"
+                id="searchResultCount">
+                <span class="font-semibold text-slate-700" id="searchCount"></span> results
+            </div>
+        </div>
+    </div>
+
     <!-- Card View (grouped by disaster) -->
     <div x-show="viewMode === 'cards'" x-transition id="areaCardView">
         <div id="areaGroupedCards" class="space-y-6">
@@ -118,7 +136,8 @@
 
     <!-- Table View -->
     <div x-show="viewMode === 'table'" x-transition x-data="{ page: 1, perPage: 10, areas: [] }"
-        @areas-loaded.window="areas = $event.detail; page = 1">
+        @areas-loaded.window="areas = $event.detail; page = 1"
+        @search-filtered.window="areas = $event.detail; page = 1">
         <div class="bg-white rounded-2xl shadow-md border border-slate-100 mb-6 overflow-hidden">
             <div
                 class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
@@ -195,7 +214,7 @@
                                             class="w-8 h-8 bg-blue-100 rounded-lg inline-flex items-center justify-center text-blue-500 hover:bg-blue-200 transition-colors">
                                             <i class="fas fa-edit text-sm"></i>
                                         </button>
-                                        <button @click="deleteArea(a.id)"
+                                        <button @click="window.deleteArea(a.id)"
                                             class="delete-btn w-8 h-8 bg-red-100 rounded-lg inline-flex items-center justify-center text-red-500 hover:bg-red-200 transition-colors">
                                             <i class="fas fa-trash text-sm"></i>
                                         </button>
@@ -206,7 +225,8 @@
                         <tr x-show="areas.length === 0" x-cloak>
                             <td colspan="8" class="px-5 py-12 text-center text-slate-400">
                                 <i class="fas fa-map-marked-alt text-4xl mb-3 block"></i>
-                                No affected areas recorded yet
+                                <span
+                                    x-text="$root.searchQuery ? 'No areas match your search.' : 'No affected areas recorded yet.'"></span>
                             </td>
                         </tr>
                     </tbody>
@@ -447,6 +467,27 @@
 
     window._areaData = [];
 
+    function getSearchQuery() {
+        const data = getAlpineData();
+        return data ? (data.searchQuery || '').toLowerCase() : '';
+    }
+
+    function filterAreas(areas) {
+        const q = getSearchQuery();
+        if (!q) return areas;
+        return areas.filter(a =>
+            (a.disaster && a.disaster.toLowerCase().includes(q)) ||
+            (a.province && a.province.toLowerCase().includes(q)) ||
+            (a.municipality && a.municipality.toLowerCase().includes(q)) ||
+            (a.barangay && a.barangay.toLowerCase().includes(q))
+        );
+    }
+
+    function updateSearchCount(count) {
+        const el = document.getElementById('searchCount');
+        if (el) el.textContent = count.toLocaleString();
+    }
+
     function loadAreas() {
         fetch('/api/affected-areas/')
             .then(r => r.json())
@@ -461,10 +502,21 @@
                 if (persEl) persEl.textContent = data.reduce((s, a) => s + a.affected_persons, 0).toLocaleString();
 
                 renderAreaTable(data);
-                renderAreaCards(data);
+                const filtered = filterAreas(data);
+                updateSearchCount(filtered.length);
+                renderAreaCards(filtered);
             })
             .catch(e => console.error('Error loading areas:', e));
     }
+
+    // Listen for search changes to re-render card view and update table
+    window.addEventListener('search-changed', function () {
+        const filtered = filterAreas(window._areaData);
+        updateSearchCount(filtered.length);
+        renderAreaCards(filtered);
+        // Push filtered data to Alpine table component
+        window.dispatchEvent(new CustomEvent('search-filtered', { detail: filtered }));
+    });
 
     function renderAreaTable(areas) {
         // Notify the Alpine component that areas have loaded so it can render the paginated template
@@ -644,7 +696,7 @@
         }
     };
 
-    function deleteArea(id) {
+    window.deleteArea = function (id) {
         if (!confirm('Are you sure you want to delete this affected area?')) return;
         fetch('/api/affected-areas/' + id + '/delete/', {
             method: 'POST',
@@ -656,7 +708,7 @@
                 else alert('Error: ' + data.message);
             })
             .catch(e => { console.error(e); alert('An error occurred.'); });
-    }
+    };
 
     window.bulkDeleteAreas = function (ids) {
         fetch('/api/affected-areas/bulk-delete/', {
