@@ -58,6 +58,17 @@ urlpatterns = [
     path('api/relief-operations/<int:op_id>/toggle-distribution/', views.toggle_family_distribution, name='toggle_family_distribution'),
     path('relief-operations/<int:op_id>/export-rds/', views.export_rds_pdf, name='export_rds_pdf'),
     
+    # Family Management
+    path('families/', views.family_list, name='family_list'),
+    path('api/families/', views.get_families, name='get_families'),
+    path('api/families/add/', views.add_family, name='add_family'),
+    path('api/families/<int:family_id>/delete/', views.delete_family, name='delete_family'),
+    
+    # Family Members Management
+    path('api/families/<int:family_id>/members/', views.get_family_members, name='get_family_members'),
+    path('api/families/<int:family_id>/members/add/', views.add_family_member, name='add_family_member'),
+    path('api/members/<int:member_id>/delete/', views.delete_family_member, name='delete_family_member'),
+
     # Early Recovery
     path('early-recovery/', views.early_recovery_view, name='early_recovery'),
     path('api/early-recovery/', views.get_early_recoveries, name='get_early_recoveries'),
@@ -65,7 +76,4 @@ urlpatterns = [
     path('api/early-recovery/<int:rec_id>/delete/', views.delete_early_recovery, name='delete_early_recovery'),
     
     # Other URL patterns
-    
-     path('api/add_family_member', views.add_family_member, name='add_family_member'),
-    path('api/add_displaced_population', views.add_displaced_population, name='add_displaced_population'),
 ]

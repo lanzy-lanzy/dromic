@@ -1,0 +1,606 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}DROMIC Manage Families{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4"
+     x-data="{
+        showModal: false,
+        families: [],
+        filteredFamilies: [],
+        search: '',
+        currentPage: 1,
+        itemsPerPage: 10,
+        
+        // Form Data
+        newFamily: {
+            head_of_family: '',
+            number_of_members: 1,
+            area_id: ''
+        },
+
+        init() {
+            this.loadFamilies();
+            this.$watch('search', () => {
+                this.currentPage = 1;
+                this.filterFamilies();
+            });
+            this.$watch('itemsPerPage', () => {
+                this.currentPage = 1;
+                this.filterFamilies();
+            });
+        },
+        
+        loadFamilies() {
+            fetch('/api/families/', { cache: 'no-store' })
+                .then(r => r.json())
+                .then(data => {
+                    this.families = data;
+                    this.filterFamilies();
+                })
+                .catch(e => console.error('Error loading families:', e));
+        },
+        
+        filterFamilies() {
+            let filtered = this.families;
+            if (this.search) {
+                const s = this.search.toLowerCase();
+                filtered = filtered.filter(f => 
+                    f.head_of_family.toLowerCase().includes(s) ||
+                    f.area_name.toLowerCase().includes(s) ||
+                    f.disaster_name.toLowerCase().includes(s)
+                );
+            }
+            this.filteredFamilies = filtered;
+        },
+        
+        get paginatedFamilies() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            return this.filteredFamilies.slice(start, start + this.itemsPerPage);
+        },
+        
+        get totalPages() {
+            return Math.ceil(this.filteredFamilies.length / this.itemsPerPage) || 1;
+        },
+        
+        goToPage(page) {
+            if (page >= 1 && page <= this.totalPages) {
+                this.currentPage = page;
+            }
+        },
+
+        openAddModal() {
+            this.newFamily = { head_of_family: '', number_of_members: 1, area_id: '' };
+            this.showModal = true;
+        },
+
+        async saveFamily() {
+            if (!this.newFamily.head_of_family || !this.newFamily.area_id || this.newFamily.number_of_members < 1) {
+                alert('Please fill out all fields correctly.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/families/add/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(this.newFamily)
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    this.showModal = false;
+                    this.loadFamilies();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error saving family:', error);
+                alert('An error occurred while saving.');
+            }
+        },
+
+        async deleteFamily(id) {
+            if (!window.confirm('Are you sure you want to delete this family? This will remove them from all distributions.')) return;
+            
+            try {
+                const response = await fetch(`/api/families/${id}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    this.loadFamilies();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error deleting family:', error);
+            }
+        },
+
+        // Members Modal Data
+        showMembersModal: false,
+        activeFamily: null,
+        currentFamilyMembers: [],
+        newMember: {
+            name: '',
+            age: 0,
+            gender: 'Female',
+            relationship: 'Member',
+            sector: '',
+            is_pwd: false,
+            is_pregnant_lactating: false,
+            is_displaced: false,
+            is_in_evacuation: false
+        },
+
+        async openMembersModal(family) {
+            this.activeFamily = family;
+            this.showMembersModal = true;
+            this.loadFamilyMembers(family.id);
+        },
+
+        async loadFamilyMembers(familyId) {
+            try {
+                const response = await fetch(`/api/families/${familyId}/members/`, { cache: 'no-store' });
+                this.currentFamilyMembers = await response.json();
+            } catch(e) {
+                console.error('Error loading members:', e);
+            }
+        },
+
+        async saveMember() {
+            if(!this.newMember.name || this.newMember.age < 0) {
+                alert('Please provide valid member details.');
+                return;
+            }
+            try {
+                const response = await fetch(`/api/families/${this.activeFamily.id}/members/add/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(this.newMember)
+                });
+                const data = await response.json();
+                if(data.status === 'success') {
+                    // Reset form and reload
+                    this.newMember = { name: '', age: 0, gender: 'Female', relationship: 'Member', sector: '', is_pwd: false, is_pregnant_lactating: false, is_displaced: false, is_in_evacuation: false };
+                    this.loadFamilyMembers(this.activeFamily.id);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch(e) {
+                console.error('Error adding member:', e);
+            }
+        },
+
+        async deleteMember(memberId) {
+            console.log('Attempting to delete member:', memberId);
+            if(!window.confirm('Remove this member?')) return;
+            try {
+                const response = await fetch(`/api/members/${memberId}/delete/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+                });
+                
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Server returned non-ok status:', response.status, text);
+                    alert('Server error while deleting. See console.');
+                    return;
+                }
+                
+                const data = await response.json();
+                if(data.status === 'success') {
+                    this.loadFamilyMembers(this.activeFamily.id);
+                    this.loadFamilies(); // Update main dashboard members count
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch(e) {
+                console.error('Error deleting member:', e);
+                alert('Network or syntax error while deleting member.');
+            }
+        }
+     }"
+     @close-modals.window="showModal = false; showMembersModal = false">
+
+    <!-- CSRF Token for Fetch API -->
+    {% csrf_token %}
+
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-bold text-dromic-navy">Manage Families</h1>
+            <p class="text-dromic-slate mt-1">Add and manage families affected by disasters for relief distribution</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+            <button @click="openAddModal()"
+                    class="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex items-center">
+                <i class="fas fa-user-plus mr-2"></i>
+                Add Affected Family
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-users text-blue-500 text-xl"></i>
+                </div>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Total Families Recorded</p>
+                <h2 class="text-4xl font-bold text-slate-800" x-text="families.length.toLocaleString()">0</h2>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-id-card text-emerald-500 text-xl"></i>
+                </div>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm font-semibold mb-1">Total Family Members</p>
+                <h2 class="text-4xl font-bold text-slate-800" x-text="families.reduce((sum, f) => sum + f.number_of_members, 0).toLocaleString()">0</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Controls -->
+    <div class="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 gap-4">
+        <!-- Search -->
+        <div class="relative w-full md:w-1/2 lg:w-1/3">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fas fa-search text-slate-400"></i>
+            </div>
+            <input x-model="search" type="text" 
+                   class="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm transition-colors" 
+                   placeholder="Search by name, location, or disaster...">
+            <button x-show="search" @click="search = ''" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Items Per Page -->
+        <div class="flex items-center text-sm text-slate-600">
+            <span class="mr-2">Show:</span>
+            <select x-model.number="itemsPerPage" class="border border-slate-200 rounded-lg py-1.5 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 focus:bg-white">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div x-show="filteredFamilies.length === 0" x-transition class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center mb-8" style="display: none;">
+        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-users-slash text-slate-400 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 mb-2" x-text="search ? 'No families found matching your search' : 'No families recorded yet'"></h3>
+        <p class="text-slate-500" x-text="search ? 'Try adjusting your search terms.' : 'Click the button above to add the first family.'"></p>
+    </div>
+
+    <!-- Table View -->
+    <div x-show="filteredFamilies.length > 0" x-transition>
+        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Head of Family</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Members</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Location</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Disaster</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <template x-for="family in paginatedFamilies" :key="family.id">
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold mr-3"
+                                             x-text="family.head_of_family.charAt(0).toUpperCase()"></div>
+                                        <div>
+                                            <div class="text-sm font-bold text-slate-800" x-text="family.head_of_family"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800"
+                                          x-text="family.number_of_members"></span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-map-marker-alt text-slate-400"></i>
+                                        <span x-text="family.area_name"></span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-exclamation-triangle text-amber-500"></i>
+                                        <span x-text="family.disaster_name"></span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end gap-2">
+                                    <button @click="openMembersModal(family)"
+                                            class="text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors flex items-center gap-1"
+                                            title="Manage Members">
+                                        <i class="fas fa-users-cog"></i> Members
+                                    </button>
+                                    <button @click="deleteFamily(family.id)"
+                                            class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors"
+                                            title="Delete Family">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination Controls -->
+            <div class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50">
+                <div class="text-sm text-slate-600">
+                    Showing <span class="font-bold text-slate-800" x-text="((currentPage - 1) * itemsPerPage) + 1"></span> to 
+                    <span class="font-bold text-slate-800" x-text="Math.min(currentPage * itemsPerPage, filteredFamilies.length)"></span> of 
+                    <span class="font-bold text-slate-800" x-text="filteredFamilies.length"></span> entries
+                </div>
+                <div class="flex gap-2">
+                    <button @click="goToPage(currentPage - 1)" 
+                            :disabled="currentPage === 1"
+                            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                            :class="currentPage === 1 ? 'text-slate-400 bg-slate-100 cursor-not-allowed' : 'text-slate-700 bg-white border border-slate-200 hover:bg-slate-50'">
+                        Previous
+                    </button>
+                    <!-- Simple pagination numbers for <= 5 pages -->
+                    <div class="flex gap-1" x-show="totalPages <= 5">
+                        <template x-for="page in totalPages" :key="page">
+                            <button @click="goToPage(page)"
+                                    class="w-8 h-8 rounded-lg text-sm font-medium transition-colors flex items-center justify-center"
+                                    :class="currentPage === page ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100 bg-white border border-slate-200'">
+                                <span x-text="page"></span>
+                            </button>
+                        </template>
+                    </div>
+                    <!-- Text indicator for > 5 pages -->
+                    <div class="flex gap-1 items-center" x-show="totalPages > 5">
+                        <span class="text-sm text-slate-600 font-medium">Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span></span>
+                    </div>
+                    <button @click="goToPage(currentPage + 1)"
+                            :disabled="currentPage === totalPages"
+                            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                            :class="currentPage === totalPages ? 'text-slate-400 bg-slate-100 cursor-not-allowed' : 'text-slate-700 bg-white border border-slate-200 hover:bg-slate-50'">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Family Modal -->
+    <div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm" @click="showModal = false"></div>
+
+            <div class="relative inline-block w-full max-w-lg p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-2xl rounded-2xl z-10">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="text-xl font-bold text-slate-800 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                            <i class="fas fa-user-plus text-emerald-600"></i>
+                        </div>
+                        Add New Family
+                    </h3>
+                    <button @click="showModal = false" class="text-slate-400 hover:text-slate-600 transition-colors p-2 rounded-lg hover:bg-slate-100">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Head of Family Name</label>
+                        <input type="text" x-model="newFamily.head_of_family" 
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all placeholder-slate-400"
+                               placeholder="e.g. Juan Dela Cruz">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Number of Members</label>
+                        <input type="number" min="1" x-model.number="newFamily.number_of_members" 
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Affected Area / Disaster</label>
+                        <select x-model="newFamily.area_id" 
+                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all">
+                            <option value="" disabled selected>Select the affected area</option>
+                            {% for area in areas %}
+                                <option value="{{ area.id }}">
+                                    {{ area.disaster.name }} - {% if area.barangay %}{{ area.barangay.name }}, {% endif %}{{ area.municipality.name }}, {{ area.province.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex gap-3 justify-end">
+                    <button type="button" @click="showModal = false"
+                            class="py-2.5 px-5 font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="button" @click="saveFamily()"
+                            class="py-2.5 px-5 font-medium text-white bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl hover:from-emerald-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                            :disabled="!newFamily.head_of_family || !newFamily.area_id || newFamily.number_of_members < 1"
+                            :class="{'opacity-50 cursor-not-allowed': (!newFamily.head_of_family || !newFamily.area_id || newFamily.number_of_members < 1)}">
+                        <i class="fas fa-save"></i> Save Family
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Members Modal -->
+    <div x-show="showMembersModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm" @click="showMembersModal = false"></div>
+
+            <div class="relative inline-block w-full max-w-4xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-2xl rounded-2xl z-10">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="text-xl font-bold text-slate-800 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                            <i class="fas fa-users-cog text-blue-600"></i>
+                        </div>
+                        Manage Members: <span x-text="activeFamily?.head_of_family"></span>
+                    </h3>
+                    <button @click="showMembersModal = false" class="text-slate-400 hover:text-slate-600 transition-colors p-2 rounded-lg hover:bg-slate-100">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Add Member Form -->
+                    <div class="col-span-1 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-slate-700 mb-4 border-b border-slate-200 pb-2">Add New Member</h4>
+                        <form @submit.prevent="saveMember" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Name</label>
+                                <input type="text" x-model="newMember.name" required
+                                       class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Age</label>
+                                    <input type="number" min="0" x-model.number="newMember.age" required
+                                           class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Gender</label>
+                                    <select x-model="newMember.gender" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm">
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Relationship to Head</label>
+                                <select x-model="newMember.relationship" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm">
+                                    <option value="Head">Head</option>
+                                    <option value="Spouse">Spouse</option>
+                                    <option value="Child">Child</option>
+                                    <option value="Parent">Parent</option>
+                                    <option value="Sibling">Sibling</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Sector (Optional)</label>
+                                <select x-model="newMember.sector" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm">
+                                    <option value="">None</option>
+                                    <option value="Children">Children</option>
+                                    <option value="Women">Women</option>
+                                    <option value="Senior Citizens">Senior Citizens</option>
+                                    <option value="Out-of-School Youth">Out-of-School Youth</option>
+                                    <option value="Solo Parents">Solo Parents</option>
+                                    <option value="Indigenous Peoples">Indigenous Peoples</option>
+                                    <option value="Farmers/Fisherfolk">Farmers/Fisherfolk</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2 pt-2 border-t border-slate-200 mt-3">
+                                <label class="flex items-center space-x-2 text-sm text-slate-700">
+                                    <input type="checkbox" x-model="newMember.is_pwd" class="rounded text-blue-600">
+                                    <span>Person with Disability (PWD)</span>
+                                </label>
+                                <label class="flex items-center space-x-2 text-sm text-slate-700">
+                                    <input type="checkbox" x-model="newMember.is_pregnant_lactating" class="rounded text-blue-600">
+                                    <span>Pregnant / Lactating</span>
+                                </label>
+                            </div>
+                            <button type="submit"
+                                    class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors text-sm">
+                                <i class="fas fa-plus mr-1"></i> Add Member
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Members List -->
+                    <div class="col-span-1 md:col-span-2">
+                        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden h-[500px] flex flex-col">
+                            <div class="overflow-y-auto flex-1 p-0">
+                                <table class="min-w-full">
+                                    <thead class="bg-slate-50 sticky top-0 border-b border-slate-200 z-10">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Name</th>
+                                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Age/Sex</th>
+                                            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Details</th>
+                                            <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        <tr x-show="currentFamilyMembers.length === 0">
+                                            <td colspan="4" class="px-4 py-8 text-center text-slate-500 text-sm">
+                                                No members recorded yet. Add them using the form.
+                                            </td>
+                                        </tr>
+                                        <template x-for="member in currentFamilyMembers" :key="member.id">
+                                            <tr class="hover:bg-slate-50">
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <div class="font-bold text-slate-800 text-sm" x-text="member.name"></div>
+                                                    <div class="text-xs text-slate-500" x-text="member.relationship_to_head"></div>
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <div class="text-sm text-slate-700"><span x-text="member.age"></span> yrs</div>
+                                                    <span class="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                                                          :class="member.gender === 'Male' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'"
+                                                          x-text="member.gender"></span>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <div class="flex flex-wrap gap-1">
+                                                        <span x-show="member.sector" class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-xs font-medium" x-text="member.sector"></span>
+                                                        <span x-show="member.is_pwd" class="px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-medium">PWD</span>
+                                                        <span x-show="member.is_pregnant_lactating" class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium">Pregnant</span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-right">
+                                                    <button @click="deleteMember(member.id)" class="text-red-400 hover:text-red-600 p-1">
+                                                        <i class="fas fa-times text-sm"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="bg-slate-50 border-t border-slate-200 px-4 py-3 flex justify-between items-center text-sm">
+                                <span class="font-medium inline-block" :class="currentFamilyMembers.length === activeFamily?.number_of_members ? 'text-emerald-600' : 'text-amber-600'">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Recorded <strong x-text="currentFamilyMembers.length"></strong> of <strong x-text="activeFamily?.number_of_members"></strong> expected members
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

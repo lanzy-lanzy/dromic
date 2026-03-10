@@ -4,7 +4,8 @@ from django.contrib.auth import logout, login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.db.models import Sum, Count, F
+from django.db.models import Sum, Count, F, Case, When, Value, CharField
+from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 import json
@@ -145,20 +146,28 @@ def overview(request):
         'total_reports': reports.count(),
         'total_affected_families': sum(report.total_affected_families() for report in reports),
         'total_affected_persons': sum(report.total_affected_persons() for report in reports),
-        'displaced_population': DisplacedPopulation.objects.aggregate(
-            cum_families=Sum('cum_families'),
-            now_families=Sum('now_families'),
-            cum_persons=Sum('cum_persons'),
-            now_persons=Sum('now_persons')
-        ),
-        'sex_age_distribution': SexAgeDistribution.objects.values('sex', 'age_group').annotate(
-            cum_total=Sum('cum_count'),
-            now_total=Sum('now_count')
-        ),
-        'sectoral_distribution': SectoralDistribution.objects.values('sector').annotate(
-            cum_total=Sum('cum_count'),
-            now_total=Sum('now_count')
-        ),
+        'displaced_population': {
+            'cum_families': 0,
+            'now_families': FamilyMember.objects.filter(is_displaced=True).values('family').distinct().count(),
+            'cum_persons': 0,
+            'now_persons': FamilyMember.objects.filter(is_displaced=True).count()
+        },
+        'sex_age_distribution': [
+             {'sex': m['gender'], 'age_group': m['age_group'], 'now_total': m['now_total']} 
+             for m in FamilyMember.objects.values('gender').annotate(
+                 age_group=Case(
+                     When(age__lt=1, then=Value('Infant')),
+                     When(age__gte=1, age__lte=2, then=Value('Toddler')),
+                     When(age__gte=3, age__lte=5, then=Value('Preschool')),
+                     When(age__gte=6, age__lte=12, then=Value('School Age')),
+                     When(age__gte=13, age__lte=17, then=Value('Teenage')),
+                     When(age__gte=18, age__lte=59, then=Value('Adult')),
+                     default=Value('Senior Citizen'),
+                     output_field=models.CharField()
+                 )
+             ).values('gender', 'age_group').annotate(now_total=Count('id'))
+        ],
+        'sectoral_distribution': FamilyMember.objects.exclude(sector='').values('sector').annotate(now_total=Count('id')),
         'damaged_houses_summary': DamagedHouse.objects.aggregate(
             total_damaged=Sum('partially_damaged') + Sum('totally_damaged'),
             partially_damaged=Sum('partially_damaged'),
@@ -399,7 +408,7 @@ def get_or_create_instance(model, instance_id, new_name, **kwargs):
 
 def disaster_impact(request):
     """Comprehensive disaster impact page with real data from all models."""
-    from django.db.models import Sum, Count
+    from django.db.models import Sum, Count, Case, When, Value
 
     # Family members
     family_members = FamilyMember.objects.all().select_related('family', 'family__area')
@@ -423,10 +432,24 @@ def disaster_impact(request):
     }
 
     # Sex and age distribution
-    sex_age_distributions = SexAgeDistribution.objects.all().select_related('population')
+    sex_age_distributions = [
+             {'sex': m['gender'], 'age_group': m['age_group'], 'now_total': m['now_total']} 
+             for m in FamilyMember.objects.values('gender').annotate(
+                 age_group=Case(
+                     When(age__lt=1, then=Value('Infant')),
+                     When(age__gte=1, age__lte=2, then=Value('Toddler')),
+                     When(age__gte=3, age__lte=5, then=Value('Preschool')),
+                     When(age__gte=6, age__lte=12, then=Value('School Age')),
+                     When(age__gte=13, age__lte=17, then=Value('Teenage')),
+                     When(age__gte=18, age__lte=59, then=Value('Adult')),
+                     default=Value('Senior Citizen'),
+                     output_field=models.CharField()
+                 )
+             ).values('gender', 'age_group').annotate(now_total=Count('id'))
+        ]
 
     # Sectoral distribution
-    sectoral_distributions = SectoralDistribution.objects.all().select_related('population')
+    sectoral_distributions = FamilyMember.objects.exclude(sector='').values('sector').annotate(now_total=Count('id'))
 
     # Damaged houses
     damaged_all = DamagedHouse.objects.all()
@@ -510,20 +533,28 @@ def report_list(request):
         'total_reports': reports.count(),
         'total_affected_families': sum(report.total_affected_families() for report in reports),
         'total_affected_persons': sum(report.total_affected_persons() for report in reports),
-        'total_displaced': DisplacedPopulation.objects.aggregate(
-            cum_families=Sum('cum_families'),
-            now_families=Sum('now_families'),
-            cum_persons=Sum('cum_persons'),
-            now_persons=Sum('now_persons')
-        ),
-        'sex_age_distribution': SexAgeDistribution.objects.values('sex', 'age_group').annotate(
-            cum_total=Sum('cum_count'),
-            now_total=Sum('now_count')
-        ),
-        'sectoral_distribution': SectoralDistribution.objects.values('sector').annotate(
-            cum_total=Sum('cum_count'),
-            now_total=Sum('now_count')
-        ),
+        'total_displaced': {
+            'cum_families': 0,
+            'now_families': FamilyMember.objects.filter(is_displaced=True).values('family').distinct().count(),
+            'cum_persons': 0,
+            'now_persons': FamilyMember.objects.filter(is_displaced=True).count()
+        },
+        'sex_age_distribution': [
+             {'sex': m['gender'], 'age_group': m['age_group'], 'now_total': m['now_total']} 
+             for m in FamilyMember.objects.values('gender').annotate(
+                 age_group=Case(
+                     When(age__lt=1, then=Value('Infant')),
+                     When(age__gte=1, age__lte=2, then=Value('Toddler')),
+                     When(age__gte=3, age__lte=5, then=Value('Preschool')),
+                     When(age__gte=6, age__lte=12, then=Value('School Age')),
+                     When(age__gte=13, age__lte=17, then=Value('Teenage')),
+                     When(age__gte=18, age__lte=59, then=Value('Adult')),
+                     default=Value('Senior Citizen'),
+                     output_field=models.CharField()
+                 )
+             ).values('gender', 'age_group').annotate(now_total=Count('id'))
+        ],
+        'sectoral_distribution': FamilyMember.objects.exclude(sector='').values('sector').annotate(now_total=Count('id')),
         'damaged_houses': DamagedHouse.objects.aggregate(
             total_damaged=Sum('partially_damaged') + Sum('totally_damaged'),
             partially_damaged=Sum('partially_damaged'),
@@ -753,35 +784,58 @@ def get_disasters(request):
     return JsonResponse(list(disasters), safe=False)
 
 
-# Disaster impact
-from django.template.loader import render_to_string
-def add_family_member(request):
-    if request.method == 'POST':
-        # Process form data and save to database
-        FamilyMember.objects.create(
-            name=request.POST.get('name'),
-            age=request.POST.get('age'),
-            gender=request.POST.get('gender'),
-            relationship_to_head=request.POST.get('relationship')
-        )
-        family_members = FamilyMember.objects.all()
-        html_content = render_to_string('core/partials/family_members.html', {'family_members': family_members})
-        return JsonResponse({'status': 'success', 'content': html_content})
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+# Family Member endpoints
+def get_family_members(request, family_id):
+    family = get_object_or_404(Family, id=family_id)
+    members = family.familymember_set.all()
+    data = []
+    for m in members:
+        data.append({
+            'id': m.id,
+            'name': m.name,
+            'age': m.age,
+            'gender': m.gender,
+            'relationship_to_head': m.relationship_to_head,
+            'sector': m.sector,
+            'is_pwd': m.is_pwd,
+            'is_pregnant_lactating': m.is_pregnant_lactating,
+            'is_displaced': m.is_displaced,
+            'is_in_evacuation_center': m.is_in_evacuation_center
+        })
+    return JsonResponse(data, safe=False)
 
-def add_displaced_population(request):
-    if request.method == 'POST':
-        DisplacedPopulation.objects.create(
-            area=request.POST.get('area'),
-            evacuation_center=request.POST.get('evacuationCenter'),
-            cum_families=request.POST.get('cumFamilies'),
-            now_families=request.POST.get('nowFamilies')
+@csrf_exempt
+@require_POST
+def add_family_member(request, family_id):
+    try:
+        data = json.loads(request.body)
+        family = get_object_or_404(Family, id=family_id)
+        
+        member = FamilyMember.objects.create(
+            family=family,
+            name=data.get('name'),
+            age=int(data.get('age', 0)),
+            gender=data.get('gender'),
+            relationship_to_head=data.get('relationship'),
+            sector=data.get('sector', ''),
+            is_pwd=data.get('is_pwd', False),
+            is_pregnant_lactating=data.get('is_pregnant_lactating', False),
+            is_displaced=data.get('is_displaced', False),
+            is_in_evacuation_center=data.get('is_in_evacuation', False)
         )
-        displaced_population = DisplacedPopulation.objects.all()
-        html_content = render_to_string('core/partials/displaced_population.html', {'displaced_population': displaced_population})
-        return JsonResponse({'status': 'success', 'content': html_content})
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+        return JsonResponse({'status': 'success', 'member_id': member.id})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
 
+@csrf_exempt
+@require_POST
+def delete_family_member(request, member_id):
+    try:
+        member = get_object_or_404(FamilyMember, id=member_id)
+        member.delete()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
 
 def report_list(request):
     """Comprehensive reports dashboard with real data from all models."""
@@ -939,5 +993,56 @@ def save_report(request):
             'message': 'Report created successfully',
             'report_id': report.id
         })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
+# ----------------------------------------------------------------------
+# Family Management Views
+# ----------------------------------------------------------------------
+
+def family_list(request):
+    """View to manage families belonging to affected areas."""
+    areas = AffectedArea.objects.all().select_related('disaster', 'province', 'municipality', 'barangay')
+    return render(request, 'core/family_list.html', {'areas': areas})
+
+def get_families(request):
+    """API to fetch all families."""
+    families = Family.objects.all().select_related('area__barangay', 'area__municipality', 'area__province', 'area__disaster')
+    data = []
+    for f in families:
+        area_str = f"{f.area.barangay.name}, {f.area.municipality.name}, {f.area.province.name}" if hasattr(f.area, 'barangay') and f.area.barangay else f"{f.area.municipality.name}, {f.area.province.name}"
+        data.append({
+            'id': f.id,
+            'head_of_family': f.head_of_family,
+            'number_of_members': f.number_of_members,
+            'area_id': f.area.id,
+            'area_name': area_str,
+            'disaster_name': f.area.disaster.name
+        })
+    return JsonResponse(data, safe=False)
+
+@csrf_exempt
+@require_POST
+def add_family(request):
+    try:
+        data = json.loads(request.body)
+        area = get_object_or_404(AffectedArea, id=data.get('area_id'))
+        
+        family = Family.objects.create(
+            area=area,
+            head_of_family=data.get('head_of_family'),
+            number_of_members=int(data.get('number_of_members', 1))
+        )
+        return JsonResponse({'status': 'success', 'family_id': family.id})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
+@csrf_exempt
+@require_POST
+def delete_family(request, family_id):
+    try:
+        family = get_object_or_404(Family, id=family_id)
+        family.delete()
+        return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})

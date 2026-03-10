@@ -78,8 +78,26 @@ class FamilyMember(models.Model):
     age = models.IntegerField()
     gender = models.CharField(max_length=10)
     relationship_to_head = models.CharField(max_length=50)
+    
+    # Needs & Demographics
+    sector = models.CharField(max_length=50, blank=True, null=True, help_text="e.g. Senior Citizen, Children, Out-of-School Youth, Solo Parent, Indigenous Peoples, Farmers/Fisherfolk")
+    is_pwd = models.BooleanField(default=False)
+    is_pregnant_lactating = models.BooleanField(default=False)
+
+    # Displaced Status
     is_displaced = models.BooleanField(default=False)
     is_in_evacuation_center = models.BooleanField(default=False)
+
+    @property
+    def age_group(self):
+        """Categorize the person into a DROMIC Age Group"""
+        if self.age < 1: return "Infant"
+        if 1 <= self.age <= 2: return "Toddler"
+        if 3 <= self.age <= 5: return "Preschool"
+        if 6 <= self.age <= 12: return "School Age"
+        if 13 <= self.age <= 17: return "Teenage"
+        if 18 <= self.age <= 59: return "Adult"
+        return "Senior Citizen"  # 60 and above
 
     def __str__(self):
         return self.name
